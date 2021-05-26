@@ -31,7 +31,7 @@ To start, a **category** ``C`` consists of
     ``f ∘ \mathrm{id}_W = f = \mathrm{id}_V ∘ f``.
 
 The morphisms in ``\mathrm{Hom}_C(V,V)`` are known as endomorphism and this set is also
-denoted as ``End_C(V)``. When the category ``C`` is clear, we can drop the subscript in
+denoted as ``\mathrm{End}_C(V)``. When the category ``C`` is clear, we can drop the subscript in
 ``\mathrm{Hom}(W,V)``. A morphism ``f:W→V`` is an isomorphism if there exists a morphism
 ``f^{-1}:V→W`` called its inverse, such that ``f^{-1} ∘ f = \mathrm{id}_W`` and ``f ∘ f^{-1}
 = \mathrm{id}_V``.
@@ -342,7 +342,7 @@ They are graphically represented as
 ![trace](img/diagram-trace.svg)
 
 and they do not need to coincide. Note that
-``\mathrm{tr}_{\mathrm{l}}(f) = \mathrm{tr}_{\mathrm{r}}(f*)`` and that
+``\mathrm{tr}_{\mathrm{l}}(f) = \mathrm{tr}_{\mathrm{r}}(f^*)`` and that
 ``\mathrm{tr}_{\mathrm{l}/\mathrm{r}}(f∘g) = \mathrm{tr}_{\mathrm{l}/\mathrm{r}}(g∘f)``.
 The (left or right) trace of the identity morphism ``\mathrm{id}_V`` defines the
 corresponding (left or right) dimension of the object ``V``, i.e.

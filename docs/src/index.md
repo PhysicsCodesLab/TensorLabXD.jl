@@ -22,7 +22,7 @@ large dimensions and take on a specific structure when symmetries are present. T
 generic symmetries, we employ notations and concepts from category theory all the way down
 to the definition of a tensor.
 
-At the same time, TensorXD.jl focusses on computational efficiency and performance. The
+At the same time, TensorXD.jl focuses on computational efficiency and performance. The
 underlying storage of a tensor's data can be any `DenseArray`. Currently, certain operations
 are already multithreaded, either by distributing the different blocks in case of a
 structured tensor (i.e. with symmetries) or by using multithreading provided by the package
