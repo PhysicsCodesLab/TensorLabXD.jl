@@ -117,7 +117,7 @@ include("deligne.jl")
 include("homspace.jl")
 
 
-# general VectorSpace methods 
+# general VectorSpace methods
 #==============================================================================#
 """
     field(V::VectorSpace) -> Field
@@ -136,9 +136,9 @@ Return the vector space associated to object `a`.
 """
 function spacetype end
 spacetype(S::Type{<:ElementarySpace}) = S
-spacetype(V::ElementarySpace) = typeof(V) # = spacetype(typeof(V))
+spacetype(V::ElementarySpace) = typeof(V)
 spacetype(::Type{<:CompositeSpace{S}}) where S = S
-spacetype(V::CompositeSpace) = spacetype(typeof(V)) # = spacetype(typeof(V))
+spacetype(V::CompositeSpace) = spacetype(typeof(V))
 
 """
     oneunit(V::S) where {S<:ElementarySpace} -> S
@@ -156,6 +156,7 @@ Base.oneunit(V::ElementarySpace) = oneunit(typeof(V))
 Return the type of sector over which object `a` (e.g. a representation space or a tensor) is
 defined. Also works in type domain.
 """
+function sectortype end
 sectortype(V::VectorSpace) = sectortype(typeof(V))
 sectortype(::Type{<:ElementarySpace}) = Trivial
 sectortype(P::Type{<:CompositeSpace}) = sectortype(spacetype(P))
@@ -177,6 +178,7 @@ end
 
 Return an iterator over the different sectors of `V`.
 """
+function sectors end
 sectors(V::ElementarySpace) = TrivialOrEmptyIterator(dim(V) == 0)
 # make ElementarySpace instances behave similar to ProductSpace instances
 blocksectors(V::ElementarySpace) = sectors(V)
@@ -187,12 +189,13 @@ blocksectors(V::ElementarySpace) = sectors(V)
 Return whether a vector space `V` has a subspace corresponding to sector `a` with non-zero
 dimension, i.e. `dim(V, a) > 0`.
 """
+function hassector end
 hassector(V::ElementarySpace, ::Trivial) = dim(V) != 0
 
 Base.axes(V::ElementarySpace, ::Trivial) = axes(V)
 
 """
-    dim(V::VectorSpace) -> Int 
+    dim(V::VectorSpace) -> Int
 
 Return the total dimension of the vector space `V` as an Int.
 (!!! There might be problem for anyons with quantum dimension which is not integer.)
@@ -201,7 +204,7 @@ function dim end
 dim(V::ElementarySpace, ::Trivial) =
     sectortype(V) == Trivial ? dim(V) : throw(SectorMismatch())
 # make ElementarySpace instances behave similar to ProductSpace instances
-blockdim(V::ElementarySpace, c::Sector) = dim(V, c)	     
+blockdim(V::ElementarySpace, c::Sector) = dim(V, c)
 
 """
     dual(V::VectorSpace) -> VectorSpace
@@ -284,7 +287,7 @@ individual spaces `V1`, `V2`, ..., or the spaces contained in `P`.
 function fuse end
 fuse(V::ElementarySpace) = V
 fuse(V1::VectorSpace, V2::VectorSpace, V3::VectorSpace...) =
-    fuse(fuse(fuse(V1), fuse(V2)), V3...) 
+    fuse(fuse(fuse(V1), fuse(V2)), V3...)
 # calling fuse on V1 and V2 will allow these to be `ProductSpace`
 
 
@@ -371,4 +374,3 @@ have the same value.
 """
 supremum(V1::ElementarySpace, V2::ElementarySpace, V3::ElementarySpace...) =
     supremum(supremum(V1, V2), V3...)
-

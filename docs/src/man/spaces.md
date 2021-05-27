@@ -3,6 +3,74 @@
 ```@setup TensorXD
 using TensorXD
 ```
+## [Types](@id ss_types)
+```julia
+abstract type Field end
+struct RealNumbers <: Field end
+struct ComplexNumbers <: Field end
+const ℝ = RealNumbers()
+const ℂ = ComplexNumbers()
+
+abstract type VectorSpace end
+
+abstract type ElementarySpace{𝕜} <: VectorSpace end
+const IndexSpace = ElementarySpace
+struct GeneralSpace{𝕜} <: ElementarySpace{𝕜}
+    d::Int
+    dual::Bool
+    conj::Bool
+end
+
+abstract type InnerProductSpace{𝕜} <: ElementarySpace{𝕜} end
+abstract type EuclideanSpace{𝕜} <: InnerProductSpace{𝕜} end
+struct CartesianSpace <: EuclideanSpace{ℝ}
+    d::Int
+end
+
+abstract type CompositeSpace{S<:ElementarySpace} <: VectorSpace end
+```
+## [Properties](@id_ss_properties)
+```julia
+function spacetype end  # returns the type of ElementarySpace associated with a composite space or a tensor
+function field end  # returns the field of a vector space or a tensor
+function dim end # returns the total dimension of a vector space as an Int
+function blockdim end
+Base.oneunit # returns the corresponding vector space that represents the trivial 1D space isomorphic to the corresponding field
+function sectortype end # return the sector type of a space or a tensor
+function sectors end # return an iterator over the different sectors of an ElementarySpace
+function blocksectors end
+function hassector end
+Base.axes
+function dual end # returns the dual space
+Base.adjoint(V::VectorSpace) = dual(V)
+function isdual end
+Base.conj # returns the complex conjugate space
+function flip end
+function ⊕ end
+function ⊗ end
+Base.:*(V1::VectorSpace, V2::VectorSpace) = ⊗(V1, V2)
+function fuse end # returns a single vector space that is isomorphic to the fusion product of the individual spaces
+function ismonomorphic end
+function isepimorphic end
+function isisomorphic end
+const ≾ = ismonomorphic
+const ≿ = isepimorphic
+const ≅ = isisomorphic
+≺(V1::VectorSpace, V2::VectorSpace) = V1 ≾ V2 && !(V1 ≿ V2)
+≻(V1::VectorSpace, V2::VectorSpace) = V1 ≿ V2 && !(V1 ≾ V2)
+function infimum end
+function supremum end
+```
+## [Operations](@id ss_operations)
+
+
+## [Others](@id ss_others)
+```julia
+struct TrivialOrEmptyIterator
+    isempty::Bool
+end # returns nothing is isempty = true, otherwise returns Trivial()
+
+```
 
 From the [Introduction](@ref s_intro), it should be clear that an important aspect in the
 definition of a tensor (map) is specifying the vector spaces and their structure in the domain and codomain of the map. The starting point is an abstract type `VectorSpace`
