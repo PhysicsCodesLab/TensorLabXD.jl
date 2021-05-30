@@ -16,7 +16,7 @@ end
 const TensorSpace{S<:ElementarySpace} = Union{S, ProductSpace{S}}
 const TensorMapSpace{S<:ElementarySpace, N₁, N₂} =
     HomSpace{S, ProductSpace{S, N₁}, ProductSpace{S, N₂}}
-	
+
 codomain(W::HomSpace) = W.codomain
 domain(W::HomSpace) = W.domain
 

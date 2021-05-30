@@ -57,6 +57,13 @@ struct ProductSpace{S<:ElementarySpace, N} <: CompositeSpace{S}
     spaces::NTuple{N, S}
 end
 
+struct HomSpace{S<:ElementarySpace, P1<:CompositeSpace{S}, P2<:CompositeSpace{S}}
+    codomain::P1
+    domain::P2
+end
+const TensorSpace{S<:ElementarySpace} = Union{S, ProductSpace{S}}
+const TensorMapSpace{S<:ElementarySpace, N₁, N₂} =
+    HomSpace{S, ProductSpace{S, N₁}, ProductSpace{S, N₂}}
 ```
 ## [Properties](@id_ss_properties)
 On both VectorSpace instances and types:
@@ -216,6 +223,25 @@ function flip(V::GradedSpace{I}) where {I<:Sector}
         typeof(V)(dual(c)=>dim(V, c) for c in sectors(V))'
     end
 end        
+```
+
+In `productspace.jl`:
+
+The order of the spaces are reversed before taking the dual of each elementray
+vecor space:
+```julia
+dual(P::ProductSpace{<:ElementarySpace, 0}) = P
+dual(P::ProductSpace) = ProductSpace(map(dual, reverse(P.spaces)))
+```
+
+In  `homespace.jl`:
+
+For a morphism the dual of the morphism is different with the adjoint of it.
+In the tensor category language, the dual of a morphism is called the transpose
+of the morphism, while the adjoint of a morphism is called the dagger of the morphism.
+```julia
+dual(W::HomSpace) = HomSpace(dual(W.domain), dual(W.codomain))
+Base.adjoint(W::HomSpace{<:EuclideanSpace}) = HomSpace(W.domain, W.codomain)
 ```
 ## [VectorSpace type](@id ss_vectorspace_type)
 
