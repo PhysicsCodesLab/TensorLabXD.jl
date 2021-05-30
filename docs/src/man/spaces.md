@@ -127,8 +127,8 @@ struct TrivialOrEmptyIterator
 end # returns nothing is isempty = true, otherwise returns Trivial()
 ```
 
-## [Details about ``dual``, ``conj``, ``flip``](@id ss_others)
-In ``vectorspaces.jl``:
+## [Details about `dual`, `conj`, `flip`](@id ss_others)
+In `vectorspaces.jl`:
 ```julia
 function dual end
 dual(V::EuclideanSpace) = conj(V)
@@ -136,7 +136,7 @@ Base.adjoint(V::VectorSpace) = dual(V)
 function flip end
 ```
 
-In ``generalspace.jl``:
+In `generalspace.jl`:
 ```julia
 dual(V::GeneralSpace{𝕜}) where {𝕜} =
     GeneralSpace{𝕜}(dim(V), !isdual(V), isconj(V))
@@ -156,7 +156,8 @@ flip(V::ComplexSpace) = dual(V)
 ```
 
 In `sectors.jl`:
-`Base.conj(a::I)`: ``a̅``, conjugate or dual label of ``a``
+
+`Base.conj(a::I)`: ``\overline{a}``, conjugate or dual label of ``a``.
 ```julia
 dual(a::Sector) = conj(a)
 ```
@@ -190,7 +191,13 @@ representation space of sector ``a``. In order for `flip(V)` to be isomorphic to
 such that, if `V = GradedSpace(a=>n_a,...)` then
 `flip(V) = dual(GradedSpace(dual(a)=>n_a,....))`.
 
-In the structure of `TensorXD.jl`
+In the structure of `TensorXD.jl`, we only keep the simple objects. It means
+that we don't have objects correspond to ``a^*`` in the language of category.
+Therefore, `dual(a) = conj(a)` both correspond to ``\overline{a}``. The dual space
+of a space is denoted in the field named as `dual` in the type definitions. If
+`dual = true`, it means that we represent the space ``R_a^*`` which is isomorphic to
+``R_{\overline{a}}``, and in the methods like `sectors` and `dim` we get the sectors
+and corresponding dims in the corresponding ``R_{\overline{a}}``.
 ```julia
 sectors(V::GradedSpace{I,<:AbstractDict}) where {I<:Sector} =
     SectorSet{I}(s->isdual(V) ? dual(s) : s, keys(V.dims))
