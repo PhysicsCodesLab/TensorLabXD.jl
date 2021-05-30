@@ -38,7 +38,19 @@ struct SpaceTable end
 const Vect = SpaceTable() # `Vect[I]` with `I<:Sector` ---> `GradedSpace{I,D}`
 struct RepTable end
 const Rep = RepTable() # `Rep[G] == Vect[Irrep[G]]`
-
+const ZNSpace{N} = GradedSpace{ZNIrrep{N}, NTuple{N,Int}}
+const Z2Space = ZNSpace{2}
+const Z3Space = ZNSpace{3}
+const Z4Space = ZNSpace{4}
+const U1Space = Rep[U₁]
+const CU1Space = Rep[CU₁]
+const SU2Space = Rep[SU₂]
+const ℤ₂Space = Z2Space
+const ℤ₃Space = Z3Space
+const ℤ₄Space = Z4Space
+const U₁Space = U1Space
+const CU₁Space = CU1Space
+const SU₂Space = SU2Space
 
 abstract type CompositeSpace{S<:ElementarySpace} <: VectorSpace end
 struct ProductSpace{S<:ElementarySpace, N} <: CompositeSpace{S}
@@ -65,6 +77,7 @@ blocksectors(P::ProductSpace) # Return an iterator over the different unique cou
 hassector # whether a vector space `V` has a subspace corresponding to sector `a` with non-zero dimension
 hassector(P::ProductSpace{S, N}, s::NTuple{N, sectortype(S)}) # Query whether `P` has a non-zero degeneracy of sector `s`, representing a combination of sectors on the individual tensor indices.
 dim # total dimension of a vector space or a product space
+dim(V::GradedSpace, c::I) # dime for sector c in a Graded Space
 dim(P::ProductSpace, n::Int) # dim for the `n`th vector space of the product space
 dim(P::ProductSpace{S, N}, s::NTuple{N, sectortype(S)}) # Return the total degeneracy dimension corresponding to a tuple of sectors for each of the spaces in the tensor product, obtained as `prod(dims(P, s))``.
 dims(P::ProductSpace) # Return the dimensions of the spaces in the tensor product space as a tuple of integers.
@@ -112,7 +125,90 @@ insertunit(P::ProductSpace, i::Int = length(P)+1; dual = false, conj = false) # 
 struct TrivialOrEmptyIterator
     isempty::Bool
 end # returns nothing is isempty = true, otherwise returns Trivial()
+```
 
+## [Details about ``dual``, ``conj``, ``flip``](@id ss_others)
+In ``vectorspaces.jl``:
+```julia
+function dual end
+dual(V::EuclideanSpace) = conj(V)
+Base.adjoint(V::VectorSpace) = dual(V)
+function flip end
+```
+
+In ``generalspace.jl``:
+```julia
+dual(V::GeneralSpace{𝕜}) where {𝕜} =
+    GeneralSpace{𝕜}(dim(V), !isdual(V), isconj(V))
+Base.conj(V::GeneralSpace{𝕜}) where {𝕜} =
+    GeneralSpace{𝕜}(dim(V), isdual(V), !isconj(V))
+```
+
+In `cartesianspace.jl`:
+```julia
+flip(V::CartesianSpace) = V
+```
+
+In `complexspace.jl`:
+```julia
+Base.conj(V::ComplexSpace) = ComplexSpace(dim(V), !isdual(V))
+flip(V::ComplexSpace) = dual(V)
+```
+
+In `sectors.jl`:
+`Base.conj(a::I)`: ``a̅``, conjugate or dual label of ``a``
+```julia
+dual(a::Sector) = conj(a)
+```
+
+In `trivial.jl`:
+```julia
+Base.conj(::Trivial) = Trivial()
+```
+
+In `anyons.jl`:
+```julia
+Base.conj(s::IsingAnyon) = s
+Base.conj(s::FibonacciAnyon) = s
+```
+
+In `irreps.jl`:
+```julia
+Base.conj(c::ZNIrrep{N}) where {N} = ZNIrrep{N}(-c.n)
+Base.conj(c::U1Irrep) = U1Irrep(-c.charge)
+Base.conj(s::SU2Irrep) = s
+Base.conj(c::CU1Irrep) = c
+```
+
+In `gradedspace.jl`:
+
+In fact, `GradedSpace` is the reason `flip` exists, cause
+in this case it is different than `dual`. The existence of flip originates from the
+non-trivial isomorphism between ``R_{\overline{a}}`` and ``R_{a}^*``, i.e. the
+representation space of the dual ``\overline{a}`` of sector ``a`` and the dual of the
+representation space of sector ``a``. In order for `flip(V)` to be isomorphic to `V`, it is
+such that, if `V = GradedSpace(a=>n_a,...)` then
+`flip(V) = dual(GradedSpace(dual(a)=>n_a,....))`.
+
+In the structure of `TensorXD.jl`
+```julia
+sectors(V::GradedSpace{I,<:AbstractDict}) where {I<:Sector} =
+    SectorSet{I}(s->isdual(V) ? dual(s) : s, keys(V.dims))
+sectors(V::GradedSpace{I,NTuple{N,Int}}) where {I<:Sector, N} =
+    SectorSet{I}(Iterators.filter(n->V.dims[n]!=0, 1:N)) do n
+        isdual(V) ? dual(values(I)[n]) : values(I)[n]
+dim(V::GradedSpace{I,<:AbstractDict}, c::I) where {I<:Sector} =
+    get(V.dims, isdual(V) ? dual(c) : c, 0)
+dim(V::GradedSpace{I,<:Tuple}, c::I) where {I<:Sector} =
+    V.dims[findindex(values(I), isdual(V) ? dual(c) : c)]    
+Base.conj(V::GradedSpace) = typeof(V)(V.dims, !V.dual)
+function flip(V::GradedSpace{I}) where {I<:Sector}
+    if isdual(V)
+        typeof(V)(c=>dim(V, c) for c in sectors(V))
+    else
+        typeof(V)(dual(c)=>dim(V, c) for c in sectors(V))'
+    end
+end        
 ```
 ## [VectorSpace type](@id ss_vectorspace_type)
 
