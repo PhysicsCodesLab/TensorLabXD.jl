@@ -32,20 +32,20 @@ function CartesianSpace(dims::AbstractDict; kwargs...)
 end
 
 # convenience constructor
-Base.getindex(::RealNumbers) = CartesianSpace
+Base.getindex(::RealNumbers) = CartesianSpace # make ℝ[] a synonyms for CartesianSpace
 Base.:^(::RealNumbers, d::Int) = CartesianSpace(d)
 
 # Corresponding methods:
 #------------------------
+Base.oneunit(::Type{CartesianSpace}) = CartesianSpace(1)
+
 dim(V::CartesianSpace) = V.d
+Base.axes(V::CartesianSpace) = Base.OneTo(dim(V))
 flip(V::CartesianSpace) = V
 ⊕(V1::CartesianSpace, V2::CartesianSpace) = CartesianSpace(V1.d+V2.d)
 fuse(V1::CartesianSpace, V2::CartesianSpace) = CartesianSpace(V1.d*V2.d)
 
 infimum(V1::CartesianSpace, V2::CartesianSpace) = CartesianSpace(min(V1.d, V2.d))
 supremum(V1::CartesianSpace, V2::CartesianSpace) = CartesianSpace(max(V1.d, V2.d))
-
-Base.oneunit(::Type{CartesianSpace}) = CartesianSpace(1)
-Base.axes(V::CartesianSpace) = Base.OneTo(dim(V))
 
 Base.show(io::IO, V::CartesianSpace) = print(io, "ℝ^$(V.d)")

@@ -30,6 +30,28 @@ ProductSpace(P::ProductSpace) = P
 ⊗(V::ElementarySpace) = ProductSpace((V,))
 ⊗(P::ProductSpace) = P
 
+# Functionality for extracting and iterating over spaces
+#--------------------------------------------------------
+Base.length(P::ProductSpace) = length(P.spaces)
+Base.getindex(P::ProductSpace, n::Integer) = P.spaces[n]
+
+@inline function Base.iterate(P::ProductSpace, ::Val{i} = Val(1)) where {i}
+    if i > length(P)
+        return nothing
+    else
+        return P.spaces[i], Val(i+1)
+    end
+end
+Base.indexed_iterate(P::ProductSpace, args...) = Base.indexed_iterate(P.spaces, args...)
+
+Base.eltype(P::ProductSpace) = eltype(typeof(P))
+Base.eltype(::Type{<:ProductSpace{S}}) where {S<:ElementarySpace} = S
+
+Base.IteratorEltype(::Type{<:ProductSpace}) = Base.HasEltype()
+Base.IteratorSize(::Type{<:ProductSpace}) = Base.HasLength()
+Base.hash(P::ProductSpace, h::UInt) = hash(P.spaces, h)
+Base.:(==)(P1::ProductSpace, P2::ProductSpace) = (P1.spaces == P2.spaces)
+
 # Corresponding methods
 #-----------------------
 """
@@ -38,12 +60,31 @@ ProductSpace(P::ProductSpace) = P
 Return the dimensions of the spaces in the tensor product space as a tuple of integers.
 """
 dims(P::ProductSpace) = map(dim, P.spaces)
+
+"""
+    dim(P::ProductSpace, n::Int) -> Int
+
+Return the dimension of the `n`th vector space in the product space `P`.
+"""
 dim(P::ProductSpace, n::Int) = dim(P.spaces[n])
+
+"""
+    dim(::ProductSpace) -> Int
+
+Return the total dimension of the tensor product space.
+"""
 dim(P::ProductSpace) = prod(dims(P))
 
 Base.axes(P::ProductSpace) = map(axes, P.spaces)
 Base.axes(P::ProductSpace, n::Int) = axes(P.spaces[n])
+Base.axes(P::ProductSpace{<:ElementarySpace, N}, sectors::NTuple{N, <:Sector}) where {N} =
+    map(axes, P.spaces, sectors)
 
+"""
+    dual(P::ProductSpace) -> ProductSpace
+
+Return the product space with reversed order of vector spaces the input product space. Each vector space is the dual one.
+"""
 dual(P::ProductSpace{<:ElementarySpace, 0}) = P
 dual(P::ProductSpace) = ProductSpace(map(dual, reverse(P.spaces)))
 
@@ -108,9 +149,6 @@ spaces in the tensor product, obtained as `prod(dims(P, s))``.
 dim(P::ProductSpace{<:ElementarySpace, N}, sector::NTuple{N, <:Sector}) where {N} =
     reduce(*, dims(P, sector); init = 1)
 
-Base.axes(P::ProductSpace{<:ElementarySpace, N}, sectors::NTuple{N, <:Sector}) where {N} =
-    map(axes, P.spaces, sectors)
-
 """
     blocksectors(P::ProductSpace)
 
@@ -159,10 +197,6 @@ function blockdim(P::ProductSpace, c::Sector)
     return d
 end
 
-Base.:(==)(P1::ProductSpace, P2::ProductSpace) = (P1.spaces == P2.spaces)
-
-Base.hash(P::ProductSpace, h::UInt) = hash(P.spaces, h)
-
 # unit element with respect to the monoidal structure of taking tensor products
 """
     one(::S) where {S<:ElementarySpace} -> ProductSpace{S, 0}
@@ -176,12 +210,14 @@ Base.one(::Type{<:ProductSpace{S}}) where {S<:ElementarySpace} = ProductSpace{S,
 Base.one(::Type{S}) where {S<:ElementarySpace} = ProductSpace{S, 0}(())
 
 Base.convert(::Type{<:ProductSpace}, V::ElementarySpace) = ProductSpace((V,))
+Base.convert(::Type{S}, P::ProductSpace{S, 0}) where {S<:ElementarySpace} = oneunit(S)
+Base.convert(::Type{S}, P::ProductSpace{S}) where {S<:ElementarySpace} = fuse(P.spaces...)
+
 Base.:^(V::ElementarySpace, N::Int) = ProductSpace{typeof(V), N}(ntuple(n->V, N))
 Base.:^(V::ProductSpace, N::Int) = ⊗(ntuple(n->V, N)...)
 Base.literal_pow(::typeof(^), V::ElementarySpace, p::Val{N}) where N =
     ProductSpace{typeof(V), N}(ntuple(n->V, p))
-Base.convert(::Type{S}, P::ProductSpace{S, 0}) where {S<:ElementarySpace} = oneunit(S)
-Base.convert(::Type{S}, P::ProductSpace{S}) where {S<:ElementarySpace} = fuse(P.spaces...)
+
 fuse(P::ProductSpace{S, 0}) where {S<:ElementarySpace} = oneunit(S)
 fuse(P::ProductSpace{S}) where {S<:ElementarySpace} = fuse(P.spaces...)
 
@@ -204,23 +240,3 @@ function insertunit(P::ProductSpace, i::Int = length(P)+1; dual = false, conj = 
     end
     ProductSpace(TupleTools.insertafter(P.spaces, i-1, (u,)))
 end
-
-# Functionality for extracting and iterating over spaces
-#--------------------------------------------------------
-Base.length(P::ProductSpace) = length(P.spaces)
-Base.getindex(P::ProductSpace, n::Integer) = P.spaces[n]
-
-@inline function Base.iterate(P::ProductSpace, ::Val{i} = Val(1)) where {i}
-    if i > length(P)
-        return nothing
-    else
-        return P.spaces[i], Val(i+1)
-    end
-end
-Base.indexed_iterate(P::ProductSpace, args...) = Base.indexed_iterate(P.spaces, args...)
-
-Base.eltype(::Type{<:ProductSpace{S}}) where {S<:ElementarySpace} = S
-Base.eltype(P::ProductSpace) = eltype(typeof(P))
-
-Base.IteratorEltype(::Type{<:ProductSpace}) = Base.HasEltype()
-Base.IteratorSize(::Type{<:ProductSpace}) = Base.HasLength()

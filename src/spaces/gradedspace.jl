@@ -68,7 +68,7 @@ construct or obtain the concrete type `GradedSpace{I,D}` instances without havin
 specify `D`.
 """
 const Vect = SpaceTable()
-Base.getindex(::SpaceTable) = ComplexSpace
+Base.getindex(::SpaceTable) = ComplexSpace # Vect[] = ComplexSpace
 Base.getindex(::SpaceTable, ::Type{Trivial}) = ComplexSpace
 function Base.getindex(::SpaceTable, I::Type{<:Sector})
     if Base.IteratorSize(values(I)) isa Union{HasLength, HasShape}
@@ -162,14 +162,14 @@ sectors(V::GradedSpace{I,NTuple{N,Int}}) where {I<:Sector, N} =
     SectorSet{I}(Iterators.filter(n->V.dims[n]!=0, 1:N)) do n
         isdual(V) ? dual(values(I)[n]) : values(I)[n]
     end
-	
+
 dim(V::GradedSpace{I,<:AbstractDict}, c::I) where {I<:Sector} =
     get(V.dims, isdual(V) ? dual(c) : c, 0)
 dim(V::GradedSpace{I,<:Tuple}, c::I) where {I<:Sector} =
     V.dims[findindex(values(I), isdual(V) ? dual(c) : c)]
 dim(V::GradedSpace) =
     reduce(+, dim(V, c) * dim(c) for c in sectors(V); init = zero(dim(one(sectortype(V)))))
-	
+
 hassector(V::GradedSpace{I}, s::I) where {I<:Sector} = dim(V, s) != 0
 
 Base.conj(V::GradedSpace) = typeof(V)(V.dims, !V.dual)

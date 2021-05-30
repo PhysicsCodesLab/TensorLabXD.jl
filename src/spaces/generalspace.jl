@@ -24,15 +24,14 @@ GeneralSpace{𝕜}(d::Int = 0; dual::Bool = false, conj::Bool = false) where {�
     GeneralSpace{𝕜}(d, dual, conj)
 
 dim(V::GeneralSpace) = V.d
-isdual(V::GeneralSpace) = V.dual
-isconj(V::GeneralSpace) = V.conj # local use, does not export
+Base.axes(V::GeneralSpace) = Base.OneTo(dim(V))
 dual(V::GeneralSpace{𝕜}) where {𝕜} =
     GeneralSpace{𝕜}(dim(V), !isdual(V), isconj(V))
-	
+isdual(V::GeneralSpace) = V.dual
 Base.conj(V::GeneralSpace{𝕜}) where {𝕜} =
     GeneralSpace{𝕜}(dim(V), isdual(V), !isconj(V))
-Base.axes(V::GeneralSpace) = Base.OneTo(dim(V))
 
+isconj(V::GeneralSpace) = V.conj # local use, does not export
 function Base.show(io::IO, V::GeneralSpace{𝕜}) where {𝕜}
     if isconj(V)
         print(io, "conj(")
@@ -45,4 +44,3 @@ function Base.show(io::IO, V::GeneralSpace{𝕜}) where {𝕜}
         print(io, ")")
     end
 end
-

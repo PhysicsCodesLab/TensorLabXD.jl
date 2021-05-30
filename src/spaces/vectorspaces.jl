@@ -135,10 +135,12 @@ field(P::Type{<:CompositeSpace}) = field(spacetype(P))
 Return the vector space associated to object `a`.
 """
 function spacetype end
-spacetype(S::Type{<:ElementarySpace}) = S
 spacetype(V::ElementarySpace) = typeof(V)
-spacetype(::Type{<:CompositeSpace{S}}) where S = S
+spacetype(S::Type{<:ElementarySpace}) = S
+
 spacetype(V::CompositeSpace) = spacetype(typeof(V))
+spacetype(::Type{<:CompositeSpace{S}}) where S = S
+
 
 """
     oneunit(V::S) where {S<:ElementarySpace} -> S
@@ -192,8 +194,6 @@ dimension, i.e. `dim(V, a) > 0`.
 function hassector end
 hassector(V::ElementarySpace, ::Trivial) = dim(V) != 0
 
-Base.axes(V::ElementarySpace, ::Trivial) = axes(V)
-
 """
     dim(V::VectorSpace) -> Int
 
@@ -205,6 +205,8 @@ dim(V::ElementarySpace, ::Trivial) =
     sectortype(V) == Trivial ? dim(V) : throw(SectorMismatch())
 # make ElementarySpace instances behave similar to ProductSpace instances
 blockdim(V::ElementarySpace, c::Sector) = dim(V, c)
+
+Base.axes(V::ElementarySpace, ::Trivial) = axes(V)
 
 """
     dual(V::VectorSpace) -> VectorSpace
@@ -254,7 +256,7 @@ function flip end
 """
     ⊕(V1::S, V2::S, V3::S...) where {S<:ElementarySpace} -> S
 
-Return the corresponding vector space of type `S` that represents the direct sum sum of the
+Return the corresponding vector space of type `S` that represents the direct sum of the
 spaces `V1`, `V2`, ... Note that all the individual spaces should have the same value for
 [`isdual`](@ref), as otherwise the direct sum is not defined.
 """

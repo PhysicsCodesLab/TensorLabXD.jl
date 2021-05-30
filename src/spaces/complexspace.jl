@@ -30,23 +30,24 @@ function ComplexSpace(dims::AbstractDict; kwargs...)
 end
 
 # convenience constructor
-Base.getindex(::ComplexNumbers) = ComplexSpace
+Base.getindex(::ComplexNumbers) = ComplexSpace # make ℂ[] a synonyms for ComplexSpace
 Base.:^(::ComplexNumbers, d::Int) = ComplexSpace(d)
 
 # Corresponding methods:
 #------------------------
-dim(V::ComplexSpace) = V.d
-isdual(V::ComplexSpace) = V.dual
-Base.axes(V::ComplexSpace) = Base.OneTo(dim(V))
-
-Base.conj(V::ComplexSpace) = ComplexSpace(dim(V), !isdual(V))
-
 Base.oneunit(::Type{ComplexSpace}) = ComplexSpace(1)
+
+dim(V::ComplexSpace) = V.d
+Base.axes(V::ComplexSpace) = Base.OneTo(dim(V))
+isdual(V::ComplexSpace) = V.dual
+Base.conj(V::ComplexSpace) = ComplexSpace(dim(V), !isdual(V))
+flip(V::ComplexSpace) = dual(V)
+
 ⊕(V1::ComplexSpace, V2::ComplexSpace) = isdual(V1) == isdual(V2) ?
     ComplexSpace(dim(V1)+dim(V2), isdual(V1)) :
     throw(SpaceMismatch("Direct sum of a vector space and its dual does not exist"))
 fuse(V1::ComplexSpace, V2::ComplexSpace) = ComplexSpace(V1.d*V2.d)
-flip(V::ComplexSpace) = dual(V)
+
 
 infimum(V1::ComplexSpace, V2::ComplexSpace) = isdual(V1) == isdual(V2) ?
     ComplexSpace(min(dim(V1), dim(V2)), isdual(V1)) :
