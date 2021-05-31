@@ -95,7 +95,7 @@ blockdim(V::ElementarySpace, c::Sector) = dim(V, c) # make ElementarySpace insta
 blockdim(P::ProductSpace, c::Sector) # Return the total dimension of a coupled sector `c` in the product space
 Base.axes
 dual # returns the dual space (dual(a)==a^*); for product space the sequence of the vector spaces are reversed.
-Base.adjoint(V::VectorSpace) = dual(V)
+Base.adjoint(V::VectorSpace) = dual(V) # make V' as the dual of V
 isdual # wether an ElementarySpace `V` is normal or rather a dual space
 Base.conj # returns the complex conjugate space (conj(a)==a̅)
 flip # flip(a)==a̅^*

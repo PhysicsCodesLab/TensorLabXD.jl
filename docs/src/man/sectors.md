@@ -174,10 +174,8 @@ fusiontensor(a::SU2Irrep, b::SU2Irrep, c::SU2Irrep)
 fusiontreetype(::Type{I}, N::Int) where {I<:Sector}  # Facilitate getting correct fusion tree types
 sectortype(::Type{<:FusionTree{I}})
 Base.length(::Type{<:FusionTree{<:Sector, N}}) where {N} = N
-function Base.isequal(f1::FusionTree{I, N}, f2::FusionTree{I, N}) where {I<:Sector, N}
-function fusiontrees(uncoupled::NTuple{N, I}, coupled::I = one(I),
-                        isdual::NTuple{N, Bool} = ntuple(n->false, Val(N))) where
-                        {N, I<:Sector}
+Base.isequal(f1::FusionTree{I, N}, f2::FusionTree{I, N}) where {I<:Sector, N}
+function fusiontrees(uncoupled::NTuple{N, I}, coupled::I = one(I), isdual::NTuple{N, Bool} = ntuple(n->false, Val(N))) where {N, I<:Sector}
     FusionTreeIterator{I, N}(uncoupled, coupled, isdual)
 end    
 fusiontreedict(I) = FusionStyle(I) isa UniqueFusion ? SingletonDict : FusionTreeDict
@@ -191,17 +189,13 @@ foldleft(f1::FusionTree{I}, f2::FusionTree{I}) where I # map first fusion vertex
 iscyclicpermutation(p)
 cycleclockwise(f1::FusionTree{I}, f2::FusionTree{I}) where {I<:Sector} # clockwise cyclic permutation while preserving (N₁, N₂): foldright & bendleft
 cycleanticlockwise(f1::FusionTree{I}, f2::FusionTree{I}) where {I<:Sector} # anticlockwise cyclic permutation while preserving (N₁, N₂): foldleft & bendright
-repartition(f1::FusionTree{I, N₁}, f2::FusionTree{I, N₂}, N::Int) where {I, N₁, N₂}
--> <:AbstractDict{Tuple{FusionTree{I, N}, FusionTree{I, N₁+N₂-N}}, <:Number}
+repartition(f1::FusionTree{I, N₁}, f2::FusionTree{I, N₂}, N::Int) where {I, N₁, N₂} -> <:AbstractDict{Tuple{FusionTree{I, N}, FusionTree{I, N₁+N₂-N}}, <:Number}
 Base.transpose(f1::FusionTree{I}, f2::FusionTree{I}, p1::IndexTuple{N₁}, p2::IndexTuple{N₂}) where {I<:Sector, N₁, N₂}
 artin_braid(f::FusionTree, i; inv::Bool = false) -> <:AbstractDict{typeof(f), <:Number} # Perform an elementary braid (Artin generator) of neighbouring uncoupled indices `i` and `i+1` on a fusion tree `f`, and returns the result as a dictionary of output trees and corresponding coefficients.
 braid(f::FusionTree{<:Sector, N}, levels::NTuple{N, Int}, p::NTuple{N, Int}) -> <:AbstractDict{typeof(t), <:Number}
 permute(f::FusionTree, p::NTuple{N, Int}) -> <:AbstractDict{typeof(t), <:Number}
-braid(f1::FusionTree{I}, f2::FusionTree{I}, levels1::IndexTuple, levels2::IndexTuple,
-        p1::IndexTuple{N₁}, p2::IndexTuple{N₂}) where {I<:Sector, N₁, N₂}
--> <:AbstractDict{Tuple{FusionTree{I, N₁}, FusionTree{I, N₂}}, <:Number}
-permute(f1::FusionTree{I}, f2::FusionTree{I}, p1::NTuple{N₁, Int}, p2::NTuple{N₂, Int}) where {I, N₁, N₂}
--> <:AbstractDict{Tuple{FusionTree{I, N₁}, FusionTree{I, N₂}}, <:Number}
+braid(f1::FusionTree{I}, f2::FusionTree{I}, levels1::IndexTuple, levels2::IndexTuple, p1::IndexTuple{N₁}, p2::IndexTuple{N₂}) where {I<:Sector, N₁, N₂} -> <:AbstractDict{Tuple{FusionTree{I, N₁}, FusionTree{I, N₂}}, <:Number}
+permute(f1::FusionTree{I}, f2::FusionTree{I}, p1::NTuple{N₁, Int}, p2::NTuple{N₂, Int}) where {I, N₁, N₂} -> <:AbstractDict{Tuple{FusionTree{I, N₁}, FusionTree{I, N₂}}, <:Number}
 ```
 ## [Others structures](@id s_others)
 ```julia
