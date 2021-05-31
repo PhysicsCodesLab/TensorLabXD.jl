@@ -81,9 +81,11 @@ sectors # an iterator over the different sectors of an ElementarySpace
 sectors(P::ProductSpace{S, N}) # Return an iterator over all possible combinations of sectors (represented as an `NTuple{N, sectortype(S)}`) that can appear within the tensor product space `P`.
 blocksectors(V::ElementarySpace) = sectors(V) # make ElementarySpace instances behave similar to ProductSpace instances
 blocksectors(P::ProductSpace) # Return an iterator over the different unique coupled sector labels
+blocksectors(W::HomSpace) # Return an iterator over the different unique coupled sector labels, i.e. the intersection of the different fusion outputs that can be obtained by fusing the sectors present in the domain, as well as from the codomain.
 hassector # whether a vector space `V` has a subspace corresponding to sector `a` with non-zero dimension
 hassector(P::ProductSpace{S, N}, s::NTuple{N, sectortype(S)}) # Query whether `P` has a non-zero degeneracy of sector `s`, representing a combination of sectors on the individual tensor indices.
 dim # total dimension of a vector space or a product space
+dim(W::HomSpace) # Return the total dimension of a `HomSpace`, i.e. the number of linearly independent morphisms that can be constructed within this space.
 dim(V::GradedSpace, c::I) # dime for sector c in a Graded Space
 dim(P::ProductSpace, n::Int) # dim for the `n`th vector space of the product space
 dim(P::ProductSpace{S, N}, s::NTuple{N, sectortype(S)}) # Return the total degeneracy dimension corresponding to a tuple of sectors for each of the spaces in the tensor product, obtained as `prod(dims(P, s))``.
@@ -123,6 +125,10 @@ Base.hash
 Base.convert
 Base.:^
 insertunit(P::ProductSpace, i::Int = length(P)+1; dual = false, conj = false) # For `P::ProductSpace{S,N}`, this adds an extra tensor product factor at position `1 <= i <= N+1` (last position by default) which is just a the `S`-equivalent of the underlying field of scalars, i.e. `oneunit(S)`.
+→(dom::TensorSpace{S}, codom::TensorSpace{S}) where {S<:ElementarySpace} =
+    HomSpace(ProductSpace(codom), ProductSpace(dom))
+←(codom::TensorSpace{S}, dom::TensorSpace{S}) where {S<:ElementarySpace} =
+    HomSpace(ProductSpace(codom), ProductSpace(dom))    
 ```
 ## [Operations](@id ss_operations)
 
@@ -243,6 +249,15 @@ of the morphism, while the adjoint of a morphism is called the dagger of the mor
 dual(W::HomSpace) = HomSpace(dual(W.domain), dual(W.codomain))
 Base.adjoint(W::HomSpace{<:EuclideanSpace}) = HomSpace(W.domain, W.codomain)
 ```
+The sequence of the elementary spaces in a TensorMapSpace is defined as ``1:N_1``
+for codomain vectors, and ``N_1+1:N_1+N_2`` for domain dual vectors. Note that
+the sequence of the domain vectors are not reversed, and the dual is taken
+individually for each elementary space.
+```julia
+Base.getindex(W::TensorMapSpace{<:IndexSpace, N₁, N₂}, i) where {N₁, N₂} =
+    i <= N₁ ? codomain(W)[i] : dual(domain(W)[i-N₁])
+```
+
 ## [VectorSpace type](@id ss_vectorspace_type)
 
 From the [Introduction](@ref s_intro), it should be clear that an important aspect in the
