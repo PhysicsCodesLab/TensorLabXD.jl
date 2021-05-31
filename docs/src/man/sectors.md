@@ -65,7 +65,6 @@ const GroupTuple = Tuple{Vararg{Group}}
 abstract type ProductGroup{T<:GroupTuple} <: Group end
 
 abstract type AbstractIrrep{G<:Group} <: Sector end # irreps have integer quantum dimensions
-BraidingStyle(::Type{<:AbstractIrrep}) = Bosonic()
 struct IrrepTable end
 const Irrep = IrrepTable()
 
@@ -150,9 +149,9 @@ const BraidKey{I<:Sector, N₁, N₂} = Tuple{<:FusionTree{I}, <:FusionTree{I},
 ```julia
 Base.one(a::Sector) = one(typeof(a)) # Return the unit element within this type of sector.
 dual(a::Sector) = conj(a)
-Base.conj
-Base.isreal(I::Type{<:Sector})
-Base.isless
+Base.conj # this should be implemented
+Base.isreal(I::Type{<:Sector}) # whether topological data real
+Base.isless # give a canonical order for the simple objects in a sector
 Base.:& # combine fusion/braiding properties of tensor products of sectors
 FusionStyle(a::Sector) = FusionStyle(typeof(a))
 ⊗(a::I, b::I) where {I<:Sector}  # Return an iterable of elements of `c::I` that appear in the fusion product `a ⊗ b`.
@@ -199,7 +198,7 @@ permute(f1::FusionTree{I}, f2::FusionTree{I}, p1::NTuple{N₁, Int}, p2::NTuple{
 ```
 ## [Others structures](@id s_others)
 ```julia
-struct SectorSet{I<:Sector, F, S} # Custum generator to represent sets of sectors with type inference
+struct SectorSet{I<:Sector, F, S} # behaves as an iterator that applies x->convert(I, f(x)) on the elements of set; if f is not provided it is just taken as the function identity.
     f::F
     set::S
 end
@@ -435,12 +434,14 @@ detail below. Fermions are somewhat in between, as their braiding is symmetric, 
 have a non-trivial *twist*. We thereto define a new type hierarchy
 ```julia
 abstract type BraidingStyle end # generic braiding
-abstract type SymmetricBraiding <: BraidingStyle end
-struct Bosonic <: SymmetricBraiding end
-struct Fermionic <: SymmetricBraiding end
-struct Anyonic <: BraidingStyle end
+abstract type HasBraiding <: BraidingStyle end
+struct NoBraiding <: BraidingStyle end
+abstract type SymmetricBraiding <: HasBraiding end # symmetric braiding => actions of permutation group are well defined
+struct Bosonic <: SymmetricBraiding end # all twists are one
+struct Fermionic <: SymmetricBraiding end # twists one and minus one
+struct Anyonic <: HasBraiding end
 ```
-New sector types `I<:Sector` should then indicate which fusion style they have by defining
+New sector types `I<:Sector` should then indicate which braiding style they have by defining
 `BraidingStyle(::Type{})`. Note that `Bosonic()` braiding does not mean that all
 permutations are trivial and ``R^{ab}_c = 1``, but that ``R^{ab}_c R^{ba}_c = 1``. For
 example, for the irreps of ``\mathsf{SU}_2``, the R-symbol associated with the fusion of
@@ -893,7 +894,7 @@ specifically a `NTuple{N, Int}` with `N = length(values(I))`. The methods
 these types can be created in a type stable manner.
 
 ### Constructing instances
-As mentioned, the convenience mehtod `Vect[I]` will return the concrete type
+As mentioned, the convenience method `Vect[I]` will return the concrete type
 `GradedSpace{I,D}` with the matching value of `D`, so that should never be a user's
 concern. In fact, for consistency, `Vect[Trivial]` will just return `ComplexSpace`,
 which is not even a specific type of `GradedSpace`. There is also the Unicode alias `ℂ[I]`,
