@@ -176,7 +176,7 @@ Base.length(::Type{<:FusionTree{<:Sector, N}}) where {N} = N
 Base.isequal(f1::FusionTree{I, N}, f2::FusionTree{I, N}) where {I<:Sector, N}
 function fusiontrees(uncoupled::NTuple{N, I}, coupled::I = one(I), isdual::NTuple{N, Bool} = ntuple(n->false, Val(N))) where {N, I<:Sector}
     FusionTreeIterator{I, N}(uncoupled, coupled, isdual)
-end    
+end # returns an iterator over all possible fusion trees from a set of N uncoupled sectors to a given coupled sector
 fusiontreedict(I) = FusionStyle(I) isa UniqueFusion ? SingletonDict : FusionTreeDict
 insertat(f::FusionTree{I, N₁}, i::Int, f2::FusionTree{I, N₂}) -> <:AbstractDict{<:FusionTree{I, N₁+N₂-1}, <:Number}
 split(f::FusionTree{I, N}, M::Int) -> (::FusionTree{I, M}, ::FusionTree{I, N-M+1})
@@ -953,7 +953,7 @@ There are a number of methods to work with instances `V` of `GradedSpace`. The
 function [`sectortype`](@ref) returns the type of the sector labels. It also works on other
 vector spaces, in which case it returns [`Trivial`](@ref). The function [`sectors`](@ref)
 returns an iterator over the different sectors `a` with non-zero `n_a`, for other
-`ElementarySpace` types it returns `(Trivial,)`. The degeneracy dimensions `n_a` can be
+`ElementarySpace` types it returns `(Trivial(),)`. The degeneracy dimensions `n_a` can be
 extracted as `dim(V, a)`, it properly returns `0` if sector `a` is not present in the
 decomposition of `V`. With [`hassector(V, a)`](@ref) one can check if `V` contains a sector
 `a` with `dim(V,a)>0`. Finally, `dim(V)` returns the total dimension of the space `V`, i.e.
