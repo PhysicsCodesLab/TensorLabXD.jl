@@ -4,7 +4,214 @@
 using TensorXD
 using LinearAlgebra
 ```
+## [Types](@id s_types)
+```julia
+abstract type Sector end
+struct SectorValues{I<:Sector} end  # Singleton type to represent an iterator over the possible values of type `I`, whose instance is obtained as `values(I)`.
 
+abstract type FusionStyle end
+struct UniqueFusion <: FusionStyle end # unique fusion output when fusion two sectors
+abstract type MultipleFusion <: FusionStyle end
+struct SimpleFusion <: MultipleFusion end # multiple fusion but multiplicity free
+struct GenericFusion <: MultipleFusion end # multiple fusion with multiplicities
+const MultiplicityFreeFusion = Union{UniqueFusion, SimpleFusion}
+
+abstract type BraidingStyle end # generic braiding
+abstract type HasBraiding <: BraidingStyle end
+struct NoBraiding <: BraidingStyle end
+abstract type SymmetricBraiding <: HasBraiding end # symmetric braiding => actions of permutation group are well defined
+struct Bosonic <: SymmetricBraiding end # all twists are one
+struct Fermionic <: SymmetricBraiding end # twists one and minus one
+struct Anyonic <: HasBraiding end
+
+struct Trivial <: Sector end
+
+struct FibonacciAnyon <: Sector
+    isone::Bool
+    function FibonacciAnyon(s::Symbol)
+        s in (:I, :τ, :tau) || throw(ArgumentError("Unknown FibonacciAnyon $s."))
+        new(s === :I)
+    end
+end
+const _goldenratio = Float64(MathConstants.golden)
+
+struct IsingAnyon <: Sector
+    s::Symbol
+    function IsingAnyon(s::Symbol)
+        s == :sigma && (s = :σ)
+        s == :psi && (s = :ψ)
+        if !(s in (:I, :σ, :ψ))
+            throw(ValueError("Unknown IsingAnyon $s."))
+        end
+        new(s)
+    end
+end
+const all_isinganyons = (IsingAnyon(:I), IsingAnyon(:σ), IsingAnyon(:ψ))
+
+abstract type Group end
+abstract type AbelianGroup <: Group end
+
+abstract type ℤ{N} <: AbelianGroup end
+abstract type U₁ <: AbelianGroup end
+abstract type SU{N} <: Group end
+abstract type CU₁ <: Group end
+
+const ℤ₂ = ℤ{2}
+const ℤ₃ = ℤ{3}
+const ℤ₄ = ℤ{4}
+const SU₂ = SU{2}
+
+const GroupTuple = Tuple{Vararg{Group}}
+abstract type ProductGroup{T<:GroupTuple} <: Group end
+
+abstract type AbstractIrrep{G<:Group} <: Sector end # irreps have integer quantum dimensions
+BraidingStyle(::Type{<:AbstractIrrep}) = Bosonic()
+struct IrrepTable end
+const Irrep = IrrepTable()
+
+const AbelianIrrep{G} = AbstractIrrep{G} where {G<:AbelianGroup}
+
+struct ZNIrrep{N} <: AbstractIrrep{ℤ{N}}
+    n::Int8
+    function ZNIrrep{N}(n::Integer) where {N}
+        @assert N < 64
+        new{N}(mod(n, N))
+    end
+end
+const Z2Irrep = ZNIrrep{2}
+const Z3Irrep = ZNIrrep{3}
+const Z4Irrep = ZNIrrep{4}
+
+struct U1Irrep <: AbstractIrrep{U₁}
+    charge::HalfInt
+end
+
+struct SU2IrrepException <: Exception end
+struct SU2Irrep <: AbstractIrrep{SU₂}
+    j::HalfInt
+    function SU2Irrep(j)
+        j >= zero(j) || error("Not a valid SU₂ irrep")
+        new(j)
+    end
+end
+const _su2one = SU2Irrep(zero(HalfInt))
+
+struct CU1Irrep <: AbstractIrrep{CU₁}
+    j::HalfInt # value of the U1 charge
+    s::Int # rep of charge conjugation:
+    # if j == 0, s = 0 (trivial) or s = 1 (non-trivial),
+    # else s = 2 (two-dimensional representation)
+    # Let constructor take the actual half integer value j
+    function CU1Irrep(j::Real, s::Integer = ifelse(j>zero(j), 2, 0))
+        if ((j > zero(j) && s == 2) || (j == zero(j) && (s == 0 || s == 1)))
+            new(j, s)
+        else
+            error("Not a valid CU₁ irrep")
+        end
+    end
+end
+
+struct FusionTree{I<:Sector, N, M, L, T}
+    uncoupled::NTuple{N, I}
+    coupled::I
+    isdual::NTuple{N, Bool}
+    innerlines::NTuple{M, I} # M = N-2
+    vertices::NTuple{L, T} # L = N-1
+    function FusionTree{I, N, M, L, T}(uncoupled::NTuple{N, I},
+                                            coupled::I,
+                                            isdual::NTuple{N, Bool},
+                                            innerlines::NTuple{M, I},
+                                            vertices::NTuple{L, T}) where
+                                            {I<:Sector, N, M, L, T}
+        new{I, N, M, L, T}(uncoupled, coupled, isdual, innerlines, vertices)
+    end
+end
+
+struct FusionTreeIterator{I<:Sector, N}
+    uncoupled::NTuple{N, I}
+    coupled::I
+    isdual::NTuple{N, Bool}
+end
+
+const transposecache = LRU{Any, Any}(; maxsize = 10^5)
+const usetransposecache = Ref{Bool}(true)
+const TransposeKey{I<:Sector, N₁, N₂} = Tuple{<:FusionTree{I}, <:FusionTree{I},
+                                                IndexTuple{N₁}, IndexTuple{N₂}}
+
+const braidcache = LRU{Any, Any}(; maxsize = 10^5)
+const usebraidcache_abelian = Ref{Bool}(false)
+const usebraidcache_nonabelian = Ref{Bool}(true)    
+
+const BraidKey{I<:Sector, N₁, N₂} = Tuple{<:FusionTree{I}, <:FusionTree{I},
+                                        IndexTuple, IndexTuple,
+                                        IndexTuple{N₁}, IndexTuple{N₂}}                                            
+```
+## [Properties](@id_s_properties)
+```julia
+Base.one(a::Sector) = one(typeof(a)) # Return the unit element within this type of sector.
+dual(a::Sector) = conj(a)
+Base.conj
+Base.isreal(I::Type{<:Sector})
+Base.isless
+Base.:& # combine fusion/braiding properties of tensor products of sectors
+FusionStyle(a::Sector) = FusionStyle(typeof(a))
+⊗(a::I, b::I) where {I<:Sector}  # Return an iterable of elements of `c::I` that appear in the fusion product `a ⊗ b`.
+Nsymbol(a::I, b::I, c::I) where {I<:Sector} -> Integer # Return an `Integer` representing the number of times `c` appears in the fusion product `a ⊗ b`. Could be a `Bool` if `FusionStyle(I) == UniqueFusion()` or `SimpleFusion()`.
+Fsymbol(a::I, b::I, c::I, d::I, e::I, f::I) where {I<:Sector}
+vertex_ind2label(k::Int, a::I, b::I, c::I) where {I<:Sector} # Convert the index `k` of the fusion vertex (a,b)->c into a label.
+vertex_labeltype(I::Type{<:Sector}) -> Type # Return the type of labels for the fusion vertices of sectors of type `I`.
+dim(a::Sector) # Return the (quantum) dimension of the sector `a`.
+sqrtdim(a::Sector)
+isqrtdim(a::Sector) # inverse of `sqrtdim(a::Sector)`
+frobeniusschur(a::Sector) # Return the Frobenius-Schur indicator of a sector `a`.
+Bsymbol(a::I, b::I, c::I) where {I<:Sector}
+Asymbol(a::I, b::I, c::I) where {I<:Sector}
+BraidingStyle(a::Sector) = BraidingStyle(typeof(a))
+Rsymbol(a::I, b::I, c::I) where {I<:Sector}
+twist(a::Sector)
+×(a::Type{<:Group}, b::Type{<:Group}, c::Type{<:Group}...) = ×(×(a, b), c...) # Product of Groups
+fusiontensor(a::SU2Irrep, b::SU2Irrep, c::SU2Irrep)
+fusiontreetype(::Type{I}, N::Int) where {I<:Sector}  # Facilitate getting correct fusion tree types
+sectortype(::Type{<:FusionTree{I}})
+Base.length(::Type{<:FusionTree{<:Sector, N}}) where {N} = N
+function Base.isequal(f1::FusionTree{I, N}, f2::FusionTree{I, N}) where {I<:Sector, N}
+function fusiontrees(uncoupled::NTuple{N, I}, coupled::I = one(I),
+                        isdual::NTuple{N, Bool} = ntuple(n->false, Val(N))) where
+                        {N, I<:Sector}
+    FusionTreeIterator{I, N}(uncoupled, coupled, isdual)
+end    
+fusiontreedict(I) = FusionStyle(I) isa UniqueFusion ? SingletonDict : FusionTreeDict
+insertat(f::FusionTree{I, N₁}, i::Int, f2::FusionTree{I, N₂}) -> <:AbstractDict{<:FusionTree{I, N₁+N₂-1}, <:Number}
+split(f::FusionTree{I, N}, M::Int) -> (::FusionTree{I, M}, ::FusionTree{I, N-M+1})
+merge(f1::FusionTree{I, N₁}, f2::FusionTree{I, N₂}, c::I, μ = nothing) -> <:AbstractDict{<:FusionTree{I, N₁+N₂}, <:Number}
+bendright(f1::FusionTree{I, N₁}, f2::FusionTree{I, N₂}) where {I<:Sector, N₁, N₂} # map final splitting vertex (a, b)<-c to fusion vertex a<-(c, dual(b))
+bendleft(f1::FusionTree{I}, f2::FusionTree{I}) where I # map final fusion vertex c<-(a, b) to splitting vertex (c, dual(b))<-a
+foldright(f1::FusionTree{I, N₁}, f2::FusionTree{I, N₂}) where {I<:Sector, N₁, N₂} # map first splitting vertex (a, b)<-c to fusion vertex b<-(dual(a), c)
+foldleft(f1::FusionTree{I}, f2::FusionTree{I}) where I # map first fusion vertex c<-(a, b) to splitting vertex (dual(a), c)<-b
+iscyclicpermutation(p)
+cycleclockwise(f1::FusionTree{I}, f2::FusionTree{I}) where {I<:Sector} # clockwise cyclic permutation while preserving (N₁, N₂): foldright & bendleft
+cycleanticlockwise(f1::FusionTree{I}, f2::FusionTree{I}) where {I<:Sector} # anticlockwise cyclic permutation while preserving (N₁, N₂): foldleft & bendright
+repartition(f1::FusionTree{I, N₁}, f2::FusionTree{I, N₂}, N::Int) where {I, N₁, N₂}
+-> <:AbstractDict{Tuple{FusionTree{I, N}, FusionTree{I, N₁+N₂-N}}, <:Number}
+Base.transpose(f1::FusionTree{I}, f2::FusionTree{I}, p1::IndexTuple{N₁}, p2::IndexTuple{N₂}) where {I<:Sector, N₁, N₂}
+artin_braid(f::FusionTree, i; inv::Bool = false) -> <:AbstractDict{typeof(f), <:Number} # Perform an elementary braid (Artin generator) of neighbouring uncoupled indices `i` and `i+1` on a fusion tree `f`, and returns the result as a dictionary of output trees and corresponding coefficients.
+braid(f::FusionTree{<:Sector, N}, levels::NTuple{N, Int}, p::NTuple{N, Int}) -> <:AbstractDict{typeof(t), <:Number}
+permute(f::FusionTree, p::NTuple{N, Int}) -> <:AbstractDict{typeof(t), <:Number}
+braid(f1::FusionTree{I}, f2::FusionTree{I}, levels1::IndexTuple, levels2::IndexTuple,
+        p1::IndexTuple{N₁}, p2::IndexTuple{N₂}) where {I<:Sector, N₁, N₂}
+-> <:AbstractDict{Tuple{FusionTree{I, N₁}, FusionTree{I, N₂}}, <:Number}
+permute(f1::FusionTree{I}, f2::FusionTree{I}, p1::NTuple{N₁, Int}, p2::NTuple{N₂, Int}) where {I, N₁, N₂}
+-> <:AbstractDict{Tuple{FusionTree{I, N₁}, FusionTree{I, N₂}}, <:Number}
+```
+## [Others structures](@id s_others)
+```julia
+struct SectorSet{I<:Sector, F, S} # Custum generator to represent sets of sectors with type inference
+    f::F
+    set::S
+end
+```
+
+## [General arguments](@id ss_general)
 Symmetries in a physical system often result in tensors which are invariant under the action
 of the symmetry group, where this group acts as a tensor product of group actions on every
 tensor index separately. The group action on a single index, or thus, on the corresponding
@@ -66,10 +273,10 @@ identity object ``I`` or ``1`` in the language of categories) such that
 such that ``N^{a\bar{a}}_{u} = 1``, whereas for all ``b \neq \bar{a}``,
 ``N^{ab}_{u} = 0``. For unitary irreps of groups, ``\bar{a}`` corresponds to the
 complex conjugate of the representation ``a``, or a representation isomorphic to it.
-(**This solves my question about why we call the sector ``\bar{a}`` as complex conjugate 
-of ``a`` in the codes even for anyons.**) Forexample, for the representations of ``\mathsf{SU}_2``, 
-the trivial sector corresponds to spin zero and all irreps are self-dual (i.e. ``a = \bar{a}``), meaning 
-that the conjugate representation is isomorphic to the non-conjugated one (they are however not 
+(**This solves my question about why we call the sector ``\bar{a}`` as complex conjugate
+of ``a`` in the codes even for anyons.**) Forexample, for the representations of ``\mathsf{SU}_2``,
+the trivial sector corresponds to spin zero and all irreps are self-dual (i.e. ``a = \bar{a}``), meaning
+that the conjugate representation is isomorphic to the non-conjugated one (they are however not
 equal but related by a similarity transform).
 
 The meaning of the fusion rules is that the space of transformations ``R_a ⊗ R_b → R_c``
@@ -158,7 +365,7 @@ For practical reasons, we also require some additional methods to be defined:
 *   `isreal(::Type{<:Sector})` returns whether the topological data of this type of sector
     is real-valued or not (in which case it is complex-valued). Note that this does not
     necessarily require that the representation itself, or the Clebsch-Gordan coefficients,
-    are real. There is a fallback implementation that checks whether the F-symbol and R-symbol 
+    are real. There is a fallback implementation that checks whether the F-symbol and R-symbol
     evaluated with all sectors equal to the identity sector have real `eltype`.
 *   `hash(a, h)` creates a hash of sectors, because sectors and objects created from them
     are used as keys in lookup tables (i.e. dictionaries)
@@ -1099,7 +1306,7 @@ establish isomorphisms between
 
 where the last morphism space is then labeled by the basis of only splitting trees. We can
 then use the manipulations from the previous section, and then again use the left duality
-to bring this back to a pair of splitting and fusion tree with `N₂′` incoming and `N₁′` outgoing 
+to bring this back to a pair of splitting and fusion tree with `N₂′` incoming and `N₁′` outgoing
 sectors (with `N₁′ + N₂′ == N₁ + N₂`).
 
 We now discuss how to actually bend lines, and thus, move sectors from the incoming part

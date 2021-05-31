@@ -130,9 +130,6 @@ insertunit(P::ProductSpace, i::Int = length(P)+1; dual = false, conj = false) # 
 ←(codom::TensorSpace{S}, dom::TensorSpace{S}) where {S<:ElementarySpace} =
     HomSpace(ProductSpace(codom), ProductSpace(dom))    
 ```
-## [Operations](@id ss_operations)
-
-
 ## [Others structures](@id ss_others)
 ```julia
 struct TrivialOrEmptyIterator
