@@ -1215,7 +1215,7 @@ implementing new custom `Sector` types. This result is implemented in the functi
 denotes the position of the first sector (i.e. labeled `b` in the above graph) which is then
 braided with the sector at position `i+1` in the fusion tree `f`. The keyword argument `inv`
 allows to select the inverse braiding operation, which amounts to replacing the R-matrix
-with its inverse (or thus, adjoint) in the above steps. The result is returned as a
+`Rsymbol(a,b,c)` with `Rsymbol(b,a,c)'` in the above steps. The result is returned as a
 dictionary with possible output fusion trees as keys and corresponding coefficients as
 value. In the case of `FusionStyle(I) isa UniqueFusion`, there is only one resulting fusion
 tree, with corresponding coefficient a complex phase (which is one for the bosonic
@@ -1312,7 +1312,7 @@ that we need is summarized in
 
 ![line bending](img/tree-linebending.svg)
 
-We will only need the B-symbol and not the A-symbol. Applying the left evaluation on the
+We will only need the B-symbol and not the A-symbol. Applying the right evaluation on the
 second sector of a splitting tensor thus yields a linear combination of fusion tensors
 (when `FusionStyle(I) == GenericFusion()`, or just a scalar times the corresponding
 fusion tensor otherwise), with corresponding ``Z`` ismorphism. Taking the adjoint of this

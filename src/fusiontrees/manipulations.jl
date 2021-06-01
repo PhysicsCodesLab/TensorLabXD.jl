@@ -870,7 +870,7 @@ function braid(f::FusionTree{I, N},
     TupleTools.isperm(p) || throw(ArgumentError("not a valid permutation: $p"))
     if FusionStyle(I) isa UniqueFusion && BraidingStyle(I) isa SymmetricBraiding
         coeff = Rsymbol(one(I), one(I), one(I))
-        for i = 1:N
+        for i = 2:N
             for j = 1:i-1
                 if p[j] > p[i]
                     a, b = f.uncoupled[p[j]], f.uncoupled[p[i]]
