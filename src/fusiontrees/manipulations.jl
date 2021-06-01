@@ -1,5 +1,3 @@
-fusiontreedict(I) = FusionStyle(I) isa UniqueFusion ? SingletonDict : FusionTreeDict
-
 # BASIC MANIPULATIONS:
 #----------------------------------------------
 # -> rewrite generic fusion tree in basis of fusion trees in standard form
@@ -804,11 +802,11 @@ function artin_braid(f::FusionTree{I, N}, i; inv::Bool = false) where {I<:Sector
         return fusiontreedict(I)(f′ => R)
     elseif FusionStyle(I) isa SimpleFusion
         local newtrees
-        for c′ in intersect(a ⊗ d, e ⊗ conj(b))
+        for c′ in intersect(a ⊗ d, e ⊗ conj(b)) # c′ is f in the figure
             coeff = oftype(oneT, if inv
-                    conj(Rsymbol(d, c, e)*Fsymbol(d, a, b, e, c′, c))*Rsymbol(d, a, c′)
+                    conj(Rsymbol(d, c, e))*conj(Fsymbol(d, a, b, e, c′, c))*Rsymbol(d, a, c′)
                 else
-                    Rsymbol(c, d, e)*conj(Fsymbol(d, a, b, e, c′, c)*Rsymbol(a, d, c′))
+                    Rsymbol(c, d, e)*conj(Fsymbol(d, a, b, e, c′, c))*conj(Rsymbol(a, d, c′))
                 end)
             iszero(coeff) && continue
             inner′ = TupleTools.setindex(inner, c′, i-1)
@@ -824,7 +822,7 @@ function artin_braid(f::FusionTree{I, N}, i; inv::Bool = false) where {I<:Sector
         local newtrees
         for c′ in intersect(a ⊗ d, e ⊗ conj(b))
             Rmat1 = inv ? Rsymbol(d, c, e)' : Rsymbol(c, d, e)
-            Rmat2 = inv ? Rsymbol(d, a, c′) : Rsymbol(a, d, c′)'
+            Rmat2 = inv ? Rsymbol(d, a, c′)' : Rsymbol(a, d, c′) # There's still problem in Jutho's codes
             Fmat = Fsymbol(d, a, b, e, c′, c)
             μ = vertices[i-1]
             ν = vertices[i]
@@ -872,7 +870,7 @@ function braid(f::FusionTree{I, N},
     TupleTools.isperm(p) || throw(ArgumentError("not a valid permutation: $p"))
     if FusionStyle(I) isa UniqueFusion && BraidingStyle(I) isa SymmetricBraiding
         coeff = Rsymbol(one(I), one(I), one(I))
-        for i = 1:N   
+        for i = 1:N
             for j = 1:i-1
                 if p[j] > p[i]
                     a, b = f.uncoupled[p[j]], f.uncoupled[p[i]]

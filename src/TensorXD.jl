@@ -124,6 +124,7 @@ include("auxiliary/random.jl")
 # experiment with different dictionaries
 const SectorDict{K, V} = SortedVectorDict{K, V}
 const FusionTreeDict{K, V} = Dict{K, V}
+fusiontreedict(I) = FusionStyle(I) isa UniqueFusion ? SingletonDict : FusionTreeDict
 #--------------------------------------------------------------------
 
 # Exception types:

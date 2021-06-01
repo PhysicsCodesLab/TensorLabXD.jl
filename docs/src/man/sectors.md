@@ -130,7 +130,7 @@ struct FusionTreeIterator{I<:Sector, N}
     uncoupled::NTuple{N, I}
     coupled::I
     isdual::NTuple{N, Bool}
-end
+end # iterate over fusion trees for fixed coupled and uncoupled sector labels
 
 const transposecache = LRU{Any, Any}(; maxsize = 10^5)
 const usetransposecache = Ref{Bool}(true)

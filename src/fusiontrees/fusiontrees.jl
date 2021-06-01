@@ -3,10 +3,9 @@
 """
     struct FusionTree{I, N, M, L, T}
 
-Represents a fusion tree of sectors of type `I<:Sector`, fusing (or splitting) `N` uncoupled
-sectors to a coupled sector. (It actually represents a splitting tree, but fusion tree
-is a more common term). The `isdual` field indicates whether an isomorphism is present
-(if the corresponding value is true) or not. The field `uncoupled` contains the sectors
+Represents a splitting tree of sectors of type `I<:Sector`, splitting a coupled
+sector to  `N` uncoupled sectors. The `isdual` field indicates whether an
+isomorphism is present or not. The field `uncoupled` contains the sectors
 coming out of the splitting trees, before the possible 𝑍 isomorphism. This fusion tree
 has `M=max(0, N-2)` inner lines. Furthermore, for `FusionStyle(I) isa GenericFusion`,
 the `L=max(0, N-1)` corresponding vertices carry a label of type `T`. If `FusionStyle(I)
@@ -24,19 +23,6 @@ struct FusionTree{I<:Sector, N, M, L, T}
                                             innerlines::NTuple{M, I},
                                             vertices::NTuple{L, T}) where
                                             {I<:Sector, N, M, L, T}
-        # if N == 0
-        #     @assert coupled == one(coupled)
-        # elseif N == 1
-        #     @assert coupled == uncoupled[1]
-        # elseif N == 2
-        #     @assert coupled ∈ ⊗(uncoupled...)
-        # else
-        #     @assert innerlines[1] ∈ ⊗(uncoupled[1], uncoupled[2])
-        #     for n = 2:N-2
-        #         @assert innerlines[n] ∈ ⊗(innerlines[n-1], uncoupled[n+1])
-        #     end
-        #     @assert coupled ∈ ⊗(innerlines[N-2], uncoupled[N])
-        # end
         new{I, N, M, L, T}(uncoupled, coupled, isdual, innerlines, vertices)
     end
 end
@@ -238,5 +224,3 @@ include("manipulations.jl")
 
 # Fusion tree iterators
 include("iterator.jl")
-
-
