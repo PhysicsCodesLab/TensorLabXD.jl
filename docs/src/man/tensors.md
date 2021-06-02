@@ -74,10 +74,9 @@ space(t::AbstractTensorMap, i::Int) = space(t)[i]
 adjointtensorindex(t::AbstractTensorMap{<:IndexSpace, N₁, N₂}, i) # gives the index in the adjoint tensor which corresponds to the ith vector space in the original tensor
 adjointtensorindices(t::AbstractTensorMap, indices::IndexTuple)
 tensormaptype(::Type{S}, N₁::Int, N₂::Int, ::Type{T}) where {S,T}
-blocks(t::TensorMap) # gives data of TensorMap as SectorDict\
+blocks(t::TensorMap) # gives data of TensorMap as SectorDict
 hasblock(t::TensorMap, s::Sector)
 block(t::TensorMap, s::Sector) # gives data for block with sector s
-
 ```
 ### Other structures
 
@@ -174,8 +173,7 @@ sectors that fuse to the same `c`, and the resulting block diagonal representati
 emerge. This basis transform is thus a permutation, which is a unitary operation, that will
 cancel or go through trivially for linear algebra operations such as composing tensor maps
 (matrix multiplication) or tensor factorizations such as a singular value decomposition. For
-such linear algebra operations, we can thus directly act on these large matrices, which
-correspond to the diagonal blocks that emerge after a basis transform, provided that the
+such linear algebra operations, we can thus directly act on these diagonal blocks that emerge after a basis transform, provided that the
 partition of the tensor indices in domain and codomain of the tensor are in line with our
 needs. For example, composing two tensor maps amounts to multiplying the matrices
 corresponding to the same `c` (provided that its subblocks labeled by the different
@@ -223,7 +221,7 @@ identity is that the group representation is recoupled to act as ``⨁_{c} 𝟙 
 all ``g ∈ \mathsf{I}``, with ``u_c(g)`` the matrix representation of group element ``g``
 according to the irrep ``c``. In the abelian case, `dim(c) == 1`, i.e. all irreducible
 representations are one-dimensional and Schur's lemma only dictates that all off-diagonal
-blocks are zero. However, in this case the basis transform to the block diagonal
+blocks are zero. However, in the non-Abelian case the basis transform to the block diagonal
 representation is not simply a permutation matrix, but a more general unitary matrix
 composed of the different fusion trees. Indeed, let us denote the fusion trees `f₁ ∈
 fusiontrees((a1, …, aN₁), c)` as ``X^{a_1, …, a_{N₁}}_{c,α}`` where
@@ -657,11 +655,17 @@ by TensorXD.jl, and can then us be used without `using LinearAlgebra` explicitly
 of the following methods, the implementation acts directly on the underlying matrix blocks
 (typically using the same method) and never needs to perform any basis transforms.
 
+1. Compose tensor maps:
+
 In particular, `AbstractTensorMap` instances can be composed, provided the domain of the
 first object coincides with the codomain of the second. Composing tensor maps uses the
 regular multiplication symbol as in `t = t1*t2`, which is also used for matrix
 multiplication. TensorXD.jl also supports (and exports) the mutating method
-`mul!(t, t1, t2)`. We can then also try to invert a tensor map using `inv(t)`, though this
+`mul!(t, t1, t2)`.
+
+2. Invert a tensor map:
+
+We can then also try to invert a tensor map using `inv(t)`, though this
 can only exist if the domain and codomain are isomorphic, which can e.g. be checked as
 `fuse(codomain(t)) == fuse(domain(t))`. If the inverse is composed with another tensor
 `t2`, we can use the syntax `t1\t2` or `t2/t1`. However, this syntax also accepts instances
@@ -669,26 +673,42 @@ can only exist if the domain and codomain are isomorphic, which can e.g. be chec
 Moore-Penrose pseudoinverse. This, however, is only really justified as minimizing the
 least squares problem if `spacetype(t) <: EuclideanSpace`.
 
+3. Addition and multiplied by a scalar:
+
 `AbstractTensorMap` instances behave themselves as vectors (i.e. they are `𝕜`-linear) and
 so they can be multiplied by scalars and, if they live in the same space, i.e. have the same
 domain and codomain, they can be added to each other. There is also a `zero(t)`, the
-additive identity, which produces a zero tensor with the same domain and codomain as `t`. In
-addition, `TensorMap` supports basic Julia methods such as `fill!` and `copyto!`, as well
-as `copy(t)` to create a copy with independent data. Aside from basic `+` and `*`
+additive identity, which produces a zero tensor with the same domain and codomain as `t`.
+
+4. Fill and copy:
+
+In addition, `TensorMap` supports basic Julia methods such as `fill!` and `copyto!`, as well
+as `copy(t)` to create a copy with independent data.
+
+5. In-place methods: `axpy!`, `axpby!`, `lmul!`, `rmul!` and `mul!`:
+
+Aside from basic `+` and `*`
 operations, TensorXD.jl reexports a number of efficient in-place methods from
 `LinearAlgebra`, such as `axpy!` (for `y ← α * x + y`), `axpby!` (for `y ← α * x + β * y`),
 `lmul!` and `rmul!` (for `y ← α*y` and `y ← y*α`, which is typically the same) and `mul!`,
 which can also be used for out-of-place scalar multiplication `y ← α*x`.
 
+6. Norm and dot:
+
 For `t::AbstractTensorMap{S}` where `S<:EuclideanSpace`, henceforth referred to as
 a `(Abstract)EuclideanTensorMap`, we can compute `norm(t)`, and for two such instances, the
 inner product `dot(t1, t2)`, provided `t1` and `t2` have the same domain and codomain.
+
+7. Normalize:
+
 Furthermore, there is `normalize(t)` and `normalize!(t)` to return a scaled version of `t`
 with unit norm. These operations should also exist for `S<:InnerProductSpace`, but requires
 an interface for defining a custom inner product in these spaces. Currently, there is no
 concrete subtype of `InnerProductSpace` that is not a subtype of `EuclideanSpace`. In
 particular, `CartesianSpace`, `ComplexSpace` and `GradedSpace` are all subtypes
 of `EuclideanSpace`.
+
+8. Adjoint:
 
 With instances `t::AbstractEuclideanTensorMap` there is associated an adjoint operation,
 given by `adjoint(t)` or simply `t'`, such that `domain(t') == codomain(t)` and
@@ -702,25 +722,38 @@ plural `TensorXD.adjointtensorindices` to convert multiple indices at once. Note
 because the adjoint interchanges domain and codomain, we have
 `space(t', j) == space(t, i)'`.
 
+9. Equal and approximate:
+
 `AbstractTensorMap` instances can furthermore be tested for exact (`t1 == t2`) or
 approximate (`t1 ≈ t2`) equality, though the latter requires `norm` can be computed.
+
+10. Multiplicative identity:
 
 When tensor map instances are endomorphisms, i.e. they have the same domain and codomain,
 there is a multiplicative identity which can be obtained as `one(t)` or `one!(t)`, where the
 latter overwrites the contents of `t`. The multiplicative identity on a space `V` can also
 be obtained using `id(A, V)` as discussed [above](@ref ss_tensor_construction), such that
 for a general homomorphism `t′`, we have `t′ == id(codomain(t′))*t′ == t′*id(domain(t′))`.
+
+11. Trace and exp:
+
 Returning to the case of endomorphisms `t`, we can compute the trace via `tr(t)` and
 exponentiate them using `exp(t)`, or if the contents of `t` can be destroyed in the
 process, `exp!(t)`. Furthermore, there are a number of tensor factorizations for both
 endomorphisms and general homomorphism that we discuss below.
 
+12. Tensor product:
+
 Finally, there are a number of operations that also belong in this paragraph because of
 their analogy to common matrix operations. The tensor product of two `TensorMap` instances
 `t1` and `t2` is obtained as `t1 ⊗ t2` and results in a new `TensorMap` with
 `codomain(t1⊗t2) = codomain(t1) ⊗ codomain(t2)` and
-`domain(t1⊗t2) = domain(t1) ⊗ domain(t2)`. If we have two `TensorMap{S,N,1}` instances `t1`
-and `t2` with the same codomain, we can combine them in a way that is analoguous to `hcat`,
+`domain(t1⊗t2) = domain(t1) ⊗ domain(t2)`.
+
+13. catdomain and catcodomain:
+
+ If we have two `TensorMap{S,N,1}` instances `t1`
+and `t2` with the same codomain, we can combine them in a way that is analogous to `hcat`,
 i.e. we stack them such that the new tensor `catdomain(t1, t2)` has also the same codomain,
 but has a domain which is `domain(t1) ⊕ domain(t2)`. Similarly, if `t1` and `t2` are of
 type `TensorMap{S,1,N}` and have the same domain, the operation `catcodomain(t1, t2)`
@@ -1138,15 +1171,17 @@ t′ ≈ t′ * P
 One of the most important operation with tensor maps is to compose them, more generally
 known as contracting them. As mentioned in the section on [category theory](@ref
 s_categories), a typical composition of maps in a ribbon category can graphically be
-represented as a planar arrangement of the morphisms (i.e. tensor maps, boxes with lines
-eminating from top and bottom, corresponding to source and target, i.e. domain and
+represented as a **planar** arrangement of the morphisms (i.e. tensor maps, boxes with lines
+emanating from top and bottom, corresponding to source and target, i.e. domain and
 codomain), where the lines connecting the source and targets of the different morphisms
 should be thought of as ribbons, that can braid over or underneath each other, and that can
-twist. Technically, we can embed this diagram in ``ℝ × [0,1]`` and attach all the
+twist.
+
+Technically, we can embed this diagram in ``ℝ × [0,1]`` and attach all the
 unconnected line endings corresponding objects in the source at some position ``(x,0)`` for
-``x∈ℝ``, and all line endings corresponding to objects in the target at some position
-``(x,1)``. The resulting morphism is then invariant under what is known as *framed
-three-dimensional isotopy*, i.e. three-dimensional rearrangements of the morphism that
+``x∈ℝ``, and all line endings corresponding to objects in the target at some position ``(x,1)``.
+The resulting morphism is then invariant under **framed three-dimensional isotopy**,
+i.e. three-dimensional rearrangements of the morphism that
 respect the rules of boxes connected by ribbons whose open endings are kept fixed. Such a
 two-dimensional diagram cannot easily be encoded in a single line of code.
 
