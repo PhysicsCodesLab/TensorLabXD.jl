@@ -3,7 +3,7 @@
 ```@setup TensorXD
 using TensorXD
 ```
-## [Types](@id ss_types)
+### Types
 ```julia
 abstract type Field end
 struct RealNumbers <: Field end
@@ -65,7 +65,7 @@ const TensorSpace{S<:ElementarySpace} = Union{S, ProductSpace{S}}
 const TensorMapSpace{S<:ElementarySpace, N₁, N₂} =
     HomSpace{S, ProductSpace{S, N₁}, ProductSpace{S, N₂}}
 ```
-## [Properties](@id_ss_properties)
+### Properties
 On both VectorSpace instances and types:
 ```julia
 spacetype # type of ElementarySpace associated with a composite space or a tensor
@@ -82,6 +82,7 @@ sectors(P::ProductSpace{S, N}) # Return an iterator over all possible combinatio
 blocksectors(V::ElementarySpace) = sectors(V) # make ElementarySpace instances behave similar to ProductSpace instances
 blocksectors(P::ProductSpace) # Return an iterator over the different unique coupled sector labels
 blocksectors(W::HomSpace) # Return an iterator over the different unique coupled sector labels, i.e. the intersection of the different fusion outputs that can be obtained by fusing the sectors present in the domain, as well as from the codomain.
+blocksectors(t::TensorMap)
 hassector # whether a vector space `V` has a subspace corresponding to sector `a` with non-zero dimension
 hassector(P::ProductSpace{S, N}, s::NTuple{N, sectortype(S)}) # Query whether `P` has a non-zero degeneracy of sector `s`, representing a combination of sectors on the individual tensor indices.
 dim # total dimension of a vector space or a product space
@@ -89,6 +90,8 @@ dim(W::HomSpace) # Return the total dimension of a `HomSpace`, i.e. the number o
 dim(V::GradedSpace, c::I) # dime for sector c in a Graded Space
 dim(P::ProductSpace, n::Int) # dim for the `n`th vector space of the product space
 dim(P::ProductSpace{S, N}, s::NTuple{N, sectortype(S)}) # Return the total degeneracy dimension corresponding to a tuple of sectors for each of the spaces in the tensor product, obtained as `prod(dims(P, s))``.
+dim(t::AbstractTensorMap) # dim for corresponding HomSpace
+dim(t::TensorMap)
 dims(P::ProductSpace) # Return the dimensions of the spaces in the tensor product space as a tuple of integers.
 dims(P::ProductSpace{S, N}, s::NTuple{N, sectortype(S)}) # Return the degeneracy dimensions corresponding to a tuple of sectors `s` for each of the spaces in the tensor product `P`.
 blockdim(V::ElementarySpace, c::Sector) = dim(V, c) # make ElementarySpace instances behave similar to ProductSpace instances
@@ -130,14 +133,14 @@ insertunit(P::ProductSpace, i::Int = length(P)+1; dual = false, conj = false) # 
 ←(codom::TensorSpace{S}, dom::TensorSpace{S}) where {S<:ElementarySpace} =
     HomSpace(ProductSpace(codom), ProductSpace(dom))    
 ```
-## [Others structures](@id ss_others)
+### Others structures
 ```julia
 struct TrivialOrEmptyIterator
     isempty::Bool
 end # returns nothing is isempty = true, otherwise returns Trivial()
 ```
 
-## [Details about `dual`, `conj`, `flip`](@id ss_others)
+### Details about `dual`, `conj`, `flip`
 In `vectorspaces.jl`:
 ```julia
 function dual end

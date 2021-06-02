@@ -4,7 +4,90 @@
 using TensorXD
 using LinearAlgebra
 ```
+### Types
+```julia
+abstract type AbstractTensorMap{S<:IndexSpace, N₁, N₂} end
+const AbstractTensor{S<:IndexSpace, N} = AbstractTensorMap{S, N, 0}
 
+struct TensorMap{S<:IndexSpace, N₁, N₂, I<:Sector, A<:Union{<:DenseMatrix,SectorDict{I,<:DenseMatrix}}, F₁, F₂} <: AbstractTensorMap{S, N₁, N₂}
+    data::A
+    codom::ProductSpace{S,N₁}
+    dom::ProductSpace{S,N₂}
+    rowr::SectorDict{I,FusionTreeDict{F₁,UnitRange{Int}}}
+    colr::SectorDict{I,FusionTreeDict{F₂,UnitRange{Int}}}
+    function TensorMap{S, N₁, N₂, I, A, F₁, F₂}(data::A,
+                codom::ProductSpace{S,N₁}, dom::ProductSpace{S,N₂},
+                rowr::SectorDict{I,FusionTreeDict{F₁,UnitRange{Int}}},
+                colr::SectorDict{I,FusionTreeDict{F₂,UnitRange{Int}}}) where
+                    {S<:IndexSpace, N₁, N₂, I<:Sector, A<:SectorDict{I,<:DenseMatrix},
+                     F₁<:FusionTree{I,N₁}, F₂<:FusionTree{I,N₂}}
+        eltype(valtype(data)) ⊆ field(S) ||
+            @warn("eltype(data) = $(eltype(data)) ⊈ $(field(S)))", maxlog=1)
+        new{S, N₁, N₂, I, A, F₁, F₂}(data, codom, dom, rowr, colr)
+    end
+    function TensorMap{S, N₁, N₂, Trivial, A, Nothing, Nothing}(data::A,
+                codom::ProductSpace{S,N₁}, dom::ProductSpace{S,N₂}) where
+                    {S<:IndexSpace, N₁, N₂, A<:DenseMatrix}
+        eltype(data) ⊆ field(S) ||
+            @warn("eltype(data) = $(eltype(data)) ⊈ $(field(S)))", maxlog=1)
+        new{S, N₁, N₂, Trivial, A, Nothing, Nothing}(data, codom, dom)
+    end
+end
+
+const Tensor{S<:IndexSpace, N, I<:Sector, A, F₁, F₂} = TensorMap{S, N, 0, I, A, F₁, F₂}
+const TrivialTensorMap{S<:IndexSpace, N₁, N₂, A<:DenseMatrix} = TensorMap{S, N₁, N₂, Trivial, A, Nothing, Nothing}
+
+struct TensorKeyIterator{I<:Sector, F₁<:FusionTree{I}, F₂<:FusionTree{I}}
+    rowr::SectorDict{I, FusionTreeDict{F₁, UnitRange{Int}}}
+    colr::SectorDict{I, FusionTreeDict{F₂, UnitRange{Int}}}
+end
+struct TensorPairIterator{I<:Sector, F₁<:FusionTree{I}, F₂<:FusionTree{I}, A<:DenseMatrix}
+    rowr::SectorDict{I, FusionTreeDict{F₁, UnitRange{Int}}}
+    colr::SectorDict{I, FusionTreeDict{F₂, UnitRange{Int}}}
+    data::SectorDict{I, A}
+end
+
+const TensorIterator{I<:Sector, F₁<:FusionTree{I}, F₂<:FusionTree{I}} = Union{TensorKeyIterator{I, F₁, F₂}, TensorPairIterator{I, F₁, F₂}}
+```
+### Properties
+On both instances and types:
+```julia
+storagetype(t::AbstractTensorMap) # gives the way the tensor data are stored, now all DenseArray
+similarstoragetype(t::AbstractTensorMap, T)
+numout(t::AbstractTensorMap) # gives N_1 for the codomain
+numin(t::AbstractTensorMap) # gives N_2 for the domain
+numind(t::AbstractTensorMap) # gives N_1+N_2
+const order = numind
+codomainind(t::AbstractTensorMap) # 1:N_1
+domainind(t::AbstractTensorMap) # N_1+1:N_1+N_2
+allind(t::AbstractTensorMap) # 1:N_1+N_2
+```
+
+On instances:
+```julia
+codomain(t::AbstractTensorMap, i)
+domain(t::AbstractTensorMap, i)
+source(t::AbstractTensorMap) # gives domain
+target(t::AbstractTensorMap) # gives codomain
+space(t::AbstractTensorMap) # give HomSpace
+space(t::AbstractTensorMap, i::Int) = space(t)[i]
+adjointtensorindex(t::AbstractTensorMap{<:IndexSpace, N₁, N₂}, i) # gives the index in the adjoint tensor which corresponds to the ith vector space in the original tensor
+adjointtensorindices(t::AbstractTensorMap, indices::IndexTuple)
+tensormaptype(::Type{S}, N₁::Int, N₂::Int, ::Type{T}) where {S,T}
+blocks(t::TensorMap) # gives data of TensorMap as SectorDict\
+hasblock(t::TensorMap, s::Sector)
+block(t::TensorMap, s::Sector) # gives data for block with sector s
+
+```
+### Other structures
+
+
+
+
+
+
+
+## General arguments
 This last page explains how to create and manipulate tensors in TensorXD.jl. As this is
 probably the most important part of the manual, we will also focus more strongly on the
 usage and interface, and less so on the underlying implementation. The only aspect of the
@@ -153,8 +236,8 @@ fusiontrees((a1, …, aN₁), c)` as ``X^{a_1, …, a_{N₁}}_{c,α}`` where
 In this diagram, we have indicated how the tensor map can be rewritten in terms of a block
 diagonal matrix with a unitary matrix on its left and another unitary matrix (if domain and
 codomain are different) on its right. So the left and right matrices should actually have
-been drawn as squares. They represent the unitary basis transform. In this picture, the 
-white regions are zero. 
+been drawn as squares. They represent the unitary basis transform. In this picture, the
+white regions are zero.
 
 ![tensor center_tensor](img/tensor-center_tensor.png)
 
@@ -201,7 +284,7 @@ corresponds to the diagonal green blocks in this drawing where the same matrix
 ``X^{(a…)}_{c,α}`` (the fusion tree) is repeated along the diagonal. Note that the fusion
 tree is not a vector or single column, but a matrix with number of rows equal to
 ``\mathrm{dim}(R_{(a\ldots)}) = d_{a_1} d_{a_2} … d_{a_{N_1}} `` and number of columns
-equal to ``d_c``. 
+equal to ``d_c``.
 
 ![tensor unitary](img/tensor-fusion_unitary.png)
 
@@ -488,7 +571,7 @@ an identity matrix of size `dim(c)`, i.e. `dim(SU2Irrep(1)) = 3` and
 ## [Tensor properties](@id ss_tensor_properties)
 
 Given a `t::AbstractTensorMap{S,N₁,N₂}`, there are various methods to query its properties.
-The most important are clearly `codomain(t)` and `domain(t)`. The `space(t)` gives the 
+The most important are clearly `codomain(t)` and `domain(t)`. The `space(t)` gives the
 corresponding `HomSpace`. We can also query
 `space(t, i)`, the space associated with the `i`th index. For `i ∈ 1:N₁`, this corresponds
 to `codomain(t, i) = codomain(t)[i]`. For `j = i-N₁ ∈ (1:N₂)`, this corresponds to

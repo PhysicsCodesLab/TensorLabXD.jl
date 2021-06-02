@@ -4,7 +4,7 @@
 using TensorXD
 using LinearAlgebra
 ```
-## [Types](@id s_types)
+### Types
 ```julia
 abstract type Sector end
 struct SectorValues{I<:Sector} end  # Singleton type to represent an iterator over the possible values of type `I`, whose instance is obtained as `values(I)`.
@@ -145,7 +145,7 @@ const BraidKey{I<:Sector, N₁, N₂} = Tuple{<:FusionTree{I}, <:FusionTree{I},
                                         IndexTuple, IndexTuple,
                                         IndexTuple{N₁}, IndexTuple{N₂}}                                            
 ```
-## [Properties](@id_s_properties)
+### Properties
 ```julia
 Base.one(a::Sector) = one(typeof(a)) # Return the unit element within this type of sector.
 dual(a::Sector) = conj(a)
@@ -196,7 +196,7 @@ permute(f::FusionTree, p::NTuple{N, Int}) -> <:AbstractDict{typeof(t), <:Number}
 braid(f1::FusionTree{I}, f2::FusionTree{I}, levels1::IndexTuple, levels2::IndexTuple, p1::IndexTuple{N₁}, p2::IndexTuple{N₂}) where {I<:Sector, N₁, N₂} -> <:AbstractDict{Tuple{FusionTree{I, N₁}, FusionTree{I, N₂}}, <:Number}
 permute(f1::FusionTree{I}, f2::FusionTree{I}, p1::NTuple{N₁, Int}, p2::NTuple{N₂, Int}) where {I, N₁, N₂} -> <:AbstractDict{Tuple{FusionTree{I, N₁}, FusionTree{I, N₂}}, <:Number}
 ```
-## [Others structures](@id s_others)
+### Others structures
 ```julia
 struct SectorSet{I<:Sector, F, S} # behaves as an iterator that applies x->convert(I, f(x)) on the elements of set; if f is not provided it is just taken as the function identity.
     f::F
