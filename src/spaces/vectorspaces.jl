@@ -91,7 +91,7 @@ abstract type EuclideanSpace{𝕜} <: InnerProductSpace{𝕜} end # 𝕜 should 
 # spaces without internal structure
 include("cartesianspace.jl")
 include("complexspace.jl")
-#include("generalspace.jl") # Try to remove this, because generalspace was never used at other parts of the package
+include("generalspace.jl") # Try to remove this, because generalspace was never used at other parts of the package
 
 # space with internal structure corresponding to the irreducible representations of
 # a group, or more generally, the simple objects of a fusion category.
@@ -122,13 +122,14 @@ include("deligne.jl")
 #------------------------------
 include("homspace.jl")
 
-
 # general VectorSpace methods
 #==============================================================================#
 """
     field(V::VectorSpace) -> Field
 
 Return the field type over which a vector space is defined.
+
+Work on both instance and type, and implemented on type.
 """
 function field end
 field(V::VectorSpace) = field(typeof(V))
@@ -136,9 +137,11 @@ field(::Type{<:ElementarySpace{𝕜}}) where {𝕜} = 𝕜
 field(P::Type{<:CompositeSpace}) = field(spacetype(P))
 
 """
-    spacetype(a) -> VectorSpace
+    spacetype(a::VectorSpace) -> ElementarySpace
 
-Return the vector space associated to object `a`.
+Return the ElementarySpace associated to a VectorSpace instance `a`.
+
+Work on both instance and type, and implemented on type.
 """
 function spacetype end
 spacetype(V::ElementarySpace) = typeof(V)
@@ -147,28 +150,39 @@ spacetype(S::Type{<:ElementarySpace}) = S
 spacetype(V::CompositeSpace) = spacetype(typeof(V))
 spacetype(::Type{<:CompositeSpace{S}}) where S = S
 
-
 """
     oneunit(V::S) where {S<:ElementarySpace} -> S
 
 Return the corresponding vector space of type `S` that represents the trivial
-one-dimensional space, i.e. the space that is isomorphic to the corresponding field. Note
-that this is different from `one(V::S)`, which returns the empty product space
+one-dimensional space, i.e. the space that is isomorphic to the corresponding field.
+
+Note that this is different from `one(V::S)`, which returns the empty product space
 `ProductSpace{S,0}(())`.
+
+Extend Base.oneunit. Work on both instance and type, and implemented on type.
 """
 Base.oneunit(V::ElementarySpace) = oneunit(typeof(V))
 
 """
-    sectortype(a) -> Type{<:Sector}
+    sectortype(a::VectorSpace) -> Type{<:Sector}
 
-Return the type of sector over which object `a` (e.g. a representation space or a tensor) is
-defined. Also works in type domain.
+Return the type of sector over which the vector space `a` is defined.
+
+Work on both instance and type, and implemented on type.
 """
 function sectortype end
 sectortype(V::VectorSpace) = sectortype(typeof(V))
 sectortype(::Type{<:ElementarySpace}) = Trivial
 sectortype(P::Type{<:CompositeSpace}) = sectortype(spacetype(P))
 
+"""
+    struct TrivialOrEmptyIterator
+        isempty::Bool
+    end
+
+An iterator that has `length = 0` and return `nothing` if `isempty = true`;
+while `length = 1` and return `Trivial()` if `isempty = false`.
+"""
 struct TrivialOrEmptyIterator
     isempty::Bool
 end
@@ -188,7 +202,14 @@ Return an iterator over the different sectors of `V`.
 """
 function sectors end
 sectors(V::ElementarySpace) = TrivialOrEmptyIterator(dim(V) == 0)
-# make ElementarySpace instances behave similar to ProductSpace instances
+
+"""
+    blocksectors(V::ElementarySpace) = sectors(V)
+
+Return an iterator over the different sectors of `V`.
+
+Make ElementarySpace instances behave similar to ProductSpace instances
+"""
 blocksectors(V::ElementarySpace) = sectors(V)
 
 """
@@ -204,14 +225,23 @@ hassector(V::ElementarySpace, ::Trivial) = dim(V) != 0
     dim(V::VectorSpace) -> Int
 
 Return the total dimension of the vector space `V` as an Int.
-(!!! There might be problem for anyons with quantum dimension which is not integer.)
 """
 function dim end
 dim(V::ElementarySpace, ::Trivial) =
     sectortype(V) == Trivial ? dim(V) : throw(SectorMismatch())
-# make ElementarySpace instances behave similar to ProductSpace instances
+
+"""
+    blockdim(V::ElementarySpace, c::Sector) = dim(V, c)
+
+Return the times of sector `c` that appear in the elementary space `V`.
+
+Make ElementarySpace instances behave similar to ProductSpace instances
+"""
 blockdim(V::ElementarySpace, c::Sector) = dim(V, c)
 
+"""
+    axes()
+"""
 Base.axes(V::ElementarySpace, ::Trivial) = axes(V)
 
 """
