@@ -56,6 +56,12 @@ different spaces should be of the same type, so that a tensor can be defined as 
 of a homogeneous tensor product of these spaces.
 """
 abstract type ElementarySpace{𝕜} <: VectorSpace end
+
+"""
+    const IndexSpace = ElementarySpace
+
+Alias for the abstact type ElementarySpace.
+"""
 const IndexSpace = ElementarySpace
 
 """
@@ -85,7 +91,7 @@ abstract type EuclideanSpace{𝕜} <: InnerProductSpace{𝕜} end # 𝕜 should 
 # spaces without internal structure
 include("cartesianspace.jl")
 include("complexspace.jl")
-include("generalspace.jl")
+#include("generalspace.jl") # Try to remove this, because generalspace was never used at other parts of the package
 
 # space with internal structure corresponding to the irreducible representations of
 # a group, or more generally, the simple objects of a fusion category.

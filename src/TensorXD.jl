@@ -18,7 +18,7 @@ export FibonacciAnyon
 export IsingAnyon
 
 export VectorSpace, Field, ElementarySpace, InnerProductSpace, EuclideanSpace # abstract vector spaces
-export ComplexSpace, CartesianSpace, GeneralSpace, GradedSpace # concrete spaces
+export ComplexSpace, CartesianSpace, GradedSpace # concrete spaces
 export ZNSpace, Z2Space, Z3Space, Z4Space, U1Space, CU1Space, SU2Space
 export Vect, Rep # space constructors
 export CompositeSpace, ProductSpace # composite spaces
