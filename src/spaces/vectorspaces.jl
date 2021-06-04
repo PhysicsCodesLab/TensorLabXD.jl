@@ -3,9 +3,10 @@
 """
     abstract type Field end
 
-Abstract type at the top of the type hierarchy for denoting fields over which vector spaces
-(or more generally, linear categories) can be defined. Two common fields are `ℝ` and `ℂ`,
-representing the field of real or complex numbers respectively.
+Abstract type at the top of the type hierarchy for denoting fields over which
+vector spaces (or more generally, linear categories) can be defined. Two common
+fields are `ℝ` and `ℂ`, representing the field of real or complex numbers
+respectively.
 """
 abstract type Field end
 
@@ -35,25 +36,26 @@ Base.show(io::IO, ::ComplexNumbers) = print(io, "ℂ")
 """
     abstract type VectorSpace end
 
-Abstract type at the top of the type hierarchy for denoting vector spaces, or, more
-accurately, 𝕜-linear categories. All instances of subtypes of VectorSpace will
-represent objects in 𝕜-linear monoidal categories.
+Abstract type at the top of the type hierarchy for denoting vector spaces, or,
+more accurately, 𝕜-linear categories. All instances of subtypes of VectorSpace
+will represent objects in 𝕜-linear monoidal categories.
 """
 abstract type VectorSpace end
 
 """
     abstract type ElementarySpace{𝕜} <: VectorSpace end
 
-Elementary finite-dimensional vector space over a field `𝕜` that can be used as the index
-space corresponding to the indices of a tensor. ElementarySpace is a super type for all
-vector spaces (objects) that can be associated with the individual indices of a tensor,
-as hinted to by its alias IndexSpace.
+Elementary finite-dimensional vector space over a field `𝕜` that can be used as
+the index space corresponding to the indices of a tensor. ElementarySpace is a
+super type for all vector spaces (objects) that can be associated with the
+individual indices of a tensor, as hinted to by its alias IndexSpace.
 
 Every elementary vector space should respond to the methods [`conj`](@ref) and
-[`dual`](@ref), returning the complex conjugate space and the dual space respectively. The
-complex conjugate of the dual space is obtained as `dual(conj(V)) === conj(dual(V))`. These
-different spaces should be of the same type, so that a tensor can be defined as an element
-of a homogeneous tensor product of these spaces.
+[`dual`](@ref), returning the complex conjugate space and the dual space
+respectively. The complex conjugate of the dual space is obtained as
+`dual(conj(V)) === conj(dual(V))`. These different spaces should be of the same
+type, so that a tensor can be defined as an element of a homogeneous tensor
+product of these spaces.
 """
 abstract type ElementarySpace{𝕜} <: VectorSpace end
 
@@ -67,22 +69,24 @@ const IndexSpace = ElementarySpace
 """
     abstract type InnerProductSpace{𝕜} <: ElementarySpace{𝕜} end
 
-Abstract type for denoting vector spaces with an inner product, thus a canonical mapping from
-`dual(V)` to `V` (for `𝕜 ⊆ ℝ`) or from `dual(V)` to `conj(V)` (otherwise). This mapping
-is provided by the metric, but no further support for working with metrics is currently
-implemented.
+Abstract type for denoting vector spaces with an inner product, thus a canonical
+mapping from `dual(V)` to `V` (for `𝕜 ⊆ ℝ`) or from `dual(V)` to `conj(V)`
+(otherwise). This mapping is provided by the metric, but no further support for
+working with metrics is currently implemented.
 """
 abstract type InnerProductSpace{𝕜} <: ElementarySpace{𝕜} end
 
 """
     abstract type EuclideanSpace{𝕜} <: InnerProductSpace{𝕜} end
 
-Abstract type for denoting real or complex spaces with a standard Euclidean inner product
-(i.e. orthonormal basis, and the metric is identity), such that the dual space is naturally
-isomorphic to the conjugate space `dual(V) == conj(V)` (in the complex case) or even to
-the space itself `dual(V) == V` (in the real case), also known as the category of
-finite-dimensional Hilbert spaces ``FdHilb``. In the language of categories, this subtype
-represents dagger or unitary categories, and support an adjoint operation.
+Abstract type for denoting real or complex spaces with a standard Euclidean
+inner product (i.e. orthonormal basis, and the metric is identity), such that
+the dual space is naturally isomorphic to the conjugate space
+`dual(V) == conj(V)` (in the complex case) or even to the space itself
+`dual(V) == V` (in the real case), also known as the category of
+finite-dimensional Hilbert spaces ``FdHilb``. In the language of categories,
+this subtype represents dagger or unitary categories, and support an adjoint
+operation.
 """
 abstract type EuclideanSpace{𝕜} <: InnerProductSpace{𝕜} end # 𝕜 should be ℝ or ℂ
 
@@ -91,10 +95,10 @@ abstract type EuclideanSpace{𝕜} <: InnerProductSpace{𝕜} end # 𝕜 should 
 # spaces without internal structure
 include("cartesianspace.jl")
 include("complexspace.jl")
-include("generalspace.jl") # Try to remove this, because generalspace was never used at other parts of the package
+include("generalspace.jl") # never used at other parts of the package
 
-# space with internal structure corresponding to the irreducible representations of
-# a group, or more generally, the simple objects of a fusion category.
+# space with internal structure corresponding to the irreducible representations
+# of a group, or more generally, the simple objects of a fusion category.
 include("gradedspace.jl")
 
 # Composite vector spaces
@@ -102,8 +106,8 @@ include("gradedspace.jl")
 """
     abstract type CompositeSpace{S<:ElementarySpace} <: VectorSpace end
 
-Abstract type for composite spaces that are defined in terms of a number of elementary
-vector spaces of a homogeneous type `S<:ElementarySpace{𝕜}`.
+Abstract type for composite spaces that are defined in terms of a number of
+elementary vector spaces of a homogeneous type `S<:ElementarySpace{𝕜}`.
 """
 abstract type CompositeSpace{S<:ElementarySpace} <: VectorSpace end
 
@@ -115,7 +119,8 @@ include("productspace.jl")
 include("deligne.jl")
 
 # Other examples might include:
-# symmetric and antisymmetric subspace of a tensor product of identical vector spaces
+# symmetric and antisymmetric subspace of a tensor product of identical vector
+# spaces
 # ...
 
 # HomSpace: space of morphisms
@@ -125,11 +130,10 @@ include("homspace.jl")
 # general VectorSpace methods
 #==============================================================================#
 """
-    field(V::VectorSpace) -> Field
+    field(::VectorSpace) -> Field
+    field(::Type{<:VectorSpace})
 
-Return the field type over which a vector space is defined.
-
-Work on both instance and type, and implemented on type.
+Return the field type over which a vector space instance or type is defined.
 """
 function field end
 field(V::VectorSpace) = field(typeof(V))
@@ -137,11 +141,10 @@ field(::Type{<:ElementarySpace{𝕜}}) where {𝕜} = 𝕜
 field(P::Type{<:CompositeSpace}) = field(spacetype(P))
 
 """
-    spacetype(a::VectorSpace) -> ElementarySpace
+    spacetype(::VectorSpace) -> ElementarySpace
+    spacetype(::Type{<:VectorSpace})
 
-Return the ElementarySpace associated to a VectorSpace instance `a`.
-
-Work on both instance and type, and implemented on type.
+Return the ElementarySpace type associated to a VectorSpace instance or type.
 """
 function spacetype end
 spacetype(V::ElementarySpace) = typeof(V)
@@ -152,23 +155,22 @@ spacetype(::Type{<:CompositeSpace{S}}) where S = S
 
 """
     oneunit(V::S) where {S<:ElementarySpace} -> S
+    oneunit(::Type{<:ElementarySpace})
 
-Return the corresponding vector space of type `S` that represents the trivial
-one-dimensional space, i.e. the space that is isomorphic to the corresponding field.
+Extend Base.oneunit. Return the corresponding vector space of type `S` that
+represents the trivial one-dimensional space, i.e. the space that is isomorphic
+to the corresponding field.
 
-Note that this is different from `one(V::S)`, which returns the empty product space
-`ProductSpace{S,0}(())`.
-
-Extend Base.oneunit. Work on both instance and type, and implemented on type.
+Note that this is different from `one(V::S)`, which returns the empty product
+space `ProductSpace{S,0}(())`.
 """
 Base.oneunit(V::ElementarySpace) = oneunit(typeof(V))
 
 """
-    sectortype(a::VectorSpace) -> Type{<:Sector}
+    sectortype(V::VectorSpace) -> Type{<:Sector}
+    sectortype(::Type{<:VectorSpace})
 
-Return the type of sector over which the vector space `a` is defined.
-
-Work on both instance and type, and implemented on type.
+Return the type of sector over which the vector space `V` is defined.
 """
 function sectortype end
 sectortype(V::VectorSpace) = sectortype(typeof(V))
@@ -180,8 +182,8 @@ sectortype(P::Type{<:CompositeSpace}) = sectortype(spacetype(P))
         isempty::Bool
     end
 
-An iterator that has `length = 0` and return `nothing` if `isempty = true`;
-while `length = 1` and return `Trivial()` if `isempty = false`.
+An iterator. Return `nothing` if `isempty = true`; return `Trivial()` if
+`isempty = false`.
 """
 struct TrivialOrEmptyIterator
     isempty::Bool
@@ -196,7 +198,7 @@ function Base.iterate(V::TrivialOrEmptyIterator, state = true)
 end
 
 """
-    sectors(V::ElementarySpace)
+    sectors(V::ElementarySpace) -> Iterator
 
 Return an iterator over the different sectors of `V`.
 """
@@ -208,15 +210,15 @@ sectors(V::ElementarySpace) = TrivialOrEmptyIterator(dim(V) == 0)
 
 Return an iterator over the different sectors of `V`.
 
-Make ElementarySpace instances behave similar to ProductSpace instances
+Make ElementarySpace instances behave similar to ProductSpace instances.
 """
 blocksectors(V::ElementarySpace) = sectors(V)
 
 """
     hassector(V::VectorSpace, a::Sector) -> Bool
 
-Return whether a vector space `V` has a subspace corresponding to sector `a` with non-zero
-dimension, i.e. `dim(V, a) > 0`.
+Return whether a vector space `V` has a subspace corresponding to sector `a`
+with non-zero dimension, i.e. `dim(V, a) > 0`.
 """
 function hassector end
 hassector(V::ElementarySpace, ::Trivial) = dim(V) != 0
@@ -231,31 +233,36 @@ dim(V::ElementarySpace, ::Trivial) =
     sectortype(V) == Trivial ? dim(V) : throw(SectorMismatch())
 
 """
-    blockdim(V::ElementarySpace, c::Sector) = dim(V, c)
+    blockdim(V::ElementarySpace, a::Sector) = dim(V, a)
 
-Return the times of sector `c` that appear in the elementary space `V`.
+Return the times of sector `a` that appear in the elementary space `V`.
 
-Make ElementarySpace instances behave similar to ProductSpace instances
+Make ElementarySpace instances behave similar to ProductSpace instances.
 """
 blockdim(V::ElementarySpace, c::Sector) = dim(V, c)
 
 """
-    axes()
+    axes(V::ElementarySpace, ::Trivial) -> UnitRange
+
+Return axes of the Trivial sector in an ElementarySpace as 1:dim(V).
 """
 Base.axes(V::ElementarySpace, ::Trivial) = axes(V)
 
 """
-    dual(V::VectorSpace) -> VectorSpace
+    dual(V::EuclideanSpace) -> EuclideanSpace
 
-Return the dual space of `V`; also obtained via `V'`. This should satisfy
-`dual(dual(V)) == V`. It is assumed that `typeof(V) == typeof(V')`.
-
-In the language of category, dual(a)==a*.
+Return the dual space of the EuclideanSpace `V` which is equal to `conj(V)`,
+which extend `Base.conj()`.
 """
 function dual end
 dual(V::EuclideanSpace) = conj(V)
 
-# convenience definitions:
+"""
+    adjoint(V::VectorSpace) = dual(V)
+
+Extend Base.adjoint(). Return the dual space of a VectorSpace instance `V`.
+Also obtained via `V'`.
+"""
 Base.adjoint(V::VectorSpace) = dual(V)
 
 """
