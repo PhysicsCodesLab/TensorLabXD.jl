@@ -78,7 +78,7 @@ function FusionTree(uncoupled::NTuple{N, I},
     else
         vertices′ = ntuple(n->nothing, max(0, N-1))
         if vertices == vertices′ || all(isone, vertices)
-            fusiontreetype(I, N)(uncoupled, coupled, isdual, innerlines, vertices)
+            fusiontreetype(I, N)(uncoupled, coupled, isdual, innerlines, vertices′)
         else
             throw(ArgumentError("Incorrect fusion vertices"))
         end
