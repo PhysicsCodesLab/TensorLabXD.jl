@@ -197,9 +197,8 @@ function Fsymbol end
 
 Convert the index `k` of the fusion vertex ``a ⊗ b → c`` into a label.
 
-For `FusionStyle(I) == UniqueFusion()` or `FusionStyle( MultipleFusion()`, where every
-fusion the default is to suppress vertex labels by
-setting them equal to `nothing`.
+For `FusionStyle(I) == UniqueFusion()` or `SimpleFusion()`, the default is to suppress
+vertex labels by setting them equal to `nothing`.
 
 For `FusionStyle(I) == GenericFusion()`, the default is to just use `k`, unless a
 specialized method is provided.

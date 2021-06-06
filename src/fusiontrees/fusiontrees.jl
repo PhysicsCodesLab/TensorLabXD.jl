@@ -11,7 +11,7 @@ The `isdual` field indicates whether an isomorphism ``Z`` is present or not.
 The field `uncoupled` contains the objects coming out of the splitting trees, before the
 possible ``Z`` isomorphism.
 
-`M=max(0, N-2)` is the number inner lines.
+`M=max(0, N-2)` is the number of inner lines.
 
 `L=max(0, N-1)` is the number of vertices.
 
@@ -61,7 +61,7 @@ function FusionTree{I}(uncoupled::NTuple{N, Any},
         vertices′ = ntuple(n->nothing, max(0, N-1))
         if vertices == vertices′ || all(isone, vertices)
             fusiontreetype(I, N)(map(s->convert(I, s), uncoupled),
-                convert(I, coupled), isdual, map(s->convert(I, s), innerlines), vertices)
+                convert(I, coupled), isdual, map(s->convert(I, s), innerlines), vertices′)
         else
             throw(ArgumentError("Incorrect fusion vertices"))
         end
