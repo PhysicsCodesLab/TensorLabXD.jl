@@ -18,6 +18,11 @@ Base.eltype(T::Type{FusionTreeIterator{I, N}}) where {I<:Sector, N} =
     fusiontreetype(I, N)
 
 Base.length(iter::FusionTreeIterator) = _fusiondim(iter.uncoupled, iter.coupled)
+"""
+	_fusiondim(u::Tuple{I, I, Vararg{I}}, c::I) where {I<:Sector}
+
+Return the number of fusiontrees with fixed uncoupled objects `u` and coupled objects `c`.
+"""
 _fusiondim(u::Tuple{}, c::I) where {I<:Sector} = Int(one(c) == c)
 _fusiondim(u::Tuple{I}, c::I) where {I<:Sector} = Int(u[1] == c)
 _fusiondim((a, b)::Tuple{I, I}, c::I) where {I<:Sector} = Int(Nsymbol(a, b, c))
@@ -50,8 +55,8 @@ function Base.iterate(it::FusionTreeIterator{I, 1},
 end
 
 #   General case:
-labelvertices(uncoupled::NTuple{2, I}, coupled::I, lines::Tuple{},
-                vertices::Tuple{Int}) where {I<:Sector} =
+labelvertices(uncoupled::NTuple{2, I}, coupled::I,
+				lines::Tuple{}, vertices::Tuple{Int}) where {I<:Sector} =
     (vertex_ind2label(vertices[1], uncoupled..., coupled),)
 
 function labelvertices(uncoupled::NTuple{N, I}, coupled::I, lines,
