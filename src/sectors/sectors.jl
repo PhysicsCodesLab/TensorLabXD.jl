@@ -127,14 +127,12 @@ There is an abstract supertype `MultipleFusion` of which both `SimpleFusion` and
 FusionStyle(a::Sector) = FusionStyle(typeof(a))
 
 """
-    fusiontensor(a::I, b::I, c::I) where {I<:Sector}
+    fusiontensor(a::I, b::I, c::I) where {I<:AbstractIrrep{G<:Group}}
 
 Return the fusiontensor ``X^{ab}_{c,μ}: c → a ⊗ b`` as a rank-4 tensor with size
 `(dim(a),dim(b),dim(c),Int(Nsymbol(a,b,c)))`.
 """
-function fusiontensor(a::I, b::I, c::I) where {I<:Sector}
-    I <: AbstractIrrep{G<:Group} || error("fusiontensor does not exist!")
-end
+function fusiontensor(a::I, b::I, c::I) where {I<:AbstractIrrep{G<:Group}} end
 
 """
     ⊗(a::I, b::I) where {I<:Sector}

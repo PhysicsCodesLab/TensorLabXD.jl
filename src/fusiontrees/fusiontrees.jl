@@ -3,26 +3,33 @@
 """
     struct FusionTree{I, N, M, L, T}
 
-Represents a splitting tree of sectors of type `I<:Sector`, splitting a coupled
-sector to  `N` uncoupled sectors. The `isdual` field indicates whether an
-isomorphism is present or not. The field `uncoupled` contains the sectors
-coming out of the splitting trees, before the possible 𝑍 isomorphism. This fusion tree
-has `M=max(0, N-2)` inner lines. Furthermore, for `FusionStyle(I) isa GenericFusion`,
-the `L=max(0, N-1)` corresponding vertices carry a label of type `T`. If `FusionStyle(I)
-isa MultiplicityFreeFusion, `T = Nothing`.
+Represents a splitting tree of simple objects of type `I<:Sector`, splitting a coupled
+object to `N` uncoupled objects.
+
+The `isdual` field indicates whether an isomorphism ``Z`` is present or not.
+
+The field `uncoupled` contains the objects coming out of the splitting trees, before the
+possible ``Z`` isomorphism.
+
+`M=max(0, N-2)` is the number inner lines.
+
+`L=max(0, N-1)` is the number of vertices.
+
+`T` is the type of the labels for the vertices. `T = Nothing` if
+`FusionStyle(I) == UniqueFusion()` or `SimpleFusion()`.
 """
 struct FusionTree{I<:Sector, N, M, L, T}
     uncoupled::NTuple{N, I}
     coupled::I
     isdual::NTuple{N, Bool}
-    innerlines::NTuple{M, I} # M = N-2
-    vertices::NTuple{L, T} # L = N-1
-    function FusionTree{I, N, M, L, T}(uncoupled::NTuple{N, I},
-                                            coupled::I,
-                                            isdual::NTuple{N, Bool},
-                                            innerlines::NTuple{M, I},
-                                            vertices::NTuple{L, T}) where
-                                            {I<:Sector, N, M, L, T}
+    innerlines::NTuple{M, I}
+    vertices::NTuple{L, T}
+    function FusionTree{I, N, M, L, T}(
+            uncoupled::NTuple{N, I},
+            coupled::I,
+            isdual::NTuple{N, Bool},
+            innerlines::NTuple{M, I},
+            vertices::NTuple{L, T}) where {I<:Sector, N, M, L, T}
         new{I, N, M, L, T}(uncoupled, coupled, isdual, innerlines, vertices)
     end
 end
@@ -39,11 +46,10 @@ Base.@pure function fusiontreetype(::Type{I}, N::Int) where {I<:Sector}
 end
 
 function FusionTree{I}(uncoupled::NTuple{N, Any},
-                        coupled,
-                        isdual::NTuple{N, Bool},
-                        innerlines,
-                        vertices = ntuple(n->nothing, max(0, N-1))
-                        ) where {I<:Sector, N}
+                       coupled,
+                       isdual::NTuple{N, Bool},
+                       innerlines,
+                       vertices = ntuple(n->nothing, max(0, N-1))) where {I<:Sector, N}
     if FusionStyle(I) isa GenericFusion
         fusiontreetype(I, N)(map(s->convert(I, s), uncoupled),
             convert(I, coupled), isdual, map(s->convert(I, s), innerlines), vertices)
@@ -59,25 +65,31 @@ function FusionTree{I}(uncoupled::NTuple{N, Any},
 end
 
 function FusionTree(uncoupled::NTuple{N, I},
-                        coupled::I,
-                        isdual::NTuple{N, Bool},
-                        innerlines,
-                        vertices = ntuple(n->nothing, max(0, N-1))
-                        ) where {I<:Sector, N}
+                    coupled::I,
+                    isdual::NTuple{N, Bool},
+                    innerlines,
+                    vertices = ntuple(n->nothing, max(0, N-1))) where {I<:Sector, N}
     if FusionStyle(I) isa GenericFusion
         fusiontreetype(I, N)(uncoupled, coupled, isdual, innerlines, vertices)
     else
         vertices′ = ntuple(n->nothing, max(0, N-1))
         if vertices == vertices′ || all(isone, vertices)
-            fusiontreetype(I, N)(uncoupled, coupled, isdual, innerlines, vertices′)
+            fusiontreetype(I, N)(uncoupled, coupled, isdual, innerlines, vertices)
         else
             throw(ArgumentError("Incorrect fusion vertices"))
         end
     end
 end
 
-# auxiliary routines
-# _abelianinner: generate the inner indices for given outer indices in the abelian case
+"""
+    _abelianinner(outer::NTuple{N, I}) where {I<:Sector, N}
+
+Return the innerlines as `NTuple{N-3,I}` in the Abelian case.
+
+Return `()` if ``N ≤ 3``.
+
+The input `outer` corresponds to `(uncoupled..., dual(coupled))`.
+"""
 _abelianinner(outer::Tuple{}) = ()
 _abelianinner(outer::Tuple{I}) where {I<:Sector} =
     outer[1] == one(I) ? () : throw(SectorMismatch())
@@ -106,15 +118,39 @@ function FusionTree(uncoupled::NTuple{N, I}, coupled::I = one(I),
 end
 
 # Properties
+"""
+    sectortype(f::FusionTree) -> Sector
+    sectortype(::Type{<:FusionTree{I}}) -> Sector
+
+Return the sector type of the fusion tree.
+"""
 sectortype(::Type{<:FusionTree{I}}) where {I<:Sector} = I
 sectortype(f::FusionTree) = sectortype(typeof(f))
 
+"""
+    FusionStyle(f::FusionTree) -> FusionStyle
+    FusionStyle(::Type{<:FusionTree{I}}) -> FusionStyle
+
+Return the fusion style of the fusion tree.
+"""
 FusionStyle(::Type{<:FusionTree{I}}) where {I<:Sector} = FusionStyle(I)
 FusionStyle(f::FusionTree) = FusionStyle(typeof(f))
 
+"""
+    BraidingStyle(f::FusionTree) -> BraidingStyle
+    BraidingStyle(::Type{<:FusionTree{I}}) -> BraidingStyle
+
+Return the braiding style of the fusion tree.
+"""
 BraidingStyle(::Type{<:FusionTree{I}}) where {I<:Sector} = BraidingStyle(I)
 BraidingStyle(f::FusionTree) = BraidingStyle(typeof(f))
 
+"""
+    length(f::FusionTree) -> Int
+    length(::Type{<:FusionTree{<:Sector, N}}) -> Int
+
+Extend `Base.length`. Return the number of the uncoupled objects in a fusion tree.
+"""
 Base.length(::Type{<:FusionTree{<:Sector, N}}) where {N} = N
 Base.length(f::FusionTree) = length(typeof(f))
 
@@ -129,6 +165,7 @@ function Base.hash(f::FusionTree{I}, h::UInt) where {I}
     end
     return h
 end
+
 function Base.isequal(f1::FusionTree{I, N}, f2::FusionTree{I, N}) where {I<:Sector, N}
     f1.coupled == f2.coupled || return false
     @inbounds for i = 1:N
