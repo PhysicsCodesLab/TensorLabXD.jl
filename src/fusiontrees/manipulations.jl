@@ -2,6 +2,63 @@
 #----------------------------------------------
 # -> rewrite generic fusion tree in basis of fusion trees in standard form
 # -> only depend on Fsymbol
+"""
+    split(f::FusionTree{I, N}, M::Int)
+    -> (::FusionTree{I, M}, ::FusionTree{I, N-M+1})
+
+Split a fusion tree into two. The first tree has as uncoupled sectors the first `M`
+uncoupled sectors of the input tree `f`, whereas its coupled sector corresponds to the
+internal sector between uncoupled sectors `M` and `M+1` of the original tree `f`. The
+second tree has as first uncoupled sector that same internal sector of `f`, followed by
+remaining `N-M` uncoupled sectors of `f`. It couples to the same sector as `f`. This
+operation is the inverse of `insertat` in the sense that if
+`f1, f2 = split(f, M) ⇒ f == insertat(f2, 1, f1)`.
+"""
+@inline function split(f::FusionTree{I, N}, M::Int) where {I, N}
+    if M > N || M < 0
+        throw(ArgumentError("M should be between 0 and N = $N"))
+    elseif M === N
+        (f, FusionTree{I}((f.coupled,), f.coupled, (false,), (), ()))
+    elseif M === 1
+        isdual1 = (f.isdual[1],)
+        isdual2 = Base.setindex(f.isdual, false, 1)
+        f1 = FusionTree{I}((f.uncoupled[1],), f.uncoupled[1], isdual1, (), ())
+        f2 = FusionTree{I}(f.uncoupled, f.coupled, isdual2, f.innerlines, f.vertices)
+        return f1, f2
+    elseif M === 0
+        f1 = FusionTree{I}((), one(I), (), ())
+        uncoupled2 = (one(I), f.uncoupled...)
+        coupled2 = f.coupled
+        isdual2 = (false, f.isdual...)
+        innerlines2 = N >= 2 ? (f.uncoupled[1], f.innerlines...) : ()
+        if FusionStyle(I) isa GenericFusion
+            vertices2 = (1, f.vertices...)
+            return f1, FusionTree{I}(uncoupled2, coupled2, isdual2, innerlines2, vertices2)
+        else
+            return f1, FusionTree{I}(uncoupled2, coupled2, isdual2, innerlines2)
+        end
+    else
+        uncoupled1 = ntuple(n->f.uncoupled[n], M)
+        isdual1 = ntuple(n->f.isdual[n], M)
+        innerlines1 = ntuple(n->f.innerlines[n], max(0, M-2))
+        coupled1 = f.innerlines[M-1]
+        vertices1 = ntuple(n->f.vertices[n], M-1)
+
+        uncoupled2 = ntuple(N - M + 1) do n
+            n == 1 ? f.innerlines[M - 1] : f.uncoupled[M + n - 1]
+        end
+        isdual2 = ntuple(N - M + 1) do n
+            n == 1 ? false : f.isdual[M + n - 1]
+        end
+        innerlines2 = ntuple(n->f.innerlines[M-1+n], N-M-1)
+        coupled2 = f.coupled
+        vertices2 = ntuple(n->f.vertices[M-1+n], N-M)
+
+        f1 = FusionTree{I}(uncoupled1, coupled1, isdual1, innerlines1, vertices1)
+        f2 = FusionTree{I}(uncoupled2, coupled2, isdual2, innerlines2, vertices2)
+        return f1, f2
+    end
+end
 
 """
     insertat(f::FusionTree{I, N₁}, i::Int, f2::FusionTree{I, N₂})
@@ -15,7 +72,7 @@ function insertat(f1::FusionTree{I}, i::Int, f2::FusionTree{I, 0}) where {I}
     # this actually removes uncoupled line i, which should be trivial
     (f1.uncoupled[i] == f2.coupled && !f1.isdual[i]) ||
         throw(SectorMismatch("cannot connect $(f2.uncoupled) to $(f1.uncoupled[i])"))
-    coeff = Fsymbol(one(I), one(I), one(I), one(I), one(I), one(I))[1,1]
+    coeff = Fsymbol(one(I), one(I), one(I), one(I), one(I), one(I))[1,1,1,1]
 
     uncoupled = TupleTools.deleteat(f1.uncoupled, i)
     coupled = f1.coupled
@@ -107,7 +164,7 @@ function insertat(f1::FusionTree{I,N₁}, i, f2::FusionTree{I,N₂}) where {I,N�
     F = fusiontreetype(I, N₁ + N₂ - 1)
     (f1.uncoupled[i] == f2.coupled && !f1.isdual[i]) ||
         throw(SectorMismatch("cannot connect $(f2.uncoupled) to $(f1.uncoupled[i])"))
-    coeff = Fsymbol(one(I), one(I), one(I), one(I), one(I), one(I))[1,1]
+    coeff = Fsymbol(one(I), one(I), one(I), one(I), one(I), one(I))[1,1,1,1]
     T = typeof(coeff)
     if length(f1) == 1
         return fusiontreedict(I){F,T}(f2 => coeff)
@@ -135,64 +192,6 @@ function insertat(f1::FusionTree{I,N₁}, i, f2::FusionTree{I,N₂}) where {I,N�
             end
         end
         return newtrees
-    end
-end
-
-"""
-    split(f::FusionTree{I, N}, M::Int)
-    -> (::FusionTree{I, M}, ::FusionTree{I, N-M+1})
-
-Split a fusion tree into two. The first tree has as uncoupled sectors the first `M`
-uncoupled sectors of the input tree `f`, whereas its coupled sector corresponds to the
-internal sector between uncoupled sectors `M` and `M+1` of the original tree `f`. The
-second tree has as first uncoupled sector that same internal sector of `f`, followed by
-remaining `N-M` uncoupled sectors of `f`. It couples to the same sector as `f`. This
-operation is the inverse of `insertat` in the sense that if
-`f1, f2 = split(t, M) ⇒ f == insertat(f2, 1, f1)`.
-"""
-@inline function split(f::FusionTree{I, N}, M::Int) where {I, N}
-    if M > N || M < 0
-        throw(ArgumentError("M should be between 0 and N = $N"))
-    elseif M === N
-        (f, FusionTree{I}((f.coupled,), f.coupled, (false,), (), ()))
-    elseif M === 1
-        isdual1 = (f.isdual[1],)
-        isdual2 = Base.setindex(f.isdual, false, 1)
-        f1 = FusionTree{I}((f.uncoupled[1],), f.uncoupled[1], isdual1, (), ())
-        f2 = FusionTree{I}(f.uncoupled, f.coupled, isdual2, f.innerlines, f.vertices)
-        return f1, f2
-    elseif M === 0
-        f1 = FusionTree{I}((), one(I), (), ())
-        uncoupled2 = (one(I), f.uncoupled...)
-        coupled2 = f.coupled
-        isdual2 = (false, f.isdual...)
-        innerlines2 = N >= 2 ? (f.uncoupled[1], f.innerlines...) : ()
-        if FusionStyle(I) isa GenericFusion
-            vertices2 = (1, f.vertices...)
-            return f1, FusionTree{I}(uncoupled2, coupled2, isdual2, innerlines2, vertices2)
-        else
-            return f1, FusionTree{I}(uncoupled2, coupled2, isdual2, innerlines2)
-        end
-    else
-        uncoupled1 = ntuple(n->f.uncoupled[n], M)
-        isdual1 = ntuple(n->f.isdual[n], M)
-        innerlines1 = ntuple(n->f.innerlines[n], max(0, M-2))
-        coupled1 = f.innerlines[M-1]
-        vertices1 = ntuple(n->f.vertices[n], M-1)
-
-        uncoupled2 = ntuple(N - M + 1) do n
-            n == 1 ? f.innerlines[M - 1] : f.uncoupled[M + n - 1]
-        end
-        isdual2 = ntuple(N - M + 1) do n
-            n == 1 ? false : f.isdual[M + n - 1]
-        end
-        innerlines2 = ntuple(n->f.innerlines[M-1+n], N-M-1)
-        coupled2 = f.coupled
-        vertices2 = ntuple(n->f.vertices[M-1+n], N-M)
-
-        f1 = FusionTree{I}(uncoupled1, coupled1, isdual1, innerlines1, vertices1)
-        f2 = FusionTree{I}(uncoupled2, coupled2, isdual2, innerlines2, vertices2)
-        return f1, f2
     end
 end
 

@@ -55,6 +55,12 @@ function Base.iterate(it::FusionTreeIterator{I, 1},
 end
 
 #   General case:
+"""
+	labelvertices(uncoupled::NTuple{N, I}, coupled::I, lines, vertices) where {I<:Sector, N}
+
+Return the vertices which is a `NTuple{L, T}`, where `L = N-1` and `T` is the type of the
+vertice labels. This form is used to construct the instance of FusionTree.
+"""
 labelvertices(uncoupled::NTuple{2, I}, coupled::I,
 				lines::Tuple{}, vertices::Tuple{Int}) where {I<:Sector} =
     (vertex_ind2label(vertices[1], uncoupled..., coupled),)
@@ -98,6 +104,10 @@ function _iterate(uncoupled::NTuple{N, I}, coupled::I) where {N, I<:Sector}
     return lines, vertices, states
 end
 
+# In the iterating, for each node, change the vertices label first, until Nsymbol(a,b,c) is
+# reached, then change the coupled object of that node.
+# The states record the iterator state of c in a ⊗ b, and keep unchanged when changing the
+# vertices label.
 function _iterate(uncoupled::NTuple{N, I}, coupled::I, lines, vertices,
                             states) where {N, I<:Sector}
     a, b, = uncoupled
