@@ -32,7 +32,18 @@ function CartesianSpace(dims::AbstractDict; kwargs...)
 end
 
 # convenience constructor
-Base.getindex(::RealNumbers) = CartesianSpace # make ℝ[] a synonyms for CartesianSpace
+"""
+    Base.getindex(::RealNumbers) -> CartesianSpace
+
+Make ℝ[] a synonyms for CartesianSpace.
+"""
+Base.getindex(::RealNumbers) = CartesianSpace
+
+"""
+    Base.:^(::RealNumbers, d::Int) -> CartesianSpace
+
+Return a CartesianSpace with dimension `d`.
+"""
 Base.:^(::RealNumbers, d::Int) = CartesianSpace(d)
 
 # Corresponding methods:
@@ -40,7 +51,8 @@ Base.:^(::RealNumbers, d::Int) = CartesianSpace(d)
 Base.oneunit(::Type{CartesianSpace}) = CartesianSpace(1)
 
 dim(V::CartesianSpace) = V.d
-Base.axes(V::CartesianSpace) = Base.OneTo(dim(V))
+
+Base.axes(V::CartesianSpace) = OneTo(dim(V)) # Base.OneTo(dim(V))
 flip(V::CartesianSpace) = V
 ⊕(V1::CartesianSpace, V2::CartesianSpace) = CartesianSpace(V1.d+V2.d)
 fuse(V1::CartesianSpace, V2::CartesianSpace) = CartesianSpace(V1.d*V2.d)

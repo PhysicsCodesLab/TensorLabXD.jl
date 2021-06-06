@@ -10,7 +10,7 @@ _sectors(::Type{T}) where {T<:SectorTuple} =
     (Base.tuple_type_head(T),  _sectors(Base.tuple_type_tail(T))...)
 
 Base.IteratorSize(::Type{SectorValues{ProductSector{T}}}) where {T<:SectorTuple} =
-    Base.IteratorSize(Base.Iterators.product(map(values, _sectors(T))...))
+    Base.IteratorSize(product(map(values, _sectors(T))...))
 Base.size(::SectorValues{ProductSector{T}}) where {T<:SectorTuple} =
     map(s->length(values(s)), _sectors(T))
 Base.length(P::SectorValues{<:ProductSector}) = *(size(P)...)

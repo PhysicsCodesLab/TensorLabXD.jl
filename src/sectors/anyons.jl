@@ -4,9 +4,8 @@
     FibonacciAnyon(s::Symbol)
 
 Represents the anyons (isomorphism classes of simple objects) of the Fibonacci fusion
-category. It can take two values, corresponding to the trivial sector
-`FibonacciAnyon(:I)` and the non-trivial sector `FibonacciAnyon(:τ)` with fusion rules
-``τ ⊗ τ = 1 ⊕ τ``.
+category. It can take two values, corresponding to the unit object `FibonacciAnyon(:I)`
+and the non-trivial object `FibonacciAnyon(:τ)` with fusion rules ``τ ⊗ τ = 1 ⊕ τ``.
 """
 struct FibonacciAnyon <: Sector
     isone::Bool
@@ -18,7 +17,7 @@ end
 
 Base.iterate(::SectorValues{FibonacciAnyon}, i = 0) =
     i == 0 ? (FibonacciAnyon(:I), 1) : (i == 1 ? (FibonacciAnyon(:τ), 2) : nothing)
-	
+
 Base.IteratorSize(::Type{SectorValues{FibonacciAnyon}}) = HasLength()
 Base.length(::SectorValues{FibonacciAnyon}) = 2
 
@@ -56,7 +55,7 @@ Base.eltype(::Type{FibonacciIterator}) = FibonacciAnyon
 function Base.iterate(iter::FibonacciIterator, state = 1)
     I = FibonacciAnyon(:I)
     τ = FibonacciAnyon(:τ)
-    if state == 1 # first iteration
+    if state == 1
         iter.a == I && return (iter.b, 2)
         iter.b == I && return (iter.a, 2)
         return (I, 2)
@@ -69,8 +68,8 @@ function Base.iterate(iter::FibonacciIterator, state = 1)
 end
 
 Nsymbol(a::FibonacciAnyon, b::FibonacciAnyon, c::FibonacciAnyon) =
-    isone(a) + isone(b) + isone(c) != 2 # zero if one tau and two ones
-	
+    isone(a) + isone(b) + isone(c) != 2
+
 function Fsymbol(a::FibonacciAnyon, b::FibonacciAnyon, c::FibonacciAnyon,
                  d::FibonacciAnyon, e::FibonacciAnyon, f::FibonacciAnyon)
     Nsymbol(a, b, e) || return zero(_goldenratio)
@@ -92,8 +91,9 @@ function Fsymbol(a::FibonacciAnyon, b::FibonacciAnyon, c::FibonacciAnyon,
         return one(_goldenratio)
     end
 end
-	
+
 const _goldenratio = Float64(MathConstants.golden)
+
 dim(a::FibonacciAnyon) = isone(a) ? one(_goldenratio) : _goldenratio
 
 BraidingStyle(::Type{FibonacciAnyon}) = Anyonic()
@@ -119,8 +119,8 @@ end
     IsingAnyon(s::Symbol)
 
 Represents the anyons (isomorphism classes of simple objects) of the Ising fusion category.
-It can take three values, corresponding to the trivial sector `IsingAnyon(:I)` and the
-non-trivial sectors `IsingAnyon(:σ)` and `IsingAnyon(:ψ)`, with fusion rules
+It can take three values, corresponding to the unit object `IsingAnyon(:I)` and the
+non-trivial objects `IsingAnyon(:σ)` and `IsingAnyon(:ψ)`, with fusion rules
 ``ψ ⊗ ψ = 1``, ``σ ⊗ ψ = σ``, and ``σ ⊗ σ = 1 ⊕ ψ``.
 """
 struct IsingAnyon <: Sector
@@ -155,6 +155,7 @@ Base.convert(::Type{IsingAnyon}, s::Symbol) = IsingAnyon(s)
 Base.one(::Type{IsingAnyon}) = IsingAnyon(:I)
 Base.conj(s::IsingAnyon) = s
 Base.isreal(::Type{IsingAnyon}) = false
+
 function Base.isless(a::IsingAnyon, b::IsingAnyon)
     vals = SectorValues{IsingAnyon}()
     return isless(findindex(vals, a), findindex(vals, b))
@@ -180,7 +181,7 @@ end
 
 function Base.iterate(iter::IsingIterator, state = 1)
     I, σ, ψ = all_isinganyons
-    if state == 1 # first iteration
+    if state == 1
         iter.a == I && return (iter.b, 2)
         iter.b == I && return (iter.a, 2)
         iter.a == σ && iter.b == ψ && return (σ, 2)
@@ -259,7 +260,3 @@ function Base.show(io::IO, a::IsingAnyon)
         return print(io, "IsingAnyon(:$(a.s))")
     end
 end
-
-
-
-

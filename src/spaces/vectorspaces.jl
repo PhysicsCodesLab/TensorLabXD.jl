@@ -13,7 +13,18 @@ abstract type Field end
 struct RealNumbers <: Field end
 struct ComplexNumbers <: Field end
 
+"""
+    const ℝ = RealNumbers()
+
+Convenient representation of RealNumbers instance.
+"""
 const ℝ = RealNumbers()
+
+"""
+    const ℂ = ComplexNumbers()
+
+Convenient representation of ComplexNumbers instance.
+"""
 const ℂ = ComplexNumbers()
 
 Base.in(::Any, ::Field) = false
@@ -200,7 +211,7 @@ end
 """
     sectors(V::ElementarySpace) -> Iterator
 
-Return an iterator over the different sectors of `V`.
+Return an iterator over the different sectors of an elementary space `V`.
 """
 function sectors end
 sectors(V::ElementarySpace) = TrivialOrEmptyIterator(dim(V) == 0)
@@ -208,16 +219,16 @@ sectors(V::ElementarySpace) = TrivialOrEmptyIterator(dim(V) == 0)
 """
     blocksectors(V::ElementarySpace) = sectors(V)
 
-Return an iterator over the different sectors of `V`.
+Return an iterator over the different sectors of an elementary space `V`.
 
 Make ElementarySpace instances behave similar to ProductSpace instances.
 """
 blocksectors(V::ElementarySpace) = sectors(V)
 
 """
-    hassector(V::VectorSpace, a::Sector) -> Bool
+    hassector(V::ElementarySpace, a::Sector) -> Bool
 
-Return whether a vector space `V` has a subspace corresponding to sector `a`
+Return whether a elementary space `V` has a subspace corresponding to sector `a`
 with non-zero dimension, i.e. `dim(V, a) > 0`.
 """
 function hassector end
@@ -229,13 +240,19 @@ hassector(V::ElementarySpace, ::Trivial) = dim(V) != 0
 Return the total dimension of the vector space `V` as an Int.
 """
 function dim end
+
+"""
+    dim(V::ElementarySpace, a::Sector) -> Int
+
+Return the dimension of sector `a` that appear in the elementary space `V`.
+"""
 dim(V::ElementarySpace, ::Trivial) =
     sectortype(V) == Trivial ? dim(V) : throw(SectorMismatch())
 
 """
     blockdim(V::ElementarySpace, a::Sector) = dim(V, a)
 
-Return the times of sector `a` that appear in the elementary space `V`.
+Return the dimension of sector `a` that appear in the elementary space `V`.
 
 Make ElementarySpace instances behave similar to ProductSpace instances.
 """

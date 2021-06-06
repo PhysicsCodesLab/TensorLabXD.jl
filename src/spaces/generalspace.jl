@@ -23,15 +23,51 @@ end
 GeneralSpace{𝕜}(d::Int = 0; dual::Bool = false, conj::Bool = false) where {𝕜} =
     GeneralSpace{𝕜}(d, dual, conj)
 
+"""
+    dim(V::GeneralSpace) -> Int
+
+Return the total dimension of a general space.
+"""
 dim(V::GeneralSpace) = V.d
+
+"""
+    Base.axes(V::GeneralSpace) -> UnitRange
+
+Return the axes of a general space as 1:dim(V).
+"""
 Base.axes(V::GeneralSpace) = Base.OneTo(dim(V))
+
+"""
+    dual(V::GeneralSpace{𝕜}) where {𝕜} -> GeneralSpace
+
+Return the dual of the general space `V`.
+"""
 dual(V::GeneralSpace{𝕜}) where {𝕜} =
     GeneralSpace{𝕜}(dim(V), !isdual(V), isconj(V))
+
+"""
+    isdual(V::GeneralSpace) -> Bool
+
+Return whether the general space is a dual space.
+"""
 isdual(V::GeneralSpace) = V.dual
+
+"""
+    conj(V::GeneralSpace{𝕜}) where {𝕜} -> GeneralSpace
+
+Extend `Base.conj()`. Return the conjugate space of a general space `V`.
+"""
 Base.conj(V::GeneralSpace{𝕜}) where {𝕜} =
     GeneralSpace{𝕜}(dim(V), isdual(V), !isconj(V))
 
+"""
+    isconj(V::GeneralSpace) -> Bool
+
+Return whether a general space is a conjugate space.
+"""
 isconj(V::GeneralSpace) = V.conj # local use, does not export
+
+
 function Base.show(io::IO, V::GeneralSpace{𝕜}) where {𝕜}
     if isconj(V)
         print(io, "conj(")

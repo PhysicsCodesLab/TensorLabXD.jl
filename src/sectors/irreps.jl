@@ -1,7 +1,5 @@
 # Sectors corresponding to irreducible representations of compact groups
 #==============================================================================#
-# Irreps of groups
-#------------------------------------------------------------------------------#
 """
     abstract type AbstractIrrep{G<:Group} <: Sector end
 
@@ -15,7 +13,7 @@ the group name followed by `Irrep`.
 
 All irreps have [`BraidingStyle`](@ref) equal to `Bosonic()` and thus trivial twists.
 """
-abstract type AbstractIrrep{G<:Group} <: Sector end # irreps have integer quantum dimensions
+abstract type AbstractIrrep{G<:Group} <: Sector end
 BraidingStyle(::Type{<:AbstractIrrep}) = Bosonic()
 
 struct IrrepTable end
@@ -23,7 +21,7 @@ struct IrrepTable end
     const Irrep
 
 A constant of a singleton type used as `Irrep[G]` with `G<:Group` a type of group, to
-construct or obtain a concrete subtype of `AbstractIrrep{G}` that implements the data 
+construct or obtain a concrete subtype of `AbstractIrrep{G}` that implements the data
 structure used to represent irreducible representations of the group `G`.
 """
 const Irrep = IrrepTable()
@@ -51,9 +49,9 @@ function Base.show(io::IO, c::AbstractIrrep)
 end
 
 const AbelianIrrep{G} = AbstractIrrep{G} where {G<:AbelianGroup}
+
 FusionStyle(::Type{<:AbelianIrrep}) = UniqueFusion()
 Base.isreal(::Type{<:AbelianIrrep}) = true
-
 Nsymbol(a::I, b::I, c::I) where {I<:AbelianIrrep} = c == first(a ⊗ b)
 Fsymbol(a::I, b::I, c::I, d::I, e::I, f::I) where {I<:AbelianIrrep} =
     Int(Nsymbol(a, b, e)*Nsymbol(e, c, d)*Nsymbol(b, c, f)*Nsymbol(a, f, d))
@@ -83,7 +81,7 @@ struct ZNIrrep{N} <: AbstractIrrep{ℤ{N}}
         new{N}(mod(n, N))
     end
 end
-Base.getindex(::IrrepTable, ::Type{ℤ{N}}) where N = ZNIrrep{N}
+Base.getindex(::IrrepTable, ::Type{ℤ{N}}) where N = ZNIrrep{N} # Irrep[Z{N}] = ZNIrrep{N}
 Base.convert(Z::Type{<:ZNIrrep}, n::Real) = Z(n)
 const Z2Irrep = ZNIrrep{2}
 const Z3Irrep = ZNIrrep{3}
@@ -104,7 +102,7 @@ findindex(::SectorValues{ZNIrrep{N}}, c::ZNIrrep{N}) where N = c.n + 1
 Base.hash(c::ZNIrrep{N}, h::UInt) where {N} = hash(c.n, h)
 Base.isless(c1::ZNIrrep{N}, c2::ZNIrrep{N}) where {N} = isless(c1.n, c2.n)
 
-# U1Irrep: irreps of U1 are labelled by integers
+# U1Irrep: irreps of U1
 """
     U1Irrep(j::Real)
     Irrep[U₁](j::Real)
@@ -118,7 +116,7 @@ entered as arbitrary `Real`. The sequence of the charges is: 0, 1/2, -1/2, 1, -1
 struct U1Irrep <: AbstractIrrep{U₁}
     charge::HalfInt
 end
-Base.getindex(::IrrepTable, ::Type{U₁}) = U1Irrep
+Base.getindex(::IrrepTable, ::Type{U₁}) = U1Irrep  # Irrep[U₁] = U1Irrep
 Base.convert(::Type{U1Irrep}, c::Real) = U1Irrep(c)
 
 Base.one(::Type{U1Irrep}) = U1Irrep(0)
@@ -142,8 +140,10 @@ Base.hash(c::U1Irrep, h::UInt) = hash(c.charge, h)
 #------------------------------------------------------------------------------#
 # SU2Irrep: irreps of SU2 are labelled by half integers j
 struct SU2IrrepException <: Exception end
+
 Base.show(io::IO, ::SU2IrrepException) =
-    print(io, "Irreps of (bosonic or fermionic) `SU₂` should be labelled by non-negative half integers, i.e. elements of `Rational{Int}` with denominator 1 or 2")
+    print(io, "Irreps of (bosonic or fermionic) `SU₂` should be labelled by non-negative
+        half integers, i.e. elements of `Rational{Int}` with denominator 1 or 2")
 
 """
     SU2Irrep(j::Real)
@@ -156,11 +156,11 @@ package.
 struct SU2Irrep <: AbstractIrrep{SU₂}
     j::HalfInt
     function SU2Irrep(j)
-        j >= zero(j) || error("Not a valid SU₂ irrep")
+        j >= zero(j) || throw(SU2IrrepException())
         new(j)
     end
 end
-Base.getindex(::IrrepTable, ::Type{SU₂}) = SU2Irrep
+Base.getindex(::IrrepTable, ::Type{SU₂}) = SU2Irrep # Irrep[SU₂] = SU2Irrep
 Base.convert(::Type{SU2Irrep}, j::Real) = SU2Irrep(j)
 
 const _su2one = SU2Irrep(zero(HalfInt))
