@@ -34,7 +34,11 @@ struct FusionTree{I<:Sector, N, M, L, T}
     end
 end
 
-# Facilitate getting correct fusion tree types
+"""
+    fusiontreetype(::Type{I}, N::Int) where {I<:Sector}
+
+Return the correct fusiontree type `FusionTree{I<:Sector, N, M, L, T}` based on `I` and `N`.
+"""
 Base.@pure function fusiontreetype(::Type{I}, N::Int) where {I<:Sector}
     if N === 0
         FusionTree{I, 0, 0, 0, vertex_labeltype(I)}
