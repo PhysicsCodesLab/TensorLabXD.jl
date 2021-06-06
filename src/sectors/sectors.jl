@@ -132,7 +132,7 @@ FusionStyle(a::Sector) = FusionStyle(typeof(a))
 Return the fusiontensor ``X^{ab}_{c,μ}: c → a ⊗ b`` as a rank-4 tensor with size
 `(dim(a),dim(b),dim(c),Int(Nsymbol(a,b,c)))`.
 """
-function fusiontensor(a::I, b::I, c::I) where {I<:AbstractIrrep} end
+function fusiontensor end
 
 """
     ⊗(a::I, b::I) where {I<:Sector}
