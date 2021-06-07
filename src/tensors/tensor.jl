@@ -7,7 +7,9 @@
 Specific subtype of [`AbstractTensorMap`](@ref) for representing tensor maps (morphisms in
 a tensor category) whose data is stored in blocks of some subtype of `DenseMatrix`.
 """
-struct TensorMap{S<:IndexSpace, N₁, N₂, I<:Sector, A<:Union{<:DenseMatrix,SectorDict{I,<:DenseMatrix}}, F₁, F₂} <: AbstractTensorMap{S, N₁, N₂}
+struct TensorMap{S<:IndexSpace, N₁, N₂, I<:Sector,
+                    A<:Union{<:DenseMatrix,SectorDict{I,<:DenseMatrix}},
+                    F₁, F₂} <: AbstractTensorMap{S, N₁, N₂}
     data::A
     codom::ProductSpace{S,N₁}
     dom::ProductSpace{S,N₂}
@@ -60,7 +62,7 @@ storagetype(::Type{<:TensorMap{<:IndexSpace,N₁,N₂,Trivial,A}}) where
     {N₁,N₂,A<:DenseMatrix} = A
 storagetype(::Type{<:TensorMap{<:IndexSpace,N₁,N₂,I,<:SectorDict{I,A}}}) where
     {N₁,N₂,I<:Sector,A<:DenseMatrix} = A
-	
+
 codomain(t::TensorMap) = t.codom
 domain(t::TensorMap) = t.dom
 
@@ -325,17 +327,17 @@ end
 #---------
 Base.similar(t::AbstractTensorMap, T::Type, codomain::VectorSpace, domain::VectorSpace) =
     similar(t, T, codomain←domain)
-	
+
 Base.similar(t::AbstractTensorMap, codomain::VectorSpace, domain::VectorSpace) =
     similar(t, codomain←domain)
 
 Base.similar(t::AbstractTensorMap{S}, ::Type{T},
                 P::TensorMapSpace{S} = (domain(t) → codomain(t))) where {T,S} =
     TensorMap(d->similarstoragetype(t, T)(undef, d), P)
-	
+
 Base.similar(t::AbstractTensorMap{S}, ::Type{T}, P::TensorSpace{S}) where {T,S} =
     Tensor(d->similarstoragetype(t, T)(undef, d), P)
-	
+
 Base.similar(t::AbstractTensorMap{S},
                 P::TensorMapSpace{S} = (domain(t) → codomain(t))) where {S} =
     TensorMap(d->storagetype(t)(undef, d), P)

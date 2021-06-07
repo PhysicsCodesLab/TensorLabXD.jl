@@ -181,15 +181,21 @@ allind(::Type{<:AbstractTensorMap{<:IndexSpace, N₁, N₂}}) where {N₁, N₂}
 """
     adjointtensorindex(t::AbstractTensorMap{<:IndexSpace, N₁, N₂}, i) where {N₁, N₂} -> Int
 
-Return the index of the `i`th  the adjoint of the ten
+Return the index of the `i`th index of the tensor map `t` in its adjoint.
 """
 adjointtensorindex(t::AbstractTensorMap{<:IndexSpace, N₁, N₂}, i) where {N₁, N₂} =
     ifelse(i<=N₁, N₂+i, i-N₁)
+
+
+"""
+    adjointtensorindices(t::AbstractTensorMap, indices::IndexTuple)
+
+Return the indices of the `indices` of the tensor map `t` in its adjoint.
+"""
 adjointtensorindices(t::AbstractTensorMap, indices::IndexTuple) =
     map(i->adjointtensorindex(t, i), indices)
 
-# Equality and approximality
-#----------------------------
+
 function Base.:(==)(t1::AbstractTensorMap, t2::AbstractTensorMap)
     (codomain(t1) == codomain(t2) && domain(t1) == domain(t2)) || return false
     for c in blocksectors(t1)
@@ -217,7 +223,6 @@ function Base.isapprox(t1::AbstractTensorMap, t2::AbstractTensorMap;
 end
 
 # Conversion to Array:
-#----------------------
 # probably not optimized for speed, only for checking purposes
 function Base.convert(::Type{Array}, t::AbstractTensorMap{S, N₁, N₂}) where {S, N₁, N₂}
     I = sectortype(t)
