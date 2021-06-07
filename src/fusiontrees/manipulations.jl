@@ -221,7 +221,7 @@ end
 function merge(f1::FusionTree{I, 0}, f2::FusionTree{I, 0}, c::I, μ =nothing) where {I}
     c == one(I) ||
         throw(SectorMismatch("cannot fuse sectors $(f1.coupled) and $(f2.coupled) to $c"))
-    return fusiontreedict(I)(f1=>Fsymbol(c, c, c, c, c, c))
+    return fusiontreedict(I)(f1=>Fsymbol(c, c, c, c, c, c)[1,1,1,1])
 end
 
 # ELEMENTARY DUALITY MANIPULATIONS: A- and B-moves
@@ -744,8 +744,8 @@ corresponding coefficients.
 The keyword `inv` determines whether index `i` will braid above or below index `i+1`, i.e.
 applying `artin_braid(f′, i; inv = true)` to all the outputs `f′` of
 `artin_braid(f, i; inv = false)` and collecting the results should yield a single fusion
-tree with non-zero coefficient, namely `f` with coefficient `1`. This keyword has no effect
-if  `BraidingStyle(sectortype(f)) isa SymmetricBraiding`.
+tree `f` with coefficient `1`. This keyword has no effect if
+`BraidingStyle(sectortype(f)) isa SymmetricBraiding`.
 """
 function artin_braid(f::FusionTree{I, N}, i; inv::Bool = false) where {I<:Sector, N}
     1 <= i < N ||
@@ -846,6 +846,30 @@ function artin_braid(f::FusionTree{I, N}, i; inv::Bool = false) where {I<:Sector
         end
         return newtrees
     end
+end
+
+"""
+    permutation2swaps(perm) -> Vector{Int}
+
+Change the permutation `perm` into a vector of Int. Each element `V[i]` of the returned
+vector `V` represent a swap operation between `V[i]`th and `V[i]+1`th objects. Applying the
+swaps in sequence on `1:length(perm)` gives the `perm`.
+"""
+function permutation2swaps(perm)
+    p = collect(perm)
+    @assert isperm(p)
+    swaps = Vector{Int}()
+    N = length(p)
+    for k = 1:N-1
+        append!(swaps, p[k]-1:-1:k)
+        for l = k+1:N
+            if p[l] < p[k]
+                p[l] += 1
+            end
+        end
+        p[k] = k
+    end
+    return swaps
 end
 
 # braid fusion tree
@@ -981,6 +1005,24 @@ end
 const BraidKey{I<:Sector, N₁, N₂} = Tuple{<:FusionTree{I}, <:FusionTree{I},
                                         IndexTuple, IndexTuple,
                                         IndexTuple{N₁}, IndexTuple{N₂}}
+"""
+    linearizepermutation(p1::NTuple{N₁, Int}, p2::NTuple{N₂},
+                                    n₁::Int, n₂::Int) where {N₁, N₂}
+
+Combine the permutation p1 and p2 for seperate splitting and fusion tree into a permutation
+on only splitting tree which obtained by repartition. Note that the sequence of the
+incoming objects of the fusion tree is reversed after repartition into the splitting tree.
+"""
+function linearizepermutation(p1::NTuple{N₁, Int}, p2::NTuple{N₂},
+                                n₁::Int, n₂::Int) where {N₁, N₂}
+    p1′ = ntuple(Val(N₁)) do n
+        p1[n] > n₁ ? n₂+2n₁+1-p1[n] : p1[n]
+    end
+    p2′ = ntuple(Val(N₂)) do n
+        p2[N₂+1-n] > n₁ ? n₂+2n₁+1-p2[N₂+1-n] : p2[N₂+1-n]
+    end
+    return (p1′..., p2′...)
+end
 
 function _braid((f1, f2, l1, l2, p1, p2)::BraidKey{I, N₁, N₂}) where {I<:Sector, N₁, N₂}
     p = linearizepermutation(p1, p2, length(f1), length(f2))
@@ -1008,8 +1050,8 @@ end
 
 Input is a double fusion tree that describes the fusion of a set of incoming uncoupled
 sectors to a set of outgoing uncoupled sectors, represented using the individual trees of
-outgoing (`t1`) and incoming sectors (`t2`) respectively (with identical coupled sector
-`t1.coupled == t2.coupled`). Computes new trees and corresponding coefficients obtained from
+outgoing (`f1`) and incoming sectors (`f2`) respectively (with identical coupled sector
+`f1.coupled == f2.coupled`). Computes new trees and corresponding coefficients obtained from
 repartitioning and permuting the tree such that sectors `p1` become outgoing and sectors
 `p2` become incoming.
 """
