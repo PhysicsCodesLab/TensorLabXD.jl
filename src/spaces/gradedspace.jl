@@ -216,6 +216,16 @@ function ⊕(V1::GradedSpace{I}, V2::GradedSpace{I}) where {I<:Sector}
     return typeof(V1)(dims; dual = dual1)
 end
 
+function fuse(V1::GradedSpace{I}, V2::GradedSpace{I}) where {I<:Sector}
+    dims = SectorDict{I, Int}()
+    for a in sectors(V1), b in sectors(V2)
+        for c in a ⊗ b
+            dims[c] = get(dims, c, 0) + Nsymbol(a, b, c)*dim(V1, a)*dim(V2, b)
+        end
+    end
+    return typeof(V1)(dims)
+end
+
 function infimum(V1::GradedSpace{I}, V2::GradedSpace{I}) where {I<:Sector}
     if V1.dual == V2.dual
         typeof(V1)(c=>min(dim(V1, c), dim(V2, c)) for c in

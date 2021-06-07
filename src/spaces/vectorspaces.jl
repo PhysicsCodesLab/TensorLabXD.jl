@@ -162,7 +162,7 @@ Base.oneunit(V::ElementarySpace) = oneunit(typeof(V))
     sectortype(V::VectorSpace) -> Type{<:Sector}
     sectortype(::Type{<:VectorSpace})
 
-Return the type of sector over which the vector space `V` is defined.
+Return the type of sector over which the vector space `V` or type is defined.
 """
 function sectortype end
 sectortype(V::VectorSpace) = sectortype(typeof(V))

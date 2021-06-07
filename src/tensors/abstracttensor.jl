@@ -11,6 +11,7 @@ an input space of type `ProductSpace{S, N₂}` to an output space of type
 `ProductSpace{S, N₁}`.
 """
 abstract type AbstractTensorMap{S<:IndexSpace, N₁, N₂} end
+
 """
     AbstractTensor{S<:IndexSpace, N} = AbstractTensorMap{S, N, 0}
 
@@ -32,47 +33,156 @@ similarstoragetype(t::AbstractTensorMap, T) = similarstoragetype(typeof(t), T)
 similarstoragetype(TT::Type{<:AbstractTensorMap}, ::Type{T}) where {T} =
     Core.Compiler.return_type(similar, Tuple{storagetype(TT), Type{T}})
 
-spacetype(t::AbstractTensorMap) = spacetype(typeof(t))
-spacetype(::Type{<:AbstractTensorMap{S}}) where {S<:IndexSpace} = S
+"""
+    field(t::AbstractTensorMap)
+    field(::Type{<:AbstractTensorMap{S}}) where {S<:IndexSpace}
 
-sectortype(t::AbstractTensorMap) = sectortype(typeof(t))
-sectortype(::Type{<:AbstractTensorMap{S}}) where {S<:IndexSpace} = sectortype(S)
-
+Return the field type over which a vector space instance or type is defined.
+"""
 field(t::AbstractTensorMap) = field(typeof(t))
 field(::Type{<:AbstractTensorMap{S}}) where {S<:IndexSpace} = field(S)
 
+"""
+    spacetype(t::AbstractTensorMap)
+    spacetype(::Type{<:AbstractTensorMap{S}}) where {S<:IndexSpace}
+
+Return the ElementarySpace type associated to a AbstractTensorMap instance or type.
+"""
+spacetype(t::AbstractTensorMap) = spacetype(typeof(t))
+spacetype(::Type{<:AbstractTensorMap{S}}) where {S<:IndexSpace} = S
+
+"""
+    sectortype(t::AbstractTensorMap) -> Type{<:Sector}
+    sectortype(::Type{<:VectorSpace}) where {S<:IndexSpace}
+
+Return the type of sector over which the AbstractTensorMap `t` or type is defined.
+"""
+sectortype(t::AbstractTensorMap) = sectortype(typeof(t))
+sectortype(::Type{<:AbstractTensorMap{S}}) where {S<:IndexSpace} = sectortype(S)
+
+
+"""
+    numout(t::AbstractTensorMap) -> Int
+    numout(::Type{<:AbstractTensorMap{<:IndexSpace, N₁, N₂}}) where {N₁, N₂}
+
+Return the number of the index spaces in the codomain of a AbstractTensorMap instance or
+type.
+"""
 numout(t::AbstractTensorMap) = numout(typeof(t))
 numout(::Type{<:AbstractTensorMap{<:IndexSpace, N₁, N₂}}) where {N₁, N₂} = N₁
 
+"""
+    numin(t::AbstractTensorMap) -> Int
+    numin(::Type{<:AbstractTensorMap{<:IndexSpace, N₁, N₂}}) where {N₁, N₂}
+
+Return the number of the index spaces in the domain of a AbstractTensorMap instance or type.
+"""
 numin(t::AbstractTensorMap) = numin(typeof(t))
 numin(::Type{<:AbstractTensorMap{<:IndexSpace, N₁, N₂}}) where {N₁, N₂} = N₂
 
+"""
+    numind(t::AbstractTensorMap) -> Int
+    numind(::Type{<:AbstractTensorMap{<:IndexSpace, N₁, N₂}}) where {N₁, N₂}
+
+Return the total number of the index spaces of a AbstractTensorMap instance or type.
+`order` is the alias of `numind`.
+"""
 numind(t::AbstractTensorMap) = numind(typeof(t))
 numind(::Type{<:AbstractTensorMap{<:IndexSpace, N₁, N₂}}) where {N₁, N₂} = N₁ + N₂
 const order = numind
 
-# tensormap implementation should provide codomain(t) and domain(t)
+"""
+    codomian(t::AbstractTensorMap)
+
+Return the codomain of the tensor map `t`.
+
+    codomain(t::AbstractTensorMap, i)
+
+Return the `i`th index space of the codomain of the tensor map `t`.
+"""
 codomain(t::AbstractTensorMap, i) = codomain(t)[i]
+
+"""
+    domain(t::AbstractTensorMap)
+
+Return the domain of the tensor map `t`.
+
+    domain(t::AbstractTensorMap, i)
+
+Return the `i`th index space of the domain of the tensor map `t`.
+"""
 domain(t::AbstractTensorMap, i) = domain(t)[i]
-source(t::AbstractTensorMap) = domain(t) # categorical terminology
+
+"""
+    target(t::AbstractTensorMap)
+
+Return the codomain of the tensor map `t`.
+"""
 target(t::AbstractTensorMap) = codomain(t) # categorical terminology
+
+"""
+    source(t::AbstractTensorMap)
+
+Return the domain of the tensor map `t`.
+"""
+source(t::AbstractTensorMap) = domain(t) # categorical terminology
+
+"""
+    space(t::AbstractTensorMap) -> HomSpace
+
+Return the HomSpace corresponding to the tensor map `t` instance.
+"""
 space(t::AbstractTensorMap) = HomSpace(codomain(t), domain(t))
+
+"""
+    space(t::AbstractTensorMap, i::Int)
+
+Return the `i`th index space of the HomSpace corresponding to the tensor map `t`.
+"""
 space(t::AbstractTensorMap, i::Int) = space(t)[i]
+
+"""
+    dim(t::AbstractTensorMap)
+
+Return the total dimension of the HomSpace corresponding to the tensor map `t`.
+"""
 dim(t::AbstractTensorMap) = dim(space(t))
 
-# some index manipulation utilities
+"""
+    codomainind(t::AbstractTensorMap) -> Tuple
+    codomainind(::Type{<:AbstractTensorMap{<:IndexSpace, N₁, N₂}}) where {N₁, N₂}
+
+Return the indices of the codomain of a tensor map instance or type as a tuple of Int.
+"""
 codomainind(t::AbstractTensorMap) = codomainind(typeof(t))
 codomainind(::Type{<:AbstractTensorMap{<:IndexSpace, N₁, N₂}}) where {N₁, N₂} =
     ntuple(n->n, N₁)
-	
+
+"""
+    domainind(t::AbstractTensorMap) -> Tuple{Int}
+    domainind(::Type{<:AbstractTensorMap{<:IndexSpace, N₁, N₂}}) where {N₁, N₂}
+
+Return the indices of the domain of a tensor map instance or type as a tuple of Int.
+"""
 domainind(t::AbstractTensorMap) = domainind(typeof(t))
 domainind(::Type{<:AbstractTensorMap{<:IndexSpace, N₁, N₂}}) where {N₁, N₂} =
     ntuple(n-> N₁+n, N₂)
 
+"""
+    allind(t::AbstractTensorMap) -> Tuple{Int}
+    allind(::Type{<:AbstractTensorMap{<:IndexSpace, N₁, N₂}}) where {N₁, N₂}
+
+Return all indices of a tensor map instance or type as a tuple of Int.
+"""
 allind(t::AbstractTensorMap) = allind(typeof(t))
 allind(::Type{<:AbstractTensorMap{<:IndexSpace, N₁, N₂}}) where {N₁, N₂} =
     ntuple(n->n, N₁+N₂)
 
+"""
+    adjointtensorindex(t::AbstractTensorMap{<:IndexSpace, N₁, N₂}, i) where {N₁, N₂} -> Int
+
+Return the index of the `i`th  the adjoint of the ten
+"""
 adjointtensorindex(t::AbstractTensorMap{<:IndexSpace, N₁, N₂}, i) where {N₁, N₂} =
     ifelse(i<=N₁, N₂+i, i-N₁)
 adjointtensorindices(t::AbstractTensorMap, indices::IndexTuple) =
