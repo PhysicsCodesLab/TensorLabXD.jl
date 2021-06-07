@@ -23,18 +23,8 @@ end
 GeneralSpace{𝕜}(d::Int = 0; dual::Bool = false, conj::Bool = false) where {𝕜} =
     GeneralSpace{𝕜}(d, dual, conj)
 
-"""
-    dim(V::GeneralSpace) -> Int
-
-Return the total dimension of a general space.
-"""
 dim(V::GeneralSpace) = V.d
 
-"""
-    Base.axes(V::GeneralSpace) -> UnitRange
-
-Return the axes of a general space as 1:dim(V).
-"""
 Base.axes(V::GeneralSpace) = Base.OneTo(dim(V))
 
 """

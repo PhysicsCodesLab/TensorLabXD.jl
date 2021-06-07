@@ -17,28 +17,80 @@ const TensorSpace{S<:ElementarySpace} = Union{S, ProductSpace{S}}
 const TensorMapSpace{S<:ElementarySpace, N₁, N₂} =
     HomSpace{S, ProductSpace{S, N₁}, ProductSpace{S, N₂}}
 
+"""
+    codomain(W::HomSpace)
+
+Return the codomain of a HomSpace.
+"""
 codomain(W::HomSpace) = W.codomain
+
+"""
+    domain(W::HomSpace)
+
+Return the domain of a HomSpace.
+"""
 domain(W::HomSpace) = W.domain
 
+"""
+    dual(W::HomSpace)
+
+Return the dual of a HomSpace which contains the dual of morphisms in this space.
+It corresponds to 180 degree rotation in the graphical representation.
+"""
 dual(W::HomSpace) = HomSpace(dual(W.domain), dual(W.codomain))
+
+"""
+    adjoint(W::HomSpace{<:EuclideanSpace})
+
+Return the adjoint of a HomSpace which contains the dagger of morphisms in this space.
+It corresponds to mirror operation and then reversing all arrows in the graphical
+representation.
+"""
 Base.adjoint(W::HomSpace{<:EuclideanSpace}) = HomSpace(W.domain, W.codomain)
 
 Base.hash(W::HomSpace, h::UInt) = hash(domain(W), hash(codomain(W), h))
 Base.:(==)(W1::HomSpace, W2::HomSpace) =
     (W1.codomain == W2.codomain) && (W1.domain == W2.domain)
 
+"""
+    spacetype(W::HomSpace) -> Type{ElementarySpace}
+    spacetype(::Type{<:HomSpace{S}})
+
+Return the ElementarySpace type associated to a HomSpace instance or type.
+"""
 spacetype(W::HomSpace) = spacetype(typeof(W))
 spacetype(::Type{<:HomSpace{S}}) where S = S
 
+"""
+    sectortype(W::HomSpace) -> Type{<:Sector}
+    sectortype(L::Type{<:HomSpace)
+
+Return the type of sector over which the HomSpace `W` is defined.
+"""
 sectortype(W::HomSpace) = sectortype(typeof(W))
 sectortype(L::Type{<:HomSpace}) = sectortype(spacetype(L))
 
+"""
+    field(W::HomSpace) -> Field
+    field(L::Type{<:HomSpace})
+
+Return the field type over which a HomSpace instance or type is defined.
+"""
 field(W::HomSpace) = field(typeof(W))
 field(L::Type{<:HomSpace}) = field(spacetype(L))
 
+# The index of a HomSpace is defined as the following: first, index spaces for codomain,
+# then, index spaces for domain; dual is taken for each index space of domain, but the order
+# are not reversed.
 Base.getindex(W::TensorMapSpace{<:IndexSpace, N₁, N₂}, i) where {N₁, N₂} =
     i <= N₁ ? codomain(W)[i] : dual(domain(W)[i-N₁])
 
+"""
+    →(dom::TensorSpace{S}, codom::TensorSpace{S}) where {S<:ElementarySpace}
+    ←(codom::TensorSpace{S}, dom::TensorSpace{S}) where {S<:ElementarySpace}
+
+Convenient constructor of HomSpace instance.
+"""
 →(dom::TensorSpace{S}, codom::TensorSpace{S}) where {S<:ElementarySpace} =
     HomSpace(ProductSpace(codom), ProductSpace(dom))
 

@@ -12,23 +12,29 @@ isomorphism classes of simple objects of a unitary and pivotal (pre-)fusion cate
 
 Here `dims` represents the degeneracy or multiplicity of every sector.
 
-The data structure `D` of `dims` will depend on the result `Base.IteratorElsize(values(I))`;
-if the result is of type `HasLength` or `HasShape`, `dims` will be stored in a
+The data structure `D` of `dims` will depend on the result `Base.IteratorElsize(values(I))`.
+
+If the result is of type `HasLength` or `HasShape`, `dims` will be stored in a
 `NTuple{N,Int}` with `N = length(values(I))`. This requires that a sector `s::I` can be
 transformed into an index via `s == getindex(values(I), i)` and
-`i == findindex(values(I), s)`. If `Base.IteratorElsize(values(I))` results `IsInfinite()`
-or `SizeUnknown()`, a `SectorDict{I,Int}` is used to store the non-zero degeneracy
-dimensions with the corresponding sector as key. The parameter `D` is hidden from the user
-and should typically be of no concern.
+`i == findindex(values(I), s)`.
+
+If `Base.IteratorElsize(values(I))` results `IsInfinite()` or `SizeUnknown()`, a
+`SectorDict{I,Int}` is used to store the non-zero degeneracy dimensions with the
+corresponding sector as key.
+
+The parameter `D` is hidden from the user and should typically be of no concern.
 
 The concrete type `GradedSpace{I,D}` with correct `D` can be obtained as `Vect[I]`, or if
-`I == Irrep[G]` for some `G<:Group`, as `Rep[G]`.
+`I == Irrep[G]` for some `G<:Group`, as `Rep[G]`. Therefore, we don't need to specify `D`
+when we construct the instance.
 """
 struct GradedSpace{I<:Sector, D} <: EuclideanSpace{ℂ}
     dims::D
     dual::Bool
 end
 
+# D = NTuple{N, Int} case
 function GradedSpace{I, NTuple{N, Int}}(dims; dual::Bool = false) where {I, N}
     d = ntuple(n->0, N)
     isset = ntuple(n->false, N)
@@ -43,6 +49,7 @@ end
 GradedSpace{I, NTuple{N, Int}}(dims::Pair; dual::Bool = false) where {I, N} =
     GradedSpace{I, NTuple{N, Int}}((dims,); dual = dual)
 
+# D = SectorDict{I, Int} case
 function GradedSpace{I, SectorDict{I, Int}}(dims; dual::Bool = false) where {I<:Sector}
     d = SectorDict{I, Int}()
     for (c, dc) in dims
@@ -55,6 +62,7 @@ end
 GradedSpace{I, SectorDict{I, Int}}(dims::Pair; dual::Bool = false) where {I<:Sector} =
     GradedSpace{I, SectorDict{I, Int}}((dims,); dual = dual)
 
+# For both kinds of D
 GradedSpace{I,D}(; kwargs...) where {I<:Sector,D} = GradedSpace{I,D}((); kwargs...)
 GradedSpace{I,D}(d1::Pair, d2::Pair, dims::Vararg{Pair}; kwargs...) where {I<:Sector,D} =
     GradedSpace{I,D}((d1, d2, dims...); kwargs...)
@@ -79,7 +87,7 @@ function Base.getindex(::SpaceTable, I::Type{<:Sector})
     end
 end
 
-Base.getindex(::ComplexNumbers, I::Type{<:Sector}) = Vect[I]
+Base.getindex(::ComplexNumbers, I::Type{<:Sector}) = Vect[I] # Make ℂ[I] = Vect[I]
 
 GradedSpace{I}(args...; kwargs...) where {I<:Sector} = Vect[I](args..., kwargs...)
 
@@ -152,14 +160,14 @@ const U₁Space = U1Space
 const CU₁Space = CU1Space
 const SU₂Space = SU2Space
 
-# Corresponding methods:
 # properties
 sectortype(::Type{<:GradedSpace{I}}) where {I<:Sector} = I
+Base.oneunit(S::Type{<:GradedSpace{I}}) where {I<:Sector} = S(one(I)=>1)
 
 sectors(V::GradedSpace{I,<:AbstractDict}) where {I<:Sector} =
     SectorSet{I}(s->isdual(V) ? dual(s) : s, keys(V.dims))
 sectors(V::GradedSpace{I,NTuple{N,Int}}) where {I<:Sector, N} =
-    SectorSet{I}(Iterators.filter(n->V.dims[n]!=0, 1:N)) do n
+    SectorSet{I}(filter(n->V.dims[n]!=0, 1:N)) do n
         isdual(V) ? dual(values(I)[n]) : values(I)[n]
     end
 
@@ -172,14 +180,6 @@ dim(V::GradedSpace) =
 
 hassector(V::GradedSpace{I}, s::I) where {I<:Sector} = dim(V, s) != 0
 
-Base.conj(V::GradedSpace) = typeof(V)(V.dims, !V.dual)
-isdual(V::GradedSpace) = V.dual
-
-# equality / comparison
-Base.:(==)(V1::GradedSpace, V2::GradedSpace) =
-    sectortype(V1) == sectortype(V2) && (V1.dims == V2.dims) && V1.dual == V2.dual
-
-# axes
 Base.axes(V::GradedSpace) = Base.OneTo(dim(V))
 function Base.axes(V::GradedSpace{I}, c::I) where {I<:Sector}
     offset = 0
@@ -190,7 +190,16 @@ function Base.axes(V::GradedSpace{I}, c::I) where {I<:Sector}
     return (offset+1):(offset+dim(c)*dim(V, c))
 end
 
-Base.oneunit(S::Type{<:GradedSpace{I}}) where {I<:Sector} = S(one(I)=>1)
+Base.conj(V::GradedSpace) = typeof(V)(V.dims, !V.dual)
+isdual(V::GradedSpace) = V.dual
+
+function flip(V::GradedSpace{I}) where {I<:Sector}
+    if isdual(V)
+        typeof(V)(c=>dim(V, c) for c in sectors(V))
+    else
+        typeof(V)(dual(c)=>dim(V, c) for c in sectors(V))'
+    end
+end
 
 # TODO: the following methods can probably be implemented more efficiently for
 # `FiniteGradedSpace`, but we don't expect them to be used often in hot loops, so
@@ -205,24 +214,6 @@ function ⊕(V1::GradedSpace{I}, V2::GradedSpace{I}) where {I<:Sector}
         dims[cout] = dim(V1, c) + dim(V2, c)
     end
     return typeof(V1)(dims; dual = dual1)
-end
-
-function flip(V::GradedSpace{I}) where {I<:Sector}
-    if isdual(V)
-        typeof(V)(c=>dim(V, c) for c in sectors(V))
-    else
-        typeof(V)(dual(c)=>dim(V, c) for c in sectors(V))'
-    end
-end
-
-function fuse(V1::GradedSpace{I}, V2::GradedSpace{I}) where {I<:Sector}
-    dims = SectorDict{I, Int}()
-    for a in sectors(V1), b in sectors(V2)
-        for c in a ⊗ b
-            dims[c] = get(dims, c, 0) + Nsymbol(a, b, c)*dim(V1, a)*dim(V2, b)
-        end
-    end
-    return typeof(V1)(dims)
 end
 
 function infimum(V1::GradedSpace{I}, V2::GradedSpace{I}) where {I<:Sector}
@@ -261,5 +252,6 @@ function Base.show(io::IO, V::GradedSpace{I}) where {I<:Sector}
     return nothing
 end
 
-
 Base.hash(V::GradedSpace, h::UInt) = hash(V.dual, hash(V.dims, h))
+Base.:(==)(V1::GradedSpace, V2::GradedSpace) =
+    sectortype(V1) == sectortype(V2) && (V1.dims == V2.dims) && V1.dual == V2.dual
