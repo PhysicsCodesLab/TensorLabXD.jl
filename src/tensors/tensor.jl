@@ -376,12 +376,6 @@ function Base.copy(t::TensorMap{S, N₁, N₂, I, A, F₁, F₂}) where {S, N₁
 end
 
 # Similar
-Base.similar(t::AbstractTensorMap, T::Type, codomain::VectorSpace, domain::VectorSpace) =
-    similar(t, T, codomain←domain)
-
-Base.similar(t::AbstractTensorMap, codomain::VectorSpace, domain::VectorSpace) =
-    similar(t, codomain←domain)
-
 Base.similar(t::AbstractTensorMap{S}, ::Type{T},
                 P::TensorMapSpace{S} = (domain(t) → codomain(t))) where {T,S} =
     TensorMap(d->similarstoragetype(t, T)(undef, d), P)
@@ -394,6 +388,12 @@ Base.similar(t::AbstractTensorMap{S},
     TensorMap(d->storagetype(t)(undef, d), P)
 Base.similar(t::AbstractTensorMap{S}, P::TensorSpace{S}) where {S} =
     Tensor(d->storagetype(t)(undef, d), P)
+
+Base.similar(t::AbstractTensorMap, T::Type, codomain::VectorSpace, domain::VectorSpace) =
+    similar(t, T, codomain←domain)
+
+Base.similar(t::AbstractTensorMap, codomain::VectorSpace, domain::VectorSpace) =
+    similar(t, codomain←domain)
 
 function Base.complex(t::AbstractTensorMap)
     if eltype(t) <: Complex
