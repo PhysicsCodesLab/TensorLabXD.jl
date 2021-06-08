@@ -137,13 +137,12 @@ function isometry(::Type{A},
     return t
 end
 
-# In-place methods
+# In-place methods:
 # Wrapping the blocks in a StridedView enables multithreading if JULIA_NUM_THREADS > 1
-# Copy, adjoint! and fill:
 """
     copy!(tdst::AbstractTensorMap, tsrc::AbstractTensorMap) -> tdst
 
-In-place copy of `tsrc` to `tdst`
+In-place copy of `tsrc` to `tdst`.
 """
 function Base.copy!(tdst::AbstractTensorMap, tsrc::AbstractTensorMap)
     space(tdst) == space(tsrc) || throw(SpaceMismatch())
@@ -153,12 +152,23 @@ function Base.copy!(tdst::AbstractTensorMap, tsrc::AbstractTensorMap)
     return tdst
 end
 
+"""
+    fill!(t::AbstractTensorMap, value::Number)
+
+Fill the all data of the tensor map `t` by the `value`.
+"""
 function Base.fill!(t::AbstractTensorMap, value::Number)
     for (c, b) in blocks(t)
         fill!(b, value)
     end
     return t
 end
+
+"""
+    adjoint!(tdst::AbstractEuclideanTensorMap, tsrc::AbstractEuclideanTensorMap)
+
+Extend `LinearAlgebra.adjoint!`.
+"""
 function LinearAlgebra.adjoint!(tdst::AbstractEuclideanTensorMap,
                                 tsrc::AbstractEuclideanTensorMap)
     space(tdst) == adjoint(space(tsrc)) || throw(SpaceMismatch())
