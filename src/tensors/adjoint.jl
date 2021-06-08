@@ -1,10 +1,19 @@
-# AdjointTensorMap: lazy adjoint
-#==========================================================#
 """
     struct AdjointTensorMap{S<:IndexSpace, N₁, N₂, ...} <: AbstractTensorMap{S, N₁, N₂}
 
 Specific subtype of [`AbstractTensorMap`](@ref) that is a lazy wrapper for representing the
 adjoint of an instance of [`TensorMap`](@ref).
+
+The logic here is similar to the representation of the adjoint of the vector space. In the
+case of vector space, we represent the dual or adjoint of a vector space by changing the
+field `dual`, which create a new instance which share other structures with the original
+vector space.
+
+Here, the adjoint of a tensor map is stored as a new type of tensor map which is called the
+AjointTensorMap to let us know the adjoint operation explicitly. By taking the adjoint
+operation we create a new instance rather than change the original tensor map. The adjoint
+of the tensor map share its structure with the original tensor map, which is stored in the
+field `parent` of the type definition.
 """
 struct AdjointTensorMap{S<:IndexSpace, N₁, N₂, I<:Sector, A, F₁, F₂} <:
                                                             AbstractTensorMap{S, N₁, N₂}
@@ -30,7 +39,6 @@ storagetype(::Type{<:AdjointTensorMap{<:IndexSpace, N₁, N₂, I, <:SectorDict{
 dim(t::AdjointTensorMap) = dim(t.parent)
 
 # Indexing
-#----------
 hasblock(t::AdjointTensorMap, s::Sector) = hasblock(t.parent, s)
 block(t::AdjointTensorMap, s::Sector) = block(t.parent, s)'
 blocks(t::AdjointTensorMap) = (c=>b' for (c, b) in blocks(t.parent))
@@ -43,7 +51,7 @@ function Base.getindex(t::AdjointTensorMap{S, N₁, N₂, I},
     c = f1.coupled
     @boundscheck begin
         c == f2.coupled || throw(SectorMismatch())
-        hassector(codomain(t), f1.uncoupled) && hassector(domain(t), f2.uncoupled) # should an error thrown here
+        hassector(codomain(t), f1.uncoupled) && hassector(domain(t), f2.uncoupled)
     end
     return sreshape(
             (StridedView(t.parent.data[c])[t.parent.rowr[c][f2], t.parent.colr[c][f1]])',
@@ -76,7 +84,6 @@ end
 end
 
 # Show
-#------
 function Base.summary(t::AdjointTensorMap)
     print("AdjointTensorMap(", codomain(t), " ← ", domain(t), ")")
 end

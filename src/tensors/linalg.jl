@@ -138,12 +138,6 @@ function isometry(::Type{A},
 end
 
 # In-place methods
-#------------------
-import Base: copyto!
-Base.@deprecate(
-    copyto!(tdst::AbstractTensorMap, tsrc::AbstractTensorMap),
-    copy!(tdst, tsrc))
-
 # Wrapping the blocks in a StridedView enables multithreading if JULIA_NUM_THREADS > 1
 # Copy, adjoint! and fill:
 function Base.copy!(tdst::AbstractTensorMap, tsrc::AbstractTensorMap)

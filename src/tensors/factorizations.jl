@@ -452,7 +452,7 @@ function tsvd!(t::TensorMap{<:EuclideanSpace};
         truncerr = abs(zero(eltype(t)))
     end
     for (c, Σ) in Σdata
-        Σmdata[c] = copyto!(similar(Σ, length(Σ), length(Σ)), Diagonal(Σ))
+        Σmdata[c] = copy!(similar(Σ, length(Σ), length(Σ)), Diagonal(Σ))
     end
     return TensorMap(Udata, codomain(t)←W), TensorMap(Σmdata, W←W),
             TensorMap(Vdata, W←domain(t)), truncerr
@@ -482,7 +482,7 @@ function eigh!(t::TensorMap{<:EuclideanSpace}; kwargs...)
     for (c, b) in blocks(t)
         values, vectors = eigen!(Hermitian(b); kwargs...)
         d = length(values)
-        Ddata[c] = copyto!(similar(values, (d, d)), Diagonal(values))
+        Ddata[c] = copy!(similar(values, (d, d)), Diagonal(values))
         Vdata[c] = vectors
         dims[c] = d
     end
@@ -507,11 +507,11 @@ function eig!(t::TensorMap; kwargs...)
     for (c, b) in blocks(t)
         values, vectors = eigen!(b; kwargs...)
         d = length(values)
-        Ddata[c] = copyto!(similar(values, T, (d, d)), Diagonal(values))
+        Ddata[c] = copy!(similar(values, T, (d, d)), Diagonal(values))
         if eltype(vectors) == T
             Vdata[c] = vectors
         else
-            Vdata[c] = copyto!(similar(vectors, T), vectors)
+            Vdata[c] = copy!(similar(vectors, T), vectors)
         end
         dims[c] = d
     end

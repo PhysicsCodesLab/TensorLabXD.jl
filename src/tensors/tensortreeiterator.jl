@@ -1,14 +1,34 @@
+"""
+    struct TensorKeyIterator{I<:Sector, F₁<:FusionTree{I}, F₂<:FusionTree{I}}
+        rowr::SectorDict{I, FusionTreeDict{F₁, UnitRange{Int}}}
+        colr::SectorDict{I, FusionTreeDict{F₂, UnitRange{Int}}}
+    end
+
+An iterator over all different splitting and fusion tree pairs.
+"""
 struct TensorKeyIterator{I<:Sector, F₁<:FusionTree{I}, F₂<:FusionTree{I}}
     rowr::SectorDict{I, FusionTreeDict{F₁, UnitRange{Int}}}
     colr::SectorDict{I, FusionTreeDict{F₂, UnitRange{Int}}}
 end
+
+"""
+    struct TensorPairIterator{I<:Sector, F₁<:FusionTree{I},
+                                F₂<:FusionTree{I},A<:DenseMatrix}
+        rowr::SectorDict{I, FusionTreeDict{F₁, UnitRange{Int}}}
+        colr::SectorDict{I, FusionTreeDict{F₂, UnitRange{Int}}}
+        data::SectorDict{I, A}
+    end
+
+An iterator that has not been implemented.
+"""
 struct TensorPairIterator{I<:Sector, F₁<:FusionTree{I}, F₂<:FusionTree{I}, A<:DenseMatrix}
     rowr::SectorDict{I, FusionTreeDict{F₁, UnitRange{Int}}}
     colr::SectorDict{I, FusionTreeDict{F₂, UnitRange{Int}}}
     data::SectorDict{I, A}
 end
 
-const TensorIterator{I<:Sector, F₁<:FusionTree{I}, F₂<:FusionTree{I}} = Union{TensorKeyIterator{I, F₁, F₂}, TensorPairIterator{I, F₁, F₂}}
+const TensorIterator{I<:Sector, F₁<:FusionTree{I}, F₂<:FusionTree{I}} =
+        Union{TensorKeyIterator{I, F₁, F₂}, TensorPairIterator{I, F₁, F₂}}
 
 Base.IteratorSize(::Type{<:TensorIterator}) = Base.HasLength()
 Base.IteratorEltype(::Type{<:TensorIterator}) = Base.HasEltype()
@@ -21,9 +41,11 @@ function Base.length(t::TensorKeyIterator)
     end
     return l
 end
+
 function Base.iterate(it::TensorKeyIterator)
     i = 1
     i > length(it.rowr) && return nothing
+    # since length(it.clor) = length(it.rowr), we don't need to test it.clor
     rowit, colit = it.rowr.values[i], it.colr.values[i]
 
     rownext = iterate(rowit)
@@ -47,6 +69,7 @@ function Base.iterate(it::TensorKeyIterator)
 
     return (f1, f2), (f2, i, rowstate, colstate)
 end
+
 function Base.iterate(it::TensorKeyIterator, state)
     (f2, i, rowstate, colstate) = state
     rowit, colit = it.rowr.values[i], it.colr.values[i]

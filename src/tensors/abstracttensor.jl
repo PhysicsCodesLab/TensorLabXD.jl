@@ -27,6 +27,12 @@ const AbstractTensor{S<:IndexSpace, N} = AbstractTensorMap{S, N, 0}
 Base.eltype(t::AbstractTensorMap) = eltype(typeof(t))
 Base.eltype(T::Type{<:AbstractTensorMap}) = eltype(storagetype(T))
 
+"""
+    storagetype(t::AbstractTensorMap)
+
+Return the storage type of the data for the tensor map instance.
+Now we only have this type as DenseMatrix.
+"""
 storagetype(t::AbstractTensorMap) = storagetype(typeof(t))
 
 similarstoragetype(t::AbstractTensorMap, T) = similarstoragetype(typeof(t), T)
