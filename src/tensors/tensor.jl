@@ -50,8 +50,8 @@ struct TensorMap{S<:IndexSpace, N₁, N₂, I<:Sector,
 end
 
 const Tensor{S<:IndexSpace, N, I<:Sector, A, F₁, F₂} = TensorMap{S, N, 0, I, A, F₁, F₂}
-const TrivialTensorMap{S<:IndexSpace, N₁, N₂, A<:DenseMatrix} = T
-        ensorMap{S, N₁, N₂, Trivial, A, Nothing, Nothing}
+const TrivialTensorMap{S<:IndexSpace, N₁, N₂, A<:DenseMatrix} =
+        TensorMap{S, N₁, N₂, Trivial, A, Nothing, Nothing}
 
 """
     tensormaptype(::Type{S}, N₁::Int, N₂::Int, ::Type{T}) where {S,T}

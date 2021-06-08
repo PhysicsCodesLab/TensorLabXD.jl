@@ -140,6 +140,11 @@ end
 # In-place methods
 # Wrapping the blocks in a StridedView enables multithreading if JULIA_NUM_THREADS > 1
 # Copy, adjoint! and fill:
+"""
+    copy!(tdst::AbstractTensorMap, tsrc::AbstractTensorMap) -> tdst
+
+In-place copy of `tsrc` to `tdst`
+"""
 function Base.copy!(tdst::AbstractTensorMap, tsrc::AbstractTensorMap)
     space(tdst) == space(tsrc) || throw(SpaceMismatch())
     for c in blocksectors(tdst)
@@ -147,6 +152,7 @@ function Base.copy!(tdst::AbstractTensorMap, tsrc::AbstractTensorMap)
     end
     return tdst
 end
+
 function Base.fill!(t::AbstractTensorMap, value::Number)
     for (c, b) in blocks(t)
         fill!(b, value)
