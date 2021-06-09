@@ -328,11 +328,11 @@ Extend `Base.:/`. Return a new tensor map with data matrices as `1/α` of that o
 """
 Base.:/(t::AbstractTensorMap, α::Number) = *(t, one(eltype(t))/α)
 
-"""
-    \(α::Number, t::AbstractTensorMap)
+#"""
+    #\(α::Number, t::AbstractTensorMap)
 
-Extend `Base.:`. Return a new tensor map with data matrices as `1/α` of that of `t`.
-"""
+#Extend `Base.:`. Return a new tensor map with data matrices as `1/α` of that of `t`.
+#"""
 Base.:\(α::Number, t::AbstractTensorMap) = *(t, one(eltype(t))/α)
 
 # functions that map ℝ to (a subset of) ℝ
