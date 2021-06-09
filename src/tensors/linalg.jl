@@ -279,7 +279,7 @@ end
 
 Extend `Base.:(\)`.
 
-`A \ B` means matrix division using a polyalgorithm. For input matrices `A` and `B`, the
+It means matrix division using a polyalgorithm. For input matrices `A` and `B`, the
 result `X` is such that `A*X == B` when `A` is square.
 
 Return the tensor map from `domain(t2)` to `domain(t1)` with the data matrices which is the
@@ -331,7 +331,7 @@ Base.:/(t::AbstractTensorMap, α::Number) = *(t, one(eltype(t))/α)
 """
     Base.:\(α::Number, t::AbstractTensorMap)
 
-Extend `Base.:`. Return a new tensor map with data matrices as `1/α` of that of `t`.
+Extend `Base.:\`. Return a new tensor map with data matrices as `1/α` of that of `t`.
 """
 Base.:\(α::Number, t::AbstractTensorMap) = *(t, one(eltype(t))/α)
 
