@@ -37,7 +37,8 @@ scalar(t::AbstractTensorMap{S}) where {S<:IndexSpace} =
     if BraidingStyle(I) isa SymmetricBraiding
         add_permute!(α, tsrc, β, tdst, p1, p2)
     else
-        throw(ArgumentError("add! without levels is defined only if `BraidingStyle(sectortype(...)) isa SymmetricBraiding`"))
+        throw(ArgumentError("add! without levels is defined only if
+                                `BraidingStyle(sectortype(...)) isa SymmetricBraiding`"))
     end
 end
 @propagate_inbounds function add!(α, tsrc::AbstractTensorMap{S},
@@ -61,7 +62,8 @@ end
                                             levels::IndexTuple) where {S, N₁, N₂}
 
     length(levels) == numind(tsrc) ||
-        throw(ArgumentError("incorrect levels $levels for tensor map $(codomain(tsrc)) ← $(domain(tsrc))"))
+        throw(ArgumentError("incorrect levels $levels for tensor map
+                                $(codomain(tsrc)) ← $(domain(tsrc))"))
 
     levels1 = TupleTools.getindices(levels, codomainind(tsrc))
     levels2 = TupleTools.getindices(levels, domainind(tsrc))
@@ -100,23 +102,69 @@ function _add!(α, tsrc::AbstractTensorMap{S}, β, tdst::AbstractTensorMap{S, N�
     return tdst
 end
 
+"""
+    _add_trivial_kernel!(α, tsrc::AbstractTensorMap, β, tdst::AbstractTensorMap,
+                            p1::IndexTuple, p2::IndexTuple, fusiontreemap)
+
+`tsrc` and `tdst` are TrivialTensorMap, thus `tsrc[]` and `tdst[]` gives the data of
+the tensor map in a form of multidimensional array. `pdata = (p1..., p2...)` gives the
+permutation of the indices of the tensor map `tsrc`. After permutation `tsrc` changes
+`to `tsrc2` and has the same space with `tdst`.
+
+After running, `tdst` will be replaced in-place by the tensor map `tsrc2*α + tdst*β`.
+"""
 function _add_trivial_kernel!(α, tsrc::AbstractTensorMap, β, tdst::AbstractTensorMap,
                                 p1::IndexTuple, p2::IndexTuple, fusiontreemap)
-    cod = codomain(tsrc)
-    dom = domain(tsrc)
-    n = length(cod)
+    #cod = codomain(tsrc)
+    #dom = domain(tsrc)
+    #n = length(cod)
     pdata = (p1..., p2...)
     axpby!(α, permutedims(tsrc[], pdata), β, tdst[])
     return nothing
 end
 
+"""
+    _addabelianblock!(α, tsrc::AbstractTensorMap, β, tdst::AbstractTensorMap,
+        p1::IndexTuple, p2::IndexTuple, f1::FusionTree, f2::FusionTree, fusiontreemap)
+
+Only works for tensor maps with UniqueFusion.
+
+Here `fusiontreemap` is a function that manipulate the fusiontree and gives the resulting
+fusiontrees as keys and coefficients as values. In the Abelian case, it only gives one pair.
+
+Consider the fusion tree `(f1,f2)` in `tsrc`. After the operation of `fusiontreemap`
+(which result in `(f1′, f2′) => coeff`) and the permitation based on
+`pdata = (p1..., p2...)` (result in `tsrc2`), the corresponding block of data has the same
+shape as `tdst[f1′, f2′]`.
+
+After running, the block `tdst[f1′, f2′]` is replaced in-place by
+`tsrc2*α*coeff+tdst[f1′, f2′]*β`.
+"""
+function _addabelianblock!(α, tsrc::AbstractTensorMap, β, tdst::AbstractTensorMap,
+        p1::IndexTuple, p2::IndexTuple, f1::FusionTree, f2::FusionTree, fusiontreemap)
+    #cod = codomain(tsrc)
+    #dom = domain(tsrc)
+    (f1′, f2′), coeff = first(fusiontreemap(f1, f2))
+    pdata = (p1..., p2...)
+    @inbounds axpby!(α*coeff, permutedims(tsrc[f1, f2], pdata), β, tdst[f1′, f2′])
+end
+
+"""
+    _add_abelian_kernel!(α, tsrc::AbstractTensorMap, β, tdst::AbstractTensorMap,
+                            p1::IndexTuple, p2::IndexTuple, fusiontreemap)
+
+Only works for tensor maps with UniqueFusion.
+
+For every fusion tree in `tsrc`, apply the operation `_addabelianblock!`.
+"""
 function _add_abelian_kernel!(α, tsrc::AbstractTensorMap, β, tdst::AbstractTensorMap,
                                 p1::IndexTuple, p2::IndexTuple, fusiontreemap)
     if Threads.nthreads() > 1
         nstridedthreads = Strided.get_num_threads()
         Strided.set_num_threads(1)
         Threads.@sync for (f1, f2) in fusiontrees(tsrc)
-            Threads.@spawn _addabelianblock!(α, tsrc, β, tdst, p1, p2, f1, f2, fusiontreemap)
+            Threads.@spawn _addabelianblock!(α, tsrc, β, tdst, p1, p2, f1, f2,
+                                                fusiontreemap)
         end
         Strided.set_num_threads(nstridedthreads)
     else # debugging is easier this way
@@ -125,18 +173,6 @@ function _add_abelian_kernel!(α, tsrc::AbstractTensorMap, β, tdst::AbstractTen
         end
     end
     return nothing
-end
-
-function _addabelianblock!(α, tsrc::AbstractTensorMap,
-                            β, tdst::AbstractTensorMap,
-                            p1::IndexTuple, p2::IndexTuple,
-                            f1::FusionTree, f2::FusionTree,
-                            fusiontreemap)
-    cod = codomain(tsrc)
-    dom = domain(tsrc)
-    (f1′, f2′), coeff = first(fusiontreemap(f1, f2))
-    pdata = (p1..., p2...)
-    @inbounds axpby!(α*coeff, permutedims(tsrc[f1, f2], pdata), β, tdst[f1′, f2′])
 end
 
 function _add_general_kernel!(α, tsrc::AbstractTensorMap, β, tdst::AbstractTensorMap,
@@ -165,7 +201,8 @@ function trace!(α, tsrc::AbstractTensorMap{S}, β, tdst::AbstractTensorMap{S, N
                 q1::IndexTuple{N₃}, q2::IndexTuple{N₃}) where {S, N₁, N₂, N₃}
 
     if !(BraidingStyle(sectortype(S)) isa SymmetricBraiding)
-        throw(SectorMismatch("only tensors with symmetric braiding rules can be contracted; try `@planar` instead"))
+        throw(SectorMismatch("only tensors with symmetric braiding rules can be contracted;
+                                try `@planar` instead"))
     end
     @boundscheck begin
         all(i->space(tsrc, p1[i]) == space(tdst, i), 1:N₁) ||
@@ -283,7 +320,8 @@ function _contract!(α, A::AbstractTensorMap{S}, B::AbstractTensorMap{S},
                     syms::Union{Nothing, NTuple{3, Symbol}} = nothing) where {S, N₁, N₂}
 
     if !(BraidingStyle(sectortype(S)) isa SymmetricBraiding)
-        throw(SectorMismatch("only tensors with symmetric braiding rules can be contracted; try `@planar` instead"))
+        throw(SectorMismatch("only tensors with symmetric braiding rules can be contracted;
+                                try `@planar` instead"))
     end
     copyA = false
     if BraidingStyle(sectortype(S)) isa Fermionic
@@ -320,7 +358,8 @@ function _contract!(α, A::AbstractTensorMap{S}, B::AbstractTensorMap{S},
             p1′ = ntuple(identity, N₁)
             p2′ = N₁ .+ ntuple(identity, N₂)
             TC = eltype(C)
-            C′ = TO.cached_similar_from_indices(syms[3], TC, oindA, oindB, p1′, p2′, A, B, :N, :N)
+            C′ = TO.cached_similar_from_indices(syms[3], TC, oindA, oindB, p1′, p2′, A, B,
+                                                    :N, :N)
             mul!(C′, A′, B′)
         end
         add!(α, C′, β, C, p1, p2)
