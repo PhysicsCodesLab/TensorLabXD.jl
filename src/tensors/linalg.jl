@@ -283,7 +283,7 @@ Extend `Base.:(\)`.
 result `X` is such that `A*X == B` when `A` is square.
 
 Return the tensor map from `domain(t2)` to `domain(t1)` with the data matrices which is the
-matrix division `(\)` between the correpsonding matrices of `t1` and `t2`.
+matrix division between the correpsonding matrices of `t1` and `t2`.
 """
 function Base.:(\)(t1::AbstractTensorMap, t2::AbstractTensorMap)
     codomain(t1) == codomain(t2) ||
