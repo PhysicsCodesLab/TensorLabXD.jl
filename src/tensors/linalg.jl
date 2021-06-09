@@ -279,10 +279,11 @@ end
 
 Extend `Base.:(\)`.
 
-`\(A, B)` means matrix division using a polyalgorithm. For input matrices `A` and `B`, the result `X` is such that `A*X == B` when `A` is square.
+`\(A, B)` means matrix division using a polyalgorithm. For input matrices `A` and `B`, the
+result `X` is such that `A*X == B` when `A` is square.
 
 Return the tensor map from `domain(t2)` to `domain(t1)` with the data matrices which is the
-matrix division `\` between the correpsonding matrices of `t1` and `t2`.
+matrix division `(\)` between the correpsonding matrices of `t1` and `t2`.
 """
 function Base.:(\)(t1::AbstractTensorMap, t2::AbstractTensorMap)
     codomain(t1) == codomain(t2) ||
@@ -302,7 +303,8 @@ end
 
 Extend `Base.:(/)`.
 
-`/(A, B)` means matrix division using a polyalgorithm. For input matrices `A` and `B`, the result `X` is such that `A == X*B` when `A` is square.
+`/(A, B)` means matrix division using a polyalgorithm. For input matrices `A` and `B`, the
+result `X` is such that `A == X*B` when `A` is square.
 
 Return the tensor map from `codomain(t2)` to `codomain(t1)` with the data matrices which is
 the matrix division `/` between the correpsonding matrices of `t1` and `t2`.
