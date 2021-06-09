@@ -275,7 +275,7 @@ function LinearAlgebra.pinv(t::AbstractTensorMap; kwargs...)
 end
 
 """
-    \(t1::AbstractTensorMap, t2::AbstractTensorMap)
+    (\)(t1::AbstractTensorMap, t2::AbstractTensorMap)
 
 Extend `Base.:(\)`.
 
