@@ -1,3 +1,8 @@
+const EuclideanTensorSpace = TensorSpace{<:EuclideanSpace}
+const EuclideanTensorMapSpace = TensorMapSpace{<:EuclideanSpace}
+const AbstractEuclideanTensorMap = AbstractTensorMap{<:EuclideanTensorSpace}
+const EuclideanTensorMap = TensorMap{<:EuclideanTensorSpace}
+
 # Wrapping the blocks in a StridedView enables multithreading if JULIA_NUM_THREADS > 1
 """
     copy!(tdst::AbstractTensorMap, tsrc::AbstractTensorMap) -> tdst
@@ -690,12 +695,6 @@ isomorphism(A::Type{<:DenseMatrix}, P::TensorMapSpace) =
     isomorphism(A, codomain(P), domain(P))
 isomorphism(A::Type{<:DenseMatrix}, cod::TensorSpace, dom::TensorSpace) =
     isomorphism(A, convert(ProductSpace, cod), convert(ProductSpace, dom))
-
-
-const EuclideanTensorSpace = TensorSpace{<:EuclideanSpace}
-const EuclideanTensorMapSpace = TensorMapSpace{<:EuclideanSpace}
-const AbstractEuclideanTensorMap = AbstractTensorMap{<:EuclideanTensorSpace}
-const EuclideanTensorMap = TensorMap{<:EuclideanTensorSpace}
 
 """
     unitary([A::Type{<:DenseMatrix} = Matrix{Float64},] cod::VectorSpace, dom::VectorSpace)
