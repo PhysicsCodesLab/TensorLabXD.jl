@@ -30,77 +30,7 @@ scalar(t::AbstractTensorMap{S}) where {S<:IndexSpace} =
     dim(codomain(t)) == dim(domain(t)) == 1 ?
         first(blocks(t))[2][1, 1] : throw(SpaceMismatch())
 
-@propagate_inbounds function add!(α, tsrc::AbstractTensorMap{S},
-                                    β, tdst::AbstractTensorMap{S},
-                                    p1::IndexTuple, p2::IndexTuple) where {S}
-    I = sectortype(S)
-    if BraidingStyle(I) isa SymmetricBraiding
-        add_permute!(α, tsrc, β, tdst, p1, p2)
-    else
-        throw(ArgumentError("add! without levels is defined only if
-                                `BraidingStyle(sectortype(...)) isa SymmetricBraiding`"))
-    end
-end
-@propagate_inbounds function add!(α, tsrc::AbstractTensorMap{S},
-                                    β, tdst::AbstractTensorMap{S},
-                                    p1::IndexTuple, p2::IndexTuple,
-                                    levels::IndexTuple) where {S}
-    add_braid!(α, tsrc, β, tdst, p1, p2, levels)
-end
 
-@propagate_inbounds function add_permute!(α, tsrc::AbstractTensorMap{S},
-                                            β, tdst::AbstractTensorMap{S, N₁, N₂},
-                                            p1::IndexTuple{N₁},
-                                            p2::IndexTuple{N₂}) where {S, N₁, N₂}
-
-    _add!(α, tsrc, β, tdst, p1, p2, (f1, f2)->permute(f1, f2, p1, p2))
-end
-@propagate_inbounds function add_braid!(α, tsrc::AbstractTensorMap{S},
-                                            β, tdst::AbstractTensorMap{S, N₁, N₂},
-                                            p1::IndexTuple{N₁},
-                                            p2::IndexTuple{N₂},
-                                            levels::IndexTuple) where {S, N₁, N₂}
-
-    length(levels) == numind(tsrc) ||
-        throw(ArgumentError("incorrect levels $levels for tensor map
-                                $(codomain(tsrc)) ← $(domain(tsrc))"))
-
-    levels1 = TupleTools.getindices(levels, codomainind(tsrc))
-    levels2 = TupleTools.getindices(levels, domainind(tsrc))
-    _add!(α, tsrc, β, tdst, p1, p2, (f1, f2)->braid(f1, f2, levels1, levels2, p1, p2))
-end
-@propagate_inbounds function add_transpose!(α, tsrc::AbstractTensorMap{S},
-                                            β, tdst::AbstractTensorMap{S, N₁, N₂},
-                                            p1::IndexTuple{N₁},
-                                            p2::IndexTuple{N₂}) where {S, N₁, N₂}
-
-    _add!(α, tsrc, β, tdst, p1, p2, (f1, f2)->transpose(f1, f2, p1, p2))
-end
-
-
-function _add!(α, tsrc::AbstractTensorMap{S}, β, tdst::AbstractTensorMap{S, N₁, N₂},
-                p1::IndexTuple{N₁}, p2::IndexTuple{N₂}, fusiontreemap) where {S, N₁, N₂}
-    @boundscheck begin
-        all(i->space(tsrc, p1[i]) == space(tdst, i), 1:N₁) ||
-            throw(SpaceMismatch("tsrc = $(codomain(tsrc))←$(domain(tsrc)),
-            tdst = $(codomain(tdst))←$(domain(tdst)), p1 = $(p1), p2 = $(p2)"))
-        all(i->space(tsrc, p2[i]) == space(tdst, N₁+i), 1:N₂) ||
-            throw(SpaceMismatch("tsrc = $(codomain(tsrc))←$(domain(tsrc)),
-            tdst = $(codomain(tdst))←$(domain(tdst)), p1 = $(p1), p2 = $(p2)"))
-    end
-
-    # do some kind of dispatch which is compiled away if S is known at compile time,
-    # and makes the compiler give up quickly if S is unknown
-    I = sectortype(S)
-    i = I === Trivial ? 1 : (FusionStyle(I) isa UniqueFusion ? 2 : 3)
-    if p1 == codomainind(tsrc) && p2 == domainind(tsrc)
-        axpby!(α, tsrc, β, tdst)
-    else
-        _add_kernel! = _add_kernels[i]
-        _add_kernel!(α, tsrc, β, tdst, p1, p2, fusiontreemap)
-    end
-    return tdst
-end
 
 """
     _add_trivial_kernel!(α, tsrc::AbstractTensorMap, β, tdst::AbstractTensorMap,
@@ -175,11 +105,19 @@ function _add_abelian_kernel!(α, tsrc::AbstractTensorMap, β, tdst::AbstractTen
     return nothing
 end
 
+"""
+    _add_general_kernel!(α, tsrc::AbstractTensorMap, β, tdst::AbstractTensorMap,
+                            p1::IndexTuple, p2::IndexTuple, fusiontreemap)
+
+Works for general tensor maps.
+
+Same operations on each fusion trees.
+"""
 function _add_general_kernel!(α, tsrc::AbstractTensorMap, β, tdst::AbstractTensorMap,
                                 p1::IndexTuple, p2::IndexTuple, fusiontreemap)
-    cod = codomain(tsrc)
-    dom = domain(tsrc)
-    n = length(cod)
+    #cod = codomain(tsrc)
+    #dom = domain(tsrc)
+    #n = length(cod)
     pdata = (p1..., p2...)
     if iszero(β)
         fill!(tdst, β)
@@ -196,6 +134,132 @@ end
 
 const _add_kernels = (_add_trivial_kernel!, _add_abelian_kernel!, _add_general_kernel!)
 
+"""
+    _add!(α, tsrc::AbstractTensorMap{S}, β, tdst::AbstractTensorMap{S, N₁, N₂},
+            p1::IndexTuple{N₁}, p2::IndexTuple{N₂}, fusiontreemap) where {S, N₁, N₂}
+
+Make the general add operation between two tensor maps. For each fusion tree of `tsrc`,
+apply the manipulation `fusiontreemap` which give new fusion trees and the corresponding
+coefficients. Apply the permutation on the data of the new fusion trees based on
+`(p1..., p2...)`, where the permutation should be consistent with requirement of the
+`fusiontreemap` manipulation.
+
+Return `tdst`, whose data for each fusion tree is replaced in-place by
+`(data of new fusion tree of tsrc)*α*coefficient + (data of fusion tree of tdst)*β`.
+"""
+function _add!(α, tsrc::AbstractTensorMap{S}, β, tdst::AbstractTensorMap{S, N₁, N₂},
+                p1::IndexTuple{N₁}, p2::IndexTuple{N₂}, fusiontreemap) where {S, N₁, N₂}
+    @boundscheck begin
+        all(i->space(tsrc, p1[i]) == space(tdst, i), 1:N₁) ||
+            throw(SpaceMismatch("tsrc = $(codomain(tsrc))←$(domain(tsrc)),
+            tdst = $(codomain(tdst))←$(domain(tdst)), p1 = $(p1), p2 = $(p2)"))
+        all(i->space(tsrc, p2[i]) == space(tdst, N₁+i), 1:N₂) ||
+            throw(SpaceMismatch("tsrc = $(codomain(tsrc))←$(domain(tsrc)),
+            tdst = $(codomain(tdst))←$(domain(tdst)), p1 = $(p1), p2 = $(p2)"))
+    end
+
+    # do some kind of dispatch which is compiled away if S is known at compile time,
+    # and makes the compiler give up quickly if S is unknown
+    I = sectortype(S)
+    i = I === Trivial ? 1 : (FusionStyle(I) isa UniqueFusion ? 2 : 3)
+    if p1 == codomainind(tsrc) && p2 == domainind(tsrc)
+        axpby!(α, tsrc, β, tdst)
+    else
+        _add_kernel! = _add_kernels[i]
+        _add_kernel!(α, tsrc, β, tdst, p1, p2, fusiontreemap)
+    end
+    return tdst
+end
+
+"""
+    add_permute!(α, tsrc::AbstractTensorMap{S}, β, tdst::AbstractTensorMap{S, N₁, N₂},
+                    p1::IndexTuple{N₁}, p2::IndexTuple{N₂}) where {S, N₁, N₂}
+
+Replace `tdst` with `permutaion(tsrc)*α + tdst*β`.
+"""
+@propagate_inbounds function add_permute!(α, tsrc::AbstractTensorMap{S},
+                                            β, tdst::AbstractTensorMap{S, N₁, N₂},
+                                            p1::IndexTuple{N₁},
+                                            p2::IndexTuple{N₂}) where {S, N₁, N₂}
+
+    _add!(α, tsrc, β, tdst, p1, p2, (f1, f2)->permute(f1, f2, p1, p2))
+end
+
+"""
+    add_braid!(α, tsrc::AbstractTensorMap{S}, β, tdst::AbstractTensorMap{S, N₁, N₂},
+            p1::IndexTuple{N₁}, p2::IndexTuple{N₂}, levels::IndexTuple) where {S, N₁, N₂}
+
+Replace `tdst` with `braid(tsrc)*α + tdst*β`.
+"""
+@propagate_inbounds function add_braid!(α, tsrc::AbstractTensorMap{S},
+                                            β, tdst::AbstractTensorMap{S, N₁, N₂},
+                                            p1::IndexTuple{N₁},
+                                            p2::IndexTuple{N₂},
+                                            levels::IndexTuple) where {S, N₁, N₂}
+
+    length(levels) == numind(tsrc) ||
+        throw(ArgumentError("incorrect levels $levels for tensor map
+                                $(codomain(tsrc)) ← $(domain(tsrc))"))
+
+    levels1 = TupleTools.getindices(levels, codomainind(tsrc))
+    levels2 = TupleTools.getindices(levels, domainind(tsrc))
+    _add!(α, tsrc, β, tdst, p1, p2, (f1, f2)->braid(f1, f2, levels1, levels2, p1, p2))
+end
+
+"""
+    add_transpose!(α, tsrc::AbstractTensorMap{S}, β, tdst::AbstractTensorMap{S, N₁, N₂},
+                    p1::IndexTuple{N₁}, p2::IndexTuple{N₂}) where {S, N₁, N₂}
+
+Replace `tdst` with `transpose(tsrc)*α + tdst*β`.
+
+?????? It seems that transpose is the same with permutation...
+"""
+@propagate_inbounds function add_transpose!(α, tsrc::AbstractTensorMap{S},
+                                            β, tdst::AbstractTensorMap{S, N₁, N₂},
+                                            p1::IndexTuple{N₁},
+                                            p2::IndexTuple{N₂}) where {S, N₁, N₂}
+
+    _add!(α, tsrc, β, tdst, p1, p2, (f1, f2)->transpose(f1, f2, p1, p2))
+end
+
+"""
+    add!(α, tsrc::AbstractTensorMap{S}, β, tdst::AbstractTensorMap{S},
+            p1::IndexTuple, p2::IndexTuple) where {S}
+
+Replace `tdst` with `permutaion(tsrc)*α + tdst*β`.
+"""
+@propagate_inbounds function add!(α, tsrc::AbstractTensorMap{S},
+                                    β, tdst::AbstractTensorMap{S},
+                                    p1::IndexTuple, p2::IndexTuple) where {S}
+    I = sectortype(S)
+    if BraidingStyle(I) isa SymmetricBraiding
+        add_permute!(α, tsrc, β, tdst, p1, p2)
+    else
+        throw(ArgumentError("add! without levels is defined only if
+                                `BraidingStyle(sectortype(...)) isa SymmetricBraiding`"))
+    end
+end
+
+"""
+    add!(α, tsrc::AbstractTensorMap{S}, β, tdst::AbstractTensorMap{S},
+            p1::IndexTuple, p2::IndexTuple, levels::IndexTuple) where {S}
+
+Replace `tdst` with `braid(tsrc)*α + tdst*β`.
+"""
+@propagate_inbounds function add!(α, tsrc::AbstractTensorMap{S},
+                                    β, tdst::AbstractTensorMap{S},
+                                    p1::IndexTuple, p2::IndexTuple,
+                                    levels::IndexTuple) where {S}
+    add_braid!(α, tsrc, β, tdst, p1, p2, levels)
+end
+
+"""
+    trace!(α, tsrc::AbstractTensorMap{S}, β, tdst::AbstractTensorMap{S, N₁, N₂},
+            p1::IndexTuple{N₁}, p2::IndexTuple{N₂},
+            q1::IndexTuple{N₃}, q2::IndexTuple{N₃}) where {S, N₁, N₂, N₃}
+
+
+"""
 function trace!(α, tsrc::AbstractTensorMap{S}, β, tdst::AbstractTensorMap{S, N₁, N₂},
                 p1::IndexTuple{N₁}, p2::IndexTuple{N₂},
                 q1::IndexTuple{N₃}, q2::IndexTuple{N₃}) where {S, N₁, N₂, N₃}
