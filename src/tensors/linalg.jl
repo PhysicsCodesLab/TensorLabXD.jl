@@ -274,29 +274,29 @@ function LinearAlgebra.pinv(t::AbstractTensorMap; kwargs...)
     end
 end
 
-"""
-    (\)(t1::AbstractTensorMap, t2::AbstractTensorMap)
+#"""
+    #(\)(t1::AbstractTensorMap, t2::AbstractTensorMap)
 
-Extend `Base.:(\)`.
+#Extend `Base.:(\)`.
 
-`\(A, B)` means matrix division using a polyalgorithm. For input matrices `A` and `B`, the
-result `X` is such that `A*X == B` when `A` is square.
+#`\(A, B)` means matrix division using a polyalgorithm. For input matrices `A` and `B`, the
+#result `X` is such that `A*X == B` when `A` is square.
 
-Return the tensor map from `domain(t2)` to `domain(t1)` with the data matrices which is the
-matrix division between the correpsonding matrices of `t1` and `t2`.
-"""
-function Base.:(\)(t1::AbstractTensorMap, t2::AbstractTensorMap)
-    codomain(t1) == codomain(t2) ||
-        throw(SpaceMismatch("non-matching codomains in t1 \\ t2"))
-    if sectortype(t1) === Trivial
-        data = block(t1, Trivial()) \ block(t2, Trivial())
-        return TensorMap(data, domain(t1)←domain(t2))
-    else
-        cod = codomain(t1)
-        data = SectorDict(c=>block(t1, c) \ block(t2, c) for c in blocksectors(codomain(t1)))
-        return TensorMap(data, domain(t1)←domain(t2))
-    end
-end
+#Return the tensor map from `domain(t2)` to `domain(t1)` with the data matrices which is the
+#matrix division between the correpsonding matrices of `t1` and `t2`.
+#"""
+#function Base.:(\)(t1::AbstractTensorMap, t2::AbstractTensorMap)
+    #codomain(t1) == codomain(t2) ||
+        #throw(SpaceMismatch("non-matching codomains in t1 \\ t2"))
+    #if sectortype(t1) === Trivial
+        #data = block(t1, Trivial()) \ block(t2, Trivial())
+        #return TensorMap(data, domain(t1)←domain(t2))
+    #else
+        #cod = codomain(t1)
+        #data = SectorDict(c=>block(t1, c) \ block(t2, c) for c in blocksectors(codomain(t1)))
+        #return TensorMap(data, domain(t1)←domain(t2))
+    #end
+#end
 
 """
     /(t1::AbstractTensorMap, t2::AbstractTensorMap)
