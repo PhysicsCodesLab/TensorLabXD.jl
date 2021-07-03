@@ -14,14 +14,14 @@ struct ComplexNumbers <: Field end
 """
     const ℝ = RealNumbers()
 
-Convenient representation of RealNumbers instance.
+Convenient representation of `RealNumbers` instance.
 """
 const ℝ = RealNumbers()
 
 """
     const ℂ = ComplexNumbers()
 
-Convenient representation of ComplexNumbers instance.
+Convenient representation of `ComplexNumbers` instance.
 """
 const ℂ = ComplexNumbers()
 
@@ -53,8 +53,8 @@ abstract type VectorSpace end
 """
     abstract type ElementarySpace{𝕜} <: VectorSpace end
 
-ElementarySpace over a field `𝕜` is a super type for all vector spaces (objects) that can be
-associated with the individual indices of a tensor, as hinted to by its alias IndexSpace.
+ElementarySpace over a field `𝕜` is a super type for all vector spaces (objects) that can
+be associated with the individual indices of a tensor, as hinted to by its alias IndexSpace.
 
 Every elementary vector space should has the methods [`conj`](@ref) and [`dual`](@ref),
 returning the complex conjugate space and the dual space respectively. The complex conjugate
@@ -121,12 +121,11 @@ include("deligne.jl")
 include("homspace.jl")
 
 # general VectorSpace methods
-#==========================================================================================#
 """
     field(::VectorSpace) -> Field
     field(::Type{<:VectorSpace})
 
-Return the field type over which a vector space instance or type is defined.
+Return the `Field` over which a vector space instance or type is defined.
 """
 function field end
 field(V::VectorSpace) = field(typeof(V))
@@ -137,12 +136,11 @@ field(P::Type{<:CompositeSpace}) = field(spacetype(P))
     spacetype(::VectorSpace) -> Type{ElementarySpace}
     spacetype(::Type{<:VectorSpace})
 
-Return the ElementarySpace type associated to a VectorSpace instance or type.
+Return the `ElementarySpace` associated to a VectorSpace instance or type.
 """
 function spacetype end
 spacetype(V::ElementarySpace) = typeof(V)
 spacetype(S::Type{<:ElementarySpace}) = S
-
 spacetype(V::CompositeSpace) = spacetype(typeof(V))
 spacetype(::Type{<:CompositeSpace{S}}) where S = S
 
@@ -162,7 +160,7 @@ Base.oneunit(V::ElementarySpace) = oneunit(typeof(V))
     sectortype(V::VectorSpace) -> Type{<:Sector}
     sectortype(::Type{<:VectorSpace})
 
-Return the type of sector over which the vector space `V` or type is defined.
+Return the `Sector` over which the vector space `V` or type is defined.
 """
 function sectortype end
 sectortype(V::VectorSpace) = sectortype(typeof(V))
@@ -174,7 +172,7 @@ sectortype(P::Type{<:CompositeSpace}) = sectortype(spacetype(P))
         isempty::Bool
     end
 
-An iterator. Return `nothing` if `isempty = true`; return `Trivial()` if
+An iterator which returns `nothing` if `isempty = true`; returns `Trivial()` if
 `isempty = false`.
 """
 struct TrivialOrEmptyIterator
@@ -233,7 +231,7 @@ blockdim(V::ElementarySpace, c::Sector) = dim(V, c)
 """
     hassector(V::ElementarySpace, a::Sector) -> Bool
 
-Return whether a elementary space `V` has a subspace corresponding to sector `a`with
+Return whether a elementary space `V` has a subspace corresponding to sector `a` with
 non-zero dimension, i.e. `dim(V, a) > 0`.
 """
 function hassector end

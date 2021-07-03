@@ -5,14 +5,17 @@ using TensorXD
 ```
 ### Types
 ```julia
+# Field
 abstract type Field end
 struct RealNumbers <: Field end
 struct ComplexNumbers <: Field end
 const ℝ = RealNumbers()
 const ℂ = ComplexNumbers()
 
+# Vector Space
 abstract type VectorSpace end
 
+## Elementary Space
 abstract type ElementarySpace{𝕜} <: VectorSpace end
 const IndexSpace = ElementarySpace
 struct GeneralSpace{𝕜} <: ElementarySpace{𝕜}
@@ -35,7 +38,7 @@ struct GradedSpace{I<:Sector, D} <: EuclideanSpace{ℂ}
     dual::Bool
 end
 struct SpaceTable end
-const Vect = SpaceTable() # `Vect[I]` with `I<:Sector` ---> `GradedSpace{I,D}`
+const Vect = SpaceTable() # `Vect[I]` with `I<:Sector` -> `GradedSpace{I,D}`
 struct RepTable end
 const Rep = RepTable() # `Rep[G] == Vect[Irrep[G]]`
 const ZNSpace{N} = GradedSpace{ZNIrrep{N}, NTuple{N,Int}}
@@ -52,11 +55,13 @@ const U₁Space = U1Space
 const CU₁Space = CU1Space
 const SU₂Space = SU2Space
 
+# Composite Space
 abstract type CompositeSpace{S<:ElementarySpace} <: VectorSpace end
 struct ProductSpace{S<:ElementarySpace, N} <: CompositeSpace{S}
     spaces::NTuple{N, S}
 end
 
+# Space of Morphisms
 struct HomSpace{S<:ElementarySpace, P1<:CompositeSpace{S}, P2<:CompositeSpace{S}}
     codomain::P1
     domain::P2
@@ -66,7 +71,7 @@ const TensorMapSpace{S<:ElementarySpace, N₁, N₂} =
     HomSpace{S, ProductSpace{S, N₁}, ProductSpace{S, N₂}}
 ```
 ### Properties
-On both VectorSpace instances and types:
+On both `VectorSpace` instances and types:
 ```julia
 spacetype # type of ElementarySpace associated with a composite space or a tensor
 field # field of a vector space or a tensor
@@ -75,7 +80,7 @@ sectortype # sector type of a space or a tensor
 one(::S) where {S<:ElementarySpace} -> ProductSpace{S, 0}
 one(::ProductSpace{S}) where {S<:ElementarySpace} -> ProductSpace{S, 0}  # Return a tensor product of zero spaces of type `S`, i.e. this is the unit object under the tensor product operation, such that `V ⊗ one(V) == V`.
 ```
-On VectorSpace instances:
+On `VectorSpace` instances:
 ```julia
 sectors # an iterator over the different sectors of an ElementarySpace
 sectors(P::ProductSpace{S, N}) # Return an iterator over all possible combinations of sectors (represented as an `NTuple{N, sectortype(S)}`) that can appear within the tensor product space `P`.
@@ -83,9 +88,8 @@ blocksectors(V::ElementarySpace) = sectors(V) # make ElementarySpace instances b
 blocksectors(P::ProductSpace) # Return an iterator over the different unique coupled sector labels
 blocksectors(W::HomSpace) # Return an iterator over the different unique coupled sector labels, i.e. the intersection of the different fusion outputs that can be obtained by fusing the sectors present in the domain, as well as from the codomain.
 blocksectors(t::TensorMap)
-hassector # whether a vector space `V` has a subspace corresponding to sector `a` with non-zero dimension
-hassector(P::ProductSpace{S, N}, s::NTuple{N, sectortype(S)}) # Query whether `P` has a non-zero degeneracy of sector `s`, representing a combination of sectors on the individual tensor indices.
 dim # total dimension of a vector space or a product space
+dim(V::ElementarySpace, a::Sector) # the degeneracy or multiplicity of sector `a` that appear in the elementary space `V`.
 dim(W::HomSpace) # Return the total dimension of a `HomSpace`, i.e. the number of linearly independent morphisms that can be constructed within this space.
 dim(V::GradedSpace, c::I) # dime for sector c in a Graded Space
 dim(P::ProductSpace, n::Int) # dim for the `n`th vector space of the product space
@@ -96,6 +100,8 @@ dims(P::ProductSpace) # Return the dimensions of the spaces in the tensor produc
 dims(P::ProductSpace{S, N}, s::NTuple{N, sectortype(S)}) # Return the degeneracy dimensions corresponding to a tuple of sectors `s` for each of the spaces in the tensor product `P`.
 blockdim(V::ElementarySpace, c::Sector) = dim(V, c) # make ElementarySpace instances behave similar to ProductSpace instances
 blockdim(P::ProductSpace, c::Sector) # Return the total dimension of a coupled sector `c` in the product space
+hassector # whether a vector space `V` has a subspace corresponding to sector `a` with non-zero dimension
+hassector(P::ProductSpace{S, N}, s::NTuple{N, sectortype(S)}) # Query whether `P` has a non-zero degeneracy of sector `s`, representing a combination of sectors on the individual tensor indices.
 Base.axes
 dual # returns the dual space (dual(a)==a^*); for product space the sequence of the vector spaces are reversed.
 Base.adjoint(V::VectorSpace) = dual(V) # make V' as the dual of V
