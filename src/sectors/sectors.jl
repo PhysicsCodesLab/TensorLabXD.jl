@@ -53,9 +53,14 @@ If `IteratorSize(I) == HasLength()`, also the following must be implemented:
 struct SectorValues{I<:Sector} end
 Base.IteratorEltype(::Type{<:SectorValues}) = HasEltype()
 Base.eltype(::Type{SectorValues{I}}) where {I<:Sector} = I
+
+"""
+    Base.values(::Type{I}) where {I<:Sector}
+
+Return the iterator that generate all simple objects of sector `I`.
+"""
 Base.values(::Type{I}) where {I<:Sector} = SectorValues{I}()
 
-# basic properties of the simple objects of a sector
 """
     one(::Sector) -> Sector
     one(::Type{<:Sector}) -> Sector

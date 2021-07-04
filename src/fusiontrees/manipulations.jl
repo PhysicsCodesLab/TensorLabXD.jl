@@ -1,5 +1,4 @@
 # BASIC MANIPULATIONS:
-#----------------------------------------------
 # -> rewrite generic fusion tree in basis of fusion trees in standard form
 # -> only depend on Fsymbol
 """
@@ -225,15 +224,26 @@ function merge(f1::FusionTree{I, 0}, f2::FusionTree{I, 0}, c::I, μ =nothing) wh
 end
 
 # ELEMENTARY DUALITY MANIPULATIONS: A- and B-moves
-#---------------------------------------------------------
 # -> elementary manipulations that depend on the duality (rigidity) and pivotal structure
 # -> planar manipulations that do not require braiding, everything is in Fsymbol (A/Bsymbol)
 # -> B-move (bendleft, bendright) is simple in standard basis
 # -> A-move (foldleft, foldright) is complicated, needs to be reexpressed in standard form
 
-# change to N₁ - 1, N₂ + 1
+"""
+    bendright(f1::FusionTree{I, N₁}, f2::FusionTree{I, N₂}) where {I<:Sector, N₁, N₂}
+
+Bend the last uncoupled space of `f1` upward from right hand side to be the last uncoupled
+space of new `f2`. That is, map final splitting vertex (a, b)<-c of `f1` to fusion vertex
+a<-(c, dual(b)).
+
+Return a dictionary with new tree pairs as keys and coefficients in the linear combination
+as values.
+
+# Arguments:
+- `f1`: splitting tree
+- `f2`: fusion tree
+"""
 function bendright(f1::FusionTree{I, N₁}, f2::FusionTree{I, N₂}) where {I<:Sector, N₁, N₂}
-    # map final splitting vertex (a, b)<-c to fusion vertex a<-(c, dual(b))
     @assert N₁ > 0
     c = f1.coupled
     a = N₁ == 1 ? one(I) : (N₁ == 2 ? f1.uncoupled[1] : f1.innerlines[end])
@@ -278,16 +288,41 @@ function bendright(f1::FusionTree{I, N₁}, f2::FusionTree{I, N₂}) where {I<:S
         return newtrees
     end
 end
-# change to N₁ + 1, N₂ - 1
+
+"""
+    bendleft(f1::FusionTree{I}, f2::FusionTree{I}) where I
+
+Bend the last uncoupled space of fusion tree `f2` downward from right hand side to be the
+last uncoupled space of the splitting tree constructed from `f1`. That is, map final fusion
+vertex c<-(a, b) of `f2` to splitting vertex (c, dual(b))<-a.
+
+Return a dictionary with new tree pairs as keys and coefficients in the linear combination
+as values.
+
+# Arguments:
+- `f1`: splitting tree
+- `f2`: fusion tree
+"""
 function bendleft(f1::FusionTree{I}, f2::FusionTree{I}) where I
-    # map final fusion vertex c<-(a, b) to splitting vertex (c, dual(b))<-a
     return fusiontreedict(I)((f1′, f2′) => conj(coeff) for
                                 ((f2′, f1′), coeff) in bendright(f2, f1))
 end
 
-# change to N₁ - 1, N₂ + 1
+"""
+    foldright(f1::FusionTree{I, N₁}, f2::FusionTree{I, N₂}) where {I<:Sector, N₁, N₂}
+
+Bend the first uncoupled space of the splitting tree `f1` upward from left hand side
+to be the first uncoupled space of new fusion tree constructed from `f2`. That is, map first
+splitting vertex ``(a, b)<-c`` of `f1` to fusion vertex ``b<-(dual(a), c)``.
+
+Return a dictionary with new tree pairs as keys and coefficients in the linear combination
+as values.
+
+# Arguments:
+- `f1`: splitting tree
+- `f2`: fusion tree
+"""
 function foldright(f1::FusionTree{I, N₁}, f2::FusionTree{I, N₂}) where {I<:Sector, N₁, N₂}
-    # map first splitting vertex (a, b)<-c to fusion vertex b<-(dual(a), c)
     @assert N₁ > 0
     if FusionStyle(I) isa UniqueFusion
         a = f1.uncoupled[1]
@@ -339,19 +374,36 @@ function foldright(f1::FusionTree{I, N₁}, f2::FusionTree{I, N₂}) where {I<:S
         return newtrees
     end
 end
-# change to N₁ + 1, N₂ - 1
+
+"""
+    foldleft(f1::FusionTree{I}, f2::FusionTree{I}) where I
+
+Bend the first uncoupled space of the fusion tree `f2` downward from left hand side
+to be the first uncoupled space of new fusion tree constructed from `f1`. That is, map first
+fusion vertex ``c<-(a, b)`` of `f2` to splitting vertex ``(dual(a), c)<-b``.
+
+Return a dictionary with new tree pairs as keys and coefficients in the linear combination
+as values.
+
+# Arguments:
+- `f1`: splitting tree
+- `f2`: fusion tree
+"""
 function foldleft(f1::FusionTree{I}, f2::FusionTree{I}) where I
-    # map first fusion vertex c<-(a, b) to splitting vertex (dual(a), c)<-b
     return fusiontreedict(I)((f1′, f2′) => conj(coeff) for
                                     ((f2′, f1′), coeff) in foldright(f2, f1))
 end
 
 
 # COMPOSITE DUALITY MANIPULATIONS PART 1: Repartition and transpose
-#-------------------------------------------------------------------
 # -> composite manipulations that depend on the duality (rigidity) and pivotal structure
 # -> planar manipulations that do not require braiding, everything is in Fsymbol (A/Bsymbol)
 # -> transpose expressed as cyclic permutation
+"""
+    iscyclicpermutation(p)
+
+Check whether `p` is a cyclicpermutation, that is `p[i+1] = p[i]+1` mod `N`.
+"""
 function iscyclicpermutation(p)
     N = length(p)
     @inbounds for i = 1:N
@@ -360,7 +412,11 @@ function iscyclicpermutation(p)
     return true
 end
 
-# clockwise cyclic permutation while preserving (N₁, N₂): foldright & bendleft
+"""
+    cycleclockwise(f1::FusionTree{I}, f2::FusionTree{I}) where {I<:Sector}
+
+Clockwise cyclic permutation while preserving (N₁, N₂): foldright & bendleft
+"""
 function cycleclockwise(f1::FusionTree{I}, f2::FusionTree{I}) where {I<:Sector}
     local newtrees
     if length(f1) > 0
@@ -389,7 +445,11 @@ function cycleclockwise(f1::FusionTree{I}, f2::FusionTree{I}) where {I<:Sector}
     return newtrees
 end
 
-# anticlockwise cyclic permutation while preserving (N₁, N₂): foldleft & bendright
+"""
+    cycleanticlockwise(f1::FusionTree{I}, f2::FusionTree{I}) where {I<:Sector}
+
+Anticlockwise cyclic permutation while preserving (N₁, N₂): foldleft & bendright\
+"""
 function cycleanticlockwise(f1::FusionTree{I}, f2::FusionTree{I}) where {I<:Sector}
     local newtrees
     if length(f2) > 0
@@ -418,7 +478,6 @@ function cycleanticlockwise(f1::FusionTree{I}, f2::FusionTree{I}) where {I<:Sect
     return newtrees
 end
 
-# repartition double fusion tree
 """
     repartition(f1::FusionTree{I, N₁}, f2::FusionTree{I, N₂}, N::Int) where {I, N₁, N₂}
     -> <:AbstractDict{Tuple{FusionTree{I, N}, FusionTree{I, N₁+N₂-N}}, <:Number}

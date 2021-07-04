@@ -127,7 +127,7 @@ domain(W::HomSpace) # domain of a HomSpace.
 
 ```
 
-### Constructor methods and iterator
+### Constructors
 ```julia
 # Cartesian and Complex Space
 CartesianSpace(dim::Pair; dual = false) # Constructed by (Trivial(),d)

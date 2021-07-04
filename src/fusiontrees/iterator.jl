@@ -21,7 +21,7 @@ Base.length(iter::FusionTreeIterator) = _fusiondim(iter.uncoupled, iter.coupled)
 """
 	_fusiondim(u::Tuple{I, I, Vararg{I}}, c::I) where {I<:Sector}
 
-Return the number of fusiontrees with fixed uncoupled objects `u` and coupled objects `c`.
+Return the number of fusiontrees with fixed uncoupled objects `u` and coupled object `c`.
 """
 _fusiondim(u::Tuple{}, c::I) where {I<:Sector} = Int(one(c) == c)
 _fusiondim(u::Tuple{I}, c::I) where {I<:Sector} = Int(u[1] == c)
