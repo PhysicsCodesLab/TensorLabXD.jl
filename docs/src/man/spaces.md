@@ -102,13 +102,14 @@ blockdim(V::ElementarySpace, c::Sector) = dim(V, c) # make ElementarySpace insta
 blockdim(P::ProductSpace, c::Sector) # Return the total dimension of a coupled sector `c` in the product space
 hassector # whether a vector space `V` has a subspace corresponding to sector `a` with non-zero dimension
 hassector(P::ProductSpace{S, N}, s::NTuple{N, sectortype(S)}) # Query whether `P` has a non-zero degeneracy of sector `s`, representing a combination of sectors on the individual tensor indices.
-Base.axes
-dual # returns the dual space (dual(a)==a^*); for product space the sequence of the vector spaces are reversed.
+Base.axes(V::ElementarySpace) # the axes of an elementary space as `1:dim(V)`
+Base.axes(V::ElementarySpace, a::Sector) # axes corresponding to the sector `a` in an elementary space as a UnitRange.
+Base.conj(V::ElementarySpace) # returns the complex conjugate space (conj(V)==V̅)
+dual(V::EuclideanSpace) = conj(V) # returns the dual space (dual(V)==V^*); for product space the sequence of the vector spaces are reversed.
 Base.adjoint(V::VectorSpace) = dual(V) # make V' as the dual of V
-isdual # wether an ElementarySpace `V` is normal or rather a dual space
-Base.conj # returns the complex conjugate space (conj(a)==a̅)
-flip # flip(a)==a̅^*
-⊕ # direct sum of the spaces `V1`, `V2`, ...
+isdual(V::ElementarySpace) # wether an ElementarySpace `V` is normal or rather a dual space
+flip(V::ElementarySpace) # flip(V)==V̅^*
+⊕ # direct sum of the elementary spaces `V1`, `V2`, ...
 ⊗ # representing the tensor product of several elementary vector spaces
 Base.:*(V1::VectorSpace, V2::VectorSpace) = ⊗(V1, V2)
 fuse # returns a single vector space that is isomorphic to the fusion product of the individual spaces

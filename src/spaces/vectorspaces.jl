@@ -250,6 +250,18 @@ Note that the sectors in a GradedSpace is sorted, thus the axes of a sector is w
 Base.axes(V::ElementarySpace, ::Trivial) = axes(V)
 
 """
+    conj(V::S) where {S<:ElementarySpace} -> S
+
+Return the conjugate space of `V`. This should satisfy `conj(conj(V)) == V`.
+
+For `field(V)==ℝ`, `conj(V) == V`. It is assumed that `typeof(V) == typeof(conj(V))`.
+
+`conj(V)` is implimented by change the field `conj` of a general elementary space, or the
+field `dual` of a Euclidean space instance.
+"""
+Base.conj(V::ElementarySpace{ℝ}) = V
+
+"""
     dual(V::EuclideanSpace) -> EuclideanSpace
 
 Return the dual space of the EuclideanSpace `V` which is equal to `conj(V)`,
@@ -274,18 +286,6 @@ Return wether an ElementarySpace `V` is normal or rather a dual space. Always re
 """
 function isdual end
 isdual(V::EuclideanSpace{ℝ}) = false
-
-"""
-    conj(V::S) where {S<:ElementarySpace} -> S
-
-Return the conjugate space of `V`. This should satisfy `conj(conj(V)) == V`.
-
-For `field(V)==ℝ`, `conj(V) == V`. It is assumed that `typeof(V) == typeof(conj(V))`.
-
-`conj(V)` is implimented by change the field `conj` of a general elementary space, or the
-field `dual` of a Euclidean space instance.
-"""
-Base.conj(V::ElementarySpace{ℝ}) = V
 
 """
     flip(V::S) where {S<:ElementarySpace} -> S
