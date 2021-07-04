@@ -448,7 +448,7 @@ end
 """
     cycleanticlockwise(f1::FusionTree{I}, f2::FusionTree{I}) where {I<:Sector}
 
-Anticlockwise cyclic permutation while preserving (N₁, N₂): foldleft & bendright\
+Anticlockwise cyclic permutation while preserving (N₁, N₂): foldleft & bendright
 """
 function cycleanticlockwise(f1::FusionTree{I}, f2::FusionTree{I}) where {I<:Sector}
     local newtrees
