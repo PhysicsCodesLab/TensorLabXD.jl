@@ -36,18 +36,15 @@ Base.:^(::ComplexNumbers, d::Int) = ComplexSpace(d)
 # Corresponding methods:
 #------------------------
 Base.oneunit(::Type{ComplexSpace}) = ComplexSpace(1)
-
 dim(V::ComplexSpace) = V.d
-Base.axes(V::ComplexSpace) = Base.OneTo(dim(V))
-isdual(V::ComplexSpace) = V.dual
+Base.axes(V::ComplexSpace) = OneTo(dim(V))
 Base.conj(V::ComplexSpace) = ComplexSpace(dim(V), !isdual(V))
+isdual(V::ComplexSpace) = V.dual
 flip(V::ComplexSpace) = dual(V)
-
 ⊕(V1::ComplexSpace, V2::ComplexSpace) = isdual(V1) == isdual(V2) ?
     ComplexSpace(dim(V1)+dim(V2), isdual(V1)) :
     throw(SpaceMismatch("Direct sum of a vector space and its dual does not exist"))
 fuse(V1::ComplexSpace, V2::ComplexSpace) = ComplexSpace(V1.d*V2.d)
-
 
 infimum(V1::ComplexSpace, V2::ComplexSpace) = isdual(V1) == isdual(V2) ?
     ComplexSpace(min(dim(V1), dim(V2)), isdual(V1)) :

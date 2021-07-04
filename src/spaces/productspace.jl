@@ -29,6 +29,11 @@ ProductSpace(P::ProductSpace) = P
 ⊗(V::ElementarySpace) = ProductSpace((V,))
 ⊗(P::ProductSpace) = P
 
+Base.:^(V::ElementarySpace, N::Int) = ProductSpace{typeof(V), N}(ntuple(n->V, N))
+Base.:^(V::ProductSpace, N::Int) = ⊗(ntuple(n->V, N)...)
+Base.literal_pow(::typeof(^), V::ElementarySpace, p::Val{N}) where N =
+    ProductSpace{typeof(V), N}(ntuple(n->V, p))
+
 # Functionality for extracting and iterating over index spaces
 """
     length(P::ProductSpace) -> Int
@@ -56,6 +61,17 @@ Base.hash(P::ProductSpace, h::UInt) = hash(P.spaces, h)
 Base.:(==)(P1::ProductSpace, P2::ProductSpace) = (P1.spaces == P2.spaces)
 
 # Corresponding methods
+"""
+    one(::S) where {S<:ElementarySpace} -> ProductSpace{S, 0}
+    one(::ProductSpace{S}) where {S<:ElementarySpace} -> ProductSpace{S, 0}
+
+Return a tensor product of zero spaces of type `S`, i.e. this is the unit object under the
+tensor product operation, such that `V ⊗ one(V) == V`.
+"""
+Base.one(V::VectorSpace) = one(typeof(V))
+Base.one(::Type{<:ProductSpace{S}}) where {S<:ElementarySpace} = ProductSpace{S, 0}(())
+Base.one(::Type{S}) where {S<:ElementarySpace} = ProductSpace{S, 0}(())
+
 """
     sectors(P::ProductSpace{S, N}) where {S<:ElementarySpace}
 
@@ -210,28 +226,12 @@ function Base.show(io::IO, P::ProductSpace{S}) where {S<:ElementarySpace}
     print(io, ")")
 end
 
-"""
-    one(::S) where {S<:ElementarySpace} -> ProductSpace{S, 0}
-    one(::ProductSpace{S}) where {S<:ElementarySpace} -> ProductSpace{S, 0}
-
-Return a tensor product of zero spaces of type `S`, i.e. this is the unit object under the
-tensor product operation, such that `V ⊗ one(V) == V`.
-"""
-Base.one(V::VectorSpace) = one(typeof(V))
-Base.one(::Type{<:ProductSpace{S}}) where {S<:ElementarySpace} = ProductSpace{S, 0}(())
-Base.one(::Type{S}) where {S<:ElementarySpace} = ProductSpace{S, 0}(())
+fuse(P::ProductSpace{S, 0}) where {S<:ElementarySpace} = oneunit(S)
+fuse(P::ProductSpace{S}) where {S<:ElementarySpace} = fuse(P.spaces...)
 
 Base.convert(::Type{<:ProductSpace}, V::ElementarySpace) = ProductSpace((V,))
 Base.convert(::Type{S}, P::ProductSpace{S, 0}) where {S<:ElementarySpace} = oneunit(S)
 Base.convert(::Type{S}, P::ProductSpace{S}) where {S<:ElementarySpace} = fuse(P.spaces...)
-
-Base.:^(V::ElementarySpace, N::Int) = ProductSpace{typeof(V), N}(ntuple(n->V, N))
-Base.:^(V::ProductSpace, N::Int) = ⊗(ntuple(n->V, N)...)
-Base.literal_pow(::typeof(^), V::ElementarySpace, p::Val{N}) where N =
-    ProductSpace{typeof(V), N}(ntuple(n->V, p))
-
-fuse(P::ProductSpace{S, 0}) where {S<:ElementarySpace} = oneunit(S)
-fuse(P::ProductSpace{S}) where {S<:ElementarySpace} = fuse(P.spaces...)
 
 """
     insertunit(P::ProductSpace, i::Int = length(P)+1; dual = false, conj = false)

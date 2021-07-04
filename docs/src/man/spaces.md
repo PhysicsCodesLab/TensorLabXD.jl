@@ -37,23 +37,6 @@ struct GradedSpace{I<:Sector, D} <: EuclideanSpace{ℂ}
     dims::D
     dual::Bool
 end
-struct SpaceTable end
-const Vect = SpaceTable() # `Vect[I]` with `I<:Sector` -> `GradedSpace{I,D}`
-struct RepTable end
-const Rep = RepTable() # `Rep[G] == Vect[Irrep[G]]`
-const ZNSpace{N} = GradedSpace{ZNIrrep{N}, NTuple{N,Int}}
-const Z2Space = ZNSpace{2}
-const Z3Space = ZNSpace{3}
-const Z4Space = ZNSpace{4}
-const U1Space = Rep[U₁]
-const CU1Space = Rep[CU₁]
-const SU2Space = Rep[SU₂]
-const ℤ₂Space = Z2Space
-const ℤ₃Space = Z3Space
-const ℤ₄Space = Z4Space
-const U₁Space = U1Space
-const CU₁Space = CU1Space
-const SU₂Space = SU2Space
 
 # Composite Space
 abstract type CompositeSpace{S<:ElementarySpace} <: VectorSpace end
@@ -73,10 +56,10 @@ const TensorMapSpace{S<:ElementarySpace, N₁, N₂} =
 ### Properties
 On both `VectorSpace` instances and types:
 ```julia
-spacetype # type of ElementarySpace associated with a composite space or a tensor
-field # field of a vector space or a tensor
+spacetype # type of ElementarySpace associated with a composite space or a tensor or a HomSpace
+field # field of a vector space or a tensor or a HomSpace
 Base.oneunit # the corresponding vector space that represents the trivial 1D space isomorphic to the corresponding field
-sectortype # sector type of a space or a tensor
+sectortype # sector type of a space or a tensor or a HomSpace
 one(::S) where {S<:ElementarySpace} -> ProductSpace{S, 0}
 one(::ProductSpace{S}) where {S<:ElementarySpace} -> ProductSpace{S, 0}  # Return a tensor product of zero spaces of type `S`, i.e. this is the unit object under the tensor product operation, such that `V ⊗ one(V) == V`.
 ```
@@ -89,9 +72,9 @@ blocksectors(P::ProductSpace) # Return an iterator over the different unique cou
 blocksectors(W::HomSpace) # Return an iterator over the different unique coupled sector labels, i.e. the intersection of the different fusion outputs that can be obtained by fusing the sectors present in the domain, as well as from the codomain.
 blocksectors(t::TensorMap)
 dim # total dimension of a vector space or a product space
-dim(V::ElementarySpace, a::Sector) # the degeneracy or multiplicity of sector `a` that appear in the elementary space `V`.
+dim(V::ElementarySpace, ::Trivial) # return dim(V)
+dim(V::GradedSpace, c::I) # the degeneracy or multiplicity of sector c in a Graded Space
 dim(W::HomSpace) # Return the total dimension of a `HomSpace`, i.e. the number of linearly independent morphisms that can be constructed within this space.
-dim(V::GradedSpace, c::I) # dime for sector c in a Graded Space
 dim(P::ProductSpace, n::Int) # dim for the `n`th vector space of the product space
 dim(P::ProductSpace{S, N}, s::NTuple{N, sectortype(S)}) # Return the total degeneracy dimension corresponding to a tuple of sectors for each of the spaces in the tensor product, obtained as `prod(dims(P, s))``.
 dim(t::AbstractTensorMap) # dim for corresponding HomSpace
@@ -100,13 +83,20 @@ dims(P::ProductSpace) # Return the dimensions of the spaces in the tensor produc
 dims(P::ProductSpace{S, N}, s::NTuple{N, sectortype(S)}) # Return the degeneracy dimensions corresponding to a tuple of sectors `s` for each of the spaces in the tensor product `P`.
 blockdim(V::ElementarySpace, c::Sector) = dim(V, c) # make ElementarySpace instances behave similar to ProductSpace instances
 blockdim(P::ProductSpace, c::Sector) # Return the total dimension of a coupled sector `c` in the product space
-hassector # whether a vector space `V` has a subspace corresponding to sector `a` with non-zero dimension
+hassector # whether a vector space `V` has a subspace corresponding to sector `a` with non-zero multiplicity
 hassector(P::ProductSpace{S, N}, s::NTuple{N, sectortype(S)}) # Query whether `P` has a non-zero degeneracy of sector `s`, representing a combination of sectors on the individual tensor indices.
 Base.axes(V::ElementarySpace) # the axes of an elementary space as `1:dim(V)`
 Base.axes(V::ElementarySpace, a::Sector) # axes corresponding to the sector `a` in an elementary space as a UnitRange.
+Base.axes(P::ProductSpace) # the axes for all index spaces in product space `P`
+Base.axes(P::ProductSpace, n::Int) # the axes for `n`th index space of product space `P`
+Base.axes(P::ProductSpace{<:ElementarySpace, N}, sectors::NTuple{N, <:Sector}) where {N} # the axes of `sectors[i]` in `P.spaces[i]` for all `i ∈ 1:N`.
 Base.conj(V::ElementarySpace) # returns the complex conjugate space (conj(V)==V̅)
 dual(V::EuclideanSpace) = conj(V) # returns the dual space (dual(V)==V^*); for product space the sequence of the vector spaces are reversed.
+dual(P::ProductSpace) # Return a new product space with reversed order of index spaces of the input product space and take the dual of each index space.
+dual(W::HomSpace) # Return the dual of a HomSpace which contains the dual of morphisms in this space. It corresponds to 180 degree rotation in the graphical representation.
 Base.adjoint(V::VectorSpace) = dual(V) # make V' as the dual of V
+Base.adjoint(W::HomSpace{<:EuclideanSpace}) # Return the adjoint of a HomSpace which contains the dagger of morphisms in this space. It corresponds to mirror operation and then reversing all arrows in the graphical
+representation.
 isdual(V::ElementarySpace) # wether an ElementarySpace `V` is normal or rather a dual space
 flip(V::ElementarySpace) # flip(V)==V̅^*
 ⊕ # direct sum of the elementary spaces `V1`, `V2`, ...
@@ -123,23 +113,95 @@ const ≅ = isisomorphic
 ≻(V1::VectorSpace, V2::VectorSpace) = V1 ≿ V2 && !(V1 ≾ V2)
 infimum # Return the infimum of a number of elementary spaces
 supremum # Return the supremum of a number of elementary spaces
+Base.:(==)
+Base.hash
 Base.length(P::ProductSpace) # number of vector spaces
 Base.iterate
 Base.indexed_iterate
 Base.eltype
-Base.getindex
 Base.IteratorEltype
 Base.IteratorSize
-Base.:(==)
-Base.hash
 Base.convert
-Base.:^
+codomain(W::HomSpace) # codomain of a HomSpace.
+domain(W::HomSpace) # domain of a HomSpace.
+
+```
+
+### Constructor methods and iterator
+```julia
+# Cartesian and Complex Space
+CartesianSpace(dim::Pair; dual = false) # Constructed by (Trivial(),d)
+ComplexSpace(dim::Pair; dual = false)
+CartesianSpace(dims::AbstractDict; kwargs...) # Constructed by (Trivial() => d)
+ComplexSpace(dims::AbstractDict; kwargs...)
+Base.getindex(::RealNumbers) = CartesianSpace # Make ℝ[] a synonyms for CartesianSpace.
+Base.getindex(::ComplexNumbers) = ComplexSpace # make ℂ[] a synonyms for ComplexSpace
+Base.:^(::RealNumbers, d::Int) # Return a CartesianSpace with dimension `d`.
+Base.:^(::ComplexNumbers, d::Int) # Return a ComplexSpace with dimension `d`
+
+# Graded Space
+GradedSpace{I, NTuple{N, Int}}(dims; dual::Bool = false) where {I, N} # dims = (c=>dc,...)
+GradedSpace{I, NTuple{N, Int}}(dims::Pair; dual::Bool = false) where {I, N}
+GradedSpace{I, SectorDict{I, Int}}(dims; dual::Bool = false) where {I<:Sector}
+GradedSpace{I, SectorDict{I, Int}}(dims::Pair; dual::Bool = false) where {I<:Sector}
+GradedSpace{I,D}(; kwargs...) where {I<:Sector,D}
+GradedSpace{I,D}(d1::Pair, d2::Pair, dims::Vararg{Pair}; kwargs...) where {I<:Sector,D}
+GradedSpace{I}(args...; kwargs...) where {I<:Sector}
+GradedSpace(dims::Tuple{Vararg{Pair{I, <:Integer}}}; dual::Bool = false) where {I<:Sector}
+GradedSpace(dims::Vararg{Pair{I, <:Integer}}; dual::Bool = false) where {I<:Sector}
+GradedSpace(dims::AbstractDict{I, <:Integer}; dual::Bool = false) where {I<:Sector}
+
+struct SpaceTable end
+const Vect = SpaceTable()
+Base.getindex(::SpaceTable) = ComplexSpace # Vect[] = ComplexSpace
+Base.getindex(::SpaceTable, ::Type{Trivial}) = ComplexSpace
+Base.getindex(::SpaceTable, I::Type{<:Sector}) # # Vect[I]; Return `GradedSpace{I, NTuple{N, Int}}` if `HasLength`; return `GradedSpace{I, SectorDict{I, Int}}` if `IsInfinite`.
+Base.getindex(::ComplexNumbers, I::Type{<:Sector}) = Vect[I] # Make ℂ[I] = Vect[I]
+
+struct RepTable end
+const Rep = RepTable()
+Base.getindex(::RepTable, G::Type{<:Group}) # Rep[G] = Vect[Irrep[G]]
+const ZNSpace{N} = GradedSpace{ZNIrrep{N}, NTuple{N,Int}}
+const Z2Space = ZNSpace{2}
+const Z3Space = ZNSpace{3}
+const Z4Space = ZNSpace{4}
+const U1Space = Rep[U₁]
+const CU1Space = Rep[CU₁]
+const SU2Space = Rep[SU₂]
+const ℤ₂Space = Z2Space
+const ℤ₃Space = Z3Space
+const ℤ₄Space = Z4Space
+const U₁Space = U1Space
+const CU₁Space = CU1Space
+const SU₂Space = SU2Space
+
+# Product Space
+ProductSpace(spaces::Vararg{S, N}) where {S<:ElementarySpace, N}
+ProductSpace{S, N}(spaces::Vararg{S, N}) where {S<:ElementarySpace, N}
+ProductSpace{S}(spaces) where {S<:ElementarySpace}
+ProductSpace(P::ProductSpace)
+⊗(V1::S, V2::S) where {S<:ElementarySpace}= ProductSpace((V1, V2))
+⊗(P1::ProductSpace{S}, V2::S) where {S<:ElementarySpace}
+⊗(V1::S, P2::ProductSpace{S}) where {S<:ElementarySpace}
+⊗(P1::ProductSpace{S}, P2::ProductSpace{S}) where {S<:ElementarySpace}
+⊗(P::ProductSpace{S, 0}, ::ProductSpace{S, 0}) where {S<:ElementarySpace} = P
+⊗(P::ProductSpace{S}, ::ProductSpace{S, 0}) where {S<:ElementarySpace} = P
+⊗(::ProductSpace{S, 0}, P::ProductSpace{S}) where {S<:ElementarySpace} = P
+⊗(V::ElementarySpace) = ProductSpace((V,))
+⊗(P::ProductSpace) = P
+Base.:^(V::ElementarySpace, N::Int) = ProductSpace{typeof(V), N}(ntuple(n->V, N))
+Base.:^(V::ProductSpace, N::Int) = ⊗(ntuple(n->V, N)...)
+Base.literal_pow(::typeof(^), V::ElementarySpace, p::Val{N}) where N =
+    ProductSpace{typeof(V), N}(ntuple(n->V, p))
 insertunit(P::ProductSpace, i::Int = length(P)+1; dual = false, conj = false) # For `P::ProductSpace{S,N}`, this adds an extra tensor product factor at position `1 <= i <= N+1` (last position by default) which is just a the `S`-equivalent of the underlying field of scalars, i.e. `oneunit(S)`.
+
+# HomSpace
 →(dom::TensorSpace{S}, codom::TensorSpace{S}) where {S<:ElementarySpace} =
     HomSpace(ProductSpace(codom), ProductSpace(dom))
 ←(codom::TensorSpace{S}, dom::TensorSpace{S}) where {S<:ElementarySpace} =
     HomSpace(ProductSpace(codom), ProductSpace(dom))    
 ```
+
 ### Others structures
 ```julia
 struct TrivialOrEmptyIterator

@@ -180,7 +180,7 @@ dim(V::GradedSpace) =
 
 hassector(V::GradedSpace{I}, s::I) where {I<:Sector} = dim(V, s) != 0
 
-Base.axes(V::GradedSpace) = Base.OneTo(dim(V))
+Base.axes(V::GradedSpace) = OneTo(dim(V))
 function Base.axes(V::GradedSpace{I}, c::I) where {I<:Sector}
     offset = 0
     for c′ in sectors(V)

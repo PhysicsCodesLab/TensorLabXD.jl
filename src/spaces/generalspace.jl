@@ -25,22 +25,7 @@ GeneralSpace{𝕜}(d::Int = 0; dual::Bool = false, conj::Bool = false) where {�
 
 dim(V::GeneralSpace) = V.d
 
-Base.axes(V::GeneralSpace) = Base.OneTo(dim(V))
-
-"""
-    dual(V::GeneralSpace{𝕜}) where {𝕜} -> GeneralSpace
-
-Return the dual of the general space `V`.
-"""
-dual(V::GeneralSpace{𝕜}) where {𝕜} =
-    GeneralSpace{𝕜}(dim(V), !isdual(V), isconj(V))
-
-"""
-    isdual(V::GeneralSpace) -> Bool
-
-Return whether the general space is a dual space.
-"""
-isdual(V::GeneralSpace) = V.dual
+Base.axes(V::GeneralSpace) = OneTo(dim(V))
 
 """
     conj(V::GeneralSpace{𝕜}) where {𝕜} -> GeneralSpace
@@ -57,6 +42,20 @@ Return whether a general space is a conjugate space.
 """
 isconj(V::GeneralSpace) = V.conj # local use, does not export
 
+"""
+    dual(V::GeneralSpace{𝕜}) where {𝕜} -> GeneralSpace
+
+Return the dual of the general space `V`.
+"""
+dual(V::GeneralSpace{𝕜}) where {𝕜} =
+    GeneralSpace{𝕜}(dim(V), !isdual(V), isconj(V))
+
+"""
+    isdual(V::GeneralSpace) -> Bool
+
+Return whether the general space is a dual space.
+"""
+isdual(V::GeneralSpace) = V.dual
 
 function Base.show(io::IO, V::GeneralSpace{𝕜}) where {𝕜}
     if isconj(V)
