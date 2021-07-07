@@ -1301,7 +1301,7 @@ bendright(f1::FusionTree{I, N₁}, f2::FusionTree{I, N₂}) where {I<:Sector, N�
 ```
 which bend the last uncoupled space of the splitting tress `f1` upward from right hand side
 to be the last uncoupled space of new fusion tree constructed from `f2`. That is, map final
-splitting vertex ``(a, b)<-c`` of `f1` to fusion vertex ``a<-(c, dual(b))``.
+splitting vertex `(a, b)<-c` of `f1` to fusion vertex `a<-(c, dual(b))`.
 
 Taking the adjoint of this relation yields the required relation to transform a fusion
 tensor into a splitting tensor with an added ``Z^†`` isomorphism.
@@ -1312,7 +1312,7 @@ bendleft(f1::FusionTree{I}, f2::FusionTree{I}) where I
 ```
 which bend the last uncoupled space of fusion tree `f2` downward from right hand side to be
 the last uncoupled space of the splitting tree constructed from `f1`. That is, map final
-fusion vertex ``c<-(a, b)`` of `f2` to splitting vertex ``(c, dual(b))<-a``.
+fusion vertex `c<-(a, b)` of `f2` to splitting vertex `(c, dual(b))<-a`.
 
 We could also bend the lines from the left hand side. The corresponding functions are
 ```julia
@@ -1320,7 +1320,7 @@ foldright(f1::FusionTree{I, N₁}, f2::FusionTree{I, N₂}) where {I<:Sector, N�
 ```
 which bend the first uncoupled space of the splitting tree `f1` upward from left hand side
 to be the first uncoupled space of new fusion tree constructed from `f2`. That is, map first
-splitting vertex ``(a, b)<-c`` of `f1` to fusion vertex ``b<-(dual(a), c)``.
+splitting vertex `(a, b)<-c` of `f1` to fusion vertex `b<-(dual(a), c)`.
 
 And
 ```julia
@@ -1328,13 +1328,23 @@ foldleft(f1::FusionTree{I}, f2::FusionTree{I}) where I
 ```
 which is the adjoint of `foldright` and bend the first uncoupled space of the fusion
 tree `f2` downward from left hand side to be the first uncoupled space of new splitting tree
-constructed from `f1`. That is, map first fusion vertex ``c<-(a, b)`` of `f2` to splitting
-vertex ``(dual(a), c)<-b``.
+constructed from `f1`. That is, map first fusion vertex `c <- (a, b)` of `f2` to splitting
+vertex `(dual(a), c)<-b`.
 
-The `FusionTree` interface to duality and line bending is given by
+We also have two functions to realize cyclic permutations:
+```julia
+cycleclockwise(f1::FusionTree{I}, f2::FusionTree{I}) where {I<:Sector}
+```
+which is clockwise cyclic permutation with one `foldright` and one `bendleft`.
+```julia
+cycleanticlockwise(f1::FusionTree{I}, f2::FusionTree{I}) where {I<:Sector}
+```
+which is anticlockwise cyclic permutation with one `foldleft` and one `bendright`.
 
-`repartition(f1::FusionTree{I,N₁}, f2::FusionTree{I,N₂}, N::Int)`
-
+A more general function for repartition of incoming and outgoing sectors is given by
+```julia
+repartition(f1::FusionTree{I,N₁}, f2::FusionTree{I,N₂}, N::Int)
+```
 which takes a splitting tree `f1` with `N₁` outgoing sectors, a fusion tree `f2` with `N₂`
 incoming sectors, and applies line bending such that the resulting splitting and fusion
 trees have `N` outgoing sectors, corresponding to the first `N` sectors out of the list
@@ -1342,7 +1352,8 @@ trees have `N` outgoing sectors, corresponding to the first `N` sectors out of t
 corresponding to the dual of the last `N₁+N₂-N` sectors from the previous list, in reverse.
 This return values are correctly inferred if `N` is a compile time constant.
 
-Graphically, for `N₁ = 4`, `N₂ = 3`, `N = 2` and some particular choice of `isdual` in both the fusion and splitting tree:
+Graphically, for `N₁ = 4`, `N₂ = 3`, `N = 2` and some particular choice of `isdual` in both
+the fusion and splitting tree:
 
 ![repartition](img/tree-repartition.svg)
 
@@ -1350,6 +1361,21 @@ The result is returned as a dictionary with keys `(f1′, f2′)` and the corres
 as value. Note that the summation is only over the ``κ_j`` labels, such that, in the case
 of `FusionStyle(I) isa MultiplicityFreeFusion`, the linear combination simplifies to
 a single term with a scalar coefficient.
+
+The transpose of the splitting-fusion tree pair can be realized by repartition and cyclic
+permutations without braiding:
+```julia
+transpose(f1::FusionTree{I}, f2::FusionTree{I},
+        p1::NTuple{N₁, Int}, p2::NTuple{N₂, Int}) where {I, N₁, N₂}
+```
+Input is a double fusion tree that describes the fusion of a set of incoming uncoupled
+sectors to a set of outgoing uncoupled sectors, represented using the individual trees of
+outgoing (`f1`) and incoming sectors (`f2`) respectively (with identical coupled sector
+`f1.coupled == f2.coupled`). Computes new trees and corresponding coefficients obtained from
+repartitioning and permuting the tree such that sectors `p1` become outgoing and sectors
+`p2` become incoming. It is required that the linearized permutation is cyclic to avoid
+braiding.
+
 
 
 The next operation we discuss is an elementary braid of two neighbouring sectors

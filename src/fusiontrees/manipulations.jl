@@ -400,19 +400,6 @@ end
 # -> planar manipulations that do not require braiding, everything is in Fsymbol (A/Bsymbol)
 # -> transpose expressed as cyclic permutation
 """
-    iscyclicpermutation(p)
-
-Check whether `p` is a cyclicpermutation, that is `p[i+1] = p[i]+1` mod `N`.
-"""
-function iscyclicpermutation(p)
-    N = length(p)
-    @inbounds for i = 1:N
-        p[mod1(i+1, N)] == mod1(p[i] + 1, N) || return false
-    end
-    return true
-end
-
-"""
     cycleclockwise(f1::FusionTree{I}, f2::FusionTree{I}) where {I<:Sector}
 
 Clockwise cyclic permutation while preserving (N₁, N₂): foldright & bendleft
@@ -487,7 +474,9 @@ sectors to a set of outgoing uncoupled sectors, represented using the individual
 outgoing (`f1`) and incoming sectors (`f2`) respectively (with identical coupled sector
 `f1.coupled == f2.coupled`). Computes new trees and corresponding coefficients obtained from
 repartitioning the tree by bending incoming to outgoing sectors (or vice versa) in order to
-have `N` outgoing sectors.
+have `N` outgoing sectors, corresponding to the first `N` sectors out of the list
+``(a_1, a_2, …, a_{N_1}, b_{N_2}^*, …, b_{1}^*)`` and `N₁+N₂-N` incoming sectors,
+corresponding to the dual of the last `N₁+N₂-N` sectors from the previous list, in reverse.
 """
 @inline function repartition(f1::FusionTree{I, N₁},
                         f2::FusionTree{I, N₂},
@@ -530,16 +519,57 @@ const transposecache = LRU{Any, Any}(; maxsize = 10^5)
 const usetransposecache = Ref{Bool}(true)
 
 """
+    linearizepermutation(p1::NTuple{N₁, Int}, p2::NTuple{N₂,Int},
+                                    n₁::Int, n₂::Int) where {N₁, N₂}
+
+The input fusion tree pair has `n₁` outgoing and `n₂` incoming sectors. The output fusion
+tree has `N₁` outgoing corresponding to `p1` and `N₂` incoming sectors corresponding to `p2`.
+
+First use repartition to map the input splitting-fusion tree pair to a tree with only
+splitting tree. Then, map the permutations `p1` and `p2` to an equivalent permutation on the
+splitting tree.
+
+Note that the sequence of the incoming objects of the fusion tree is reversed after
+repartition into the splitting tree.
+"""
+function linearizepermutation(p1::NTuple{N₁, Int}, p2::NTuple{N₂},
+                                n₁::Int, n₂::Int) where {N₁, N₂}
+    p1′ = ntuple(Val(N₁)) do n
+        p1[n] > n₁ ? n₂+2n₁+1-p1[n] : p1[n]
+    end
+    p2′ = ntuple(Val(N₂)) do n
+        p2[N₂+1-n] > n₁ ? n₂+2n₁+1-p2[N₂+1-n] : p2[N₂+1-n]
+    end
+    return (p1′..., p2′...)
+end
+
+"""
+    iscyclicpermutation(p)
+
+Check whether `p` is a cyclicpermutation, that is `p[i+1] == p[i]+1` mod `N`.
+"""
+function iscyclicpermutation(p)
+    N = length(p)
+    @inbounds for i = 1:N
+        p[mod1(i+1, N)] == mod1(p[i] + 1, N) || return false
+    end
+    return true
+end
+
+"""
     transpose(f1::FusionTree{I}, f2::FusionTree{I},
             p1::NTuple{N₁, Int}, p2::NTuple{N₂, Int}) where {I, N₁, N₂}
     -> <:AbstractDict{Tuple{FusionTree{I, N₁}, FusionTree{I, N₂}}, <:Number}
+
+This function is a combination of repartition and cyclic permutations without braiding.
 
 Input is a double fusion tree that describes the fusion of a set of incoming uncoupled
 sectors to a set of outgoing uncoupled sectors, represented using the individual trees of
 outgoing (`f1`) and incoming sectors (`f2`) respectively (with identical coupled sector
 `f1.coupled == f2.coupled`). Computes new trees and corresponding coefficients obtained from
 repartitioning and permuting the tree such that sectors `p1` become outgoing and sectors
-`p2` become incoming.
+`p2` become incoming. It is required that the linearized permutation is cyclic to avoid
+braiding.
 """
 function Base.transpose(f1::FusionTree{I}, f2::FusionTree{I},
                     p1::IndexTuple{N₁}, p2::IndexTuple{N₂}) where {I<:Sector, N₁, N₂}
@@ -610,7 +640,6 @@ function _transpose((f1, f2, p1, p2)::TransposeKey{I,N₁,N₂}) where {I<:Secto
 end
 
 # COMPOSITE DUALITY MANIPULATIONS PART 2: Planar traces
-#-------------------------------------------------------------------
 # -> composite manipulations that depend on the duality (rigidity) and pivotal structure
 # -> planar manipulations that do not require braiding, everything is in Fsymbol (A/Bsymbol)
 
@@ -1064,24 +1093,6 @@ end
 const BraidKey{I<:Sector, N₁, N₂} = Tuple{<:FusionTree{I}, <:FusionTree{I},
                                         IndexTuple, IndexTuple,
                                         IndexTuple{N₁}, IndexTuple{N₂}}
-"""
-    linearizepermutation(p1::NTuple{N₁, Int}, p2::NTuple{N₂},
-                                    n₁::Int, n₂::Int) where {N₁, N₂}
-
-Combine the permutation p1 and p2 for seperate splitting and fusion tree into a permutation
-on only splitting tree which obtained by repartition. Note that the sequence of the
-incoming objects of the fusion tree is reversed after repartition into the splitting tree.
-"""
-function linearizepermutation(p1::NTuple{N₁, Int}, p2::NTuple{N₂},
-                                n₁::Int, n₂::Int) where {N₁, N₂}
-    p1′ = ntuple(Val(N₁)) do n
-        p1[n] > n₁ ? n₂+2n₁+1-p1[n] : p1[n]
-    end
-    p2′ = ntuple(Val(N₂)) do n
-        p2[N₂+1-n] > n₁ ? n₂+2n₁+1-p2[N₂+1-n] : p2[N₂+1-n]
-    end
-    return (p1′..., p2′...)
-end
 
 function _braid((f1, f2, l1, l2, p1, p2)::BraidKey{I, N₁, N₂}) where {I<:Sector, N₁, N₂}
     p = linearizepermutation(p1, p2, length(f1), length(f2))
