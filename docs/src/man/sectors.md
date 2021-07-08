@@ -1075,13 +1075,13 @@ The gain in efficiency (both in memory occupation and computation time) obtained
 symmetric (equivariant) tensor maps is that, by Schur's lemma, they are block diagonal in
 the basis of coupled sectors, i.e. they exhibit block sparsity. To exploit this block
 diagonal form, it is however essential that we know the basis transform from the individual
-(uncoupled) sectors appearing in the tensor product form of the domain and codomain, to the
+uncoupled sectors appearing in the tensor product form of the domain and codomain, to the
 totally coupled sectors that label the different blocks. We refer to the latter as block
-sectors, as we already encountered in the previous section [`blocksectors`](@ref) and
-[`blockdim`](@ref) defined on the type [`ProductSpace`](@ref).
+sectors with [`blocksectors`](@ref) and [`blockdim`](@ref) defined on the type
+[`ProductSpace`](@ref).
 
-This basis transform consists of a basis of inclusion and projection maps, denoted as
-``X^{a_1a_2…a_N}_{c,α}: R_c → R_{a_1} ⊗ R_{a_2} ⊗ … ⊗ R_{a_N}`` and their adjoints
+This basis transform consists of a basis of inclusion map
+``X^{a_1a_2…a_N}_{c,α}: R_c → R_{a_1} ⊗ R_{a_2} ⊗ … ⊗ R_{a_N}``, and projection map
 ``(X^{a_1a_2…a_N}_{c,α})^†``, such that
 
 ``(X^{a_1a_2…a_N}_{c,α})^† ∘ X^{a_1a_2…a_N}_{c′,α′} = δ_{c,c′} δ_{α,α′} \mathrm{id}_c``
@@ -1090,67 +1090,41 @@ and
 
 ``∑_{c,α} X^{a_1a_2…a_N}_{c,α} ∘ (X^{a_1a_2…a_N}_{c,α})^†  = \mathrm{id}_{a_1 ⊗ a_2 ⊗ … ⊗ a_N} = \mathrm{id}_{a_1} ⊗ \mathrm{id}_{a_2} ⊗ … ⊗ \mathrm{id}_{a_N} ``
 
-Fusion trees provide a particular way to construct such a basis. It is useful to know about
-the existence of fusion trees and how they are represented, as discussed in the first
-subsection. The next two subsections discuss possible manipulations that can be performed
-with fusion trees. These are used under the hood when manipulating the indices of tensors,
-but a typical user would not need to use these manipulations on fusion trees directly.
-Hence, these last two sections can safely be skipped.
+Fusion-splitting trees provide a particular way to construct such a basis. The following
+subsections discuss the canonical representation of fusion-splitting trees and possible
+manipulations that can be performed.
 
 ### Canonical representation
 
-To couple or fuse the different sectors together into a single block sector, we can
-sequentially fuse together two sectors into a single coupled sector, which is then fused
-with the next uncoupled sector, using the splitting tensors ``X_{a,b}^{c,μ} : R_c → R_a ⊗
-R_b`` and their adjoints. This amounts to the canonical choice of our tensor product, and
-for a given tensor mapping from ``(((W_1 ⊗ W_2) ⊗ W_3) ⊗ … )⊗ W_{N_2})`` to ``(((V_1 ⊗ V_2)
-⊗ V_3) ⊗ … )⊗ V_{N_1})``, the corresponding fusion and splitting trees take the form
+In the canonical representation a tensor map, the domain takes the form
+``(((W_1 ⊗ W_2) ⊗ W_3) ⊗ … )⊗ W_{N_2})``, and the codomain takes the form ``(((V_1 ⊗ V_2)
+⊗ V_3) ⊗ … )⊗ V_{N_1})``. In the fusion-splitting tree representation, we fuse the tensors
+sequentially by fusing two of them in each step using``X_{a,b}^{c,μ} : R_c → R_a ⊗ R_b`` and
+their adjoints.
+
+Graphically, a tensor map with ``N_1=4`` and ``N_2=3`` is represented by
 
 ![double fusion tree](img/tree-simple.svg)
 
-for the specific case ``N_1=4`` and ``N_2=3``. We can separate this tree into the fusing
-part ``(b_1⊗b_2)⊗b_3 → c`` and the splitting part ``c→(((a_1⊗a_2)⊗a_3)⊗a_4)``. Given that
-the fusion tree can be considered to be the adjoint of a corresponding splitting tree
-``c→(b_1⊗b_2)⊗b_3``, we now first consider splitting trees in isolation. A splitting tree
-which goes from one coupled sectors ``c`` to ``N`` uncoupled sectors ``a_1``, ``a_2``, …,
-``a_N`` needs ``N-2`` additional internal sector labels ``e_1``, …, ``e_{N-2}``, and, if
-`FusionStyle(I) isa GenericFusion`, ``N-1`` additional multiplicity labels ``μ_1``,
-…, ``μ_{N-1}``. We henceforth refer to them as vertex labels, as they are associated with
-the vertices of the splitting tree. In the case of `FusionStyle(I) isa UniqueFusion`, the
-internal sectors ``e_1``, …, ``e_{N-2}`` are completely fixed, for
-`FusionStyle(I) isa MultipleFusion` they can also take different values. In our abstract
-notation of the splitting basis ``X^{a_1a_2…a_N}_{c,α}`` used above, ``α`` can be consided
-a collective label, i.e. ``α = (e_1, …, e_{N-2}; μ₁, … ,μ_{N-1})``. Indeed, we can check
-the orthogonality condition
+We can separate this tree into the fusing part ``(b_1⊗b_2)⊗b_3 → c`` and the splitting part
+``c→(((a_1⊗a_2)⊗a_3)⊗a_4)``. The fusion tree can be considered to be the adjoint
+of a corresponding splitting tree ``c→(b_1⊗b_2)⊗b_3``.
+
+A splitting tree which goes from one coupled sectors ``c`` to ``N`` uncoupled sectors
+``a_1``, ``a_2``, …,``a_N`` needs ``N-2`` additional labels ``e_1``, …, ``e_{N-2}`` to
+represent the sectors on the internal lines. If `FusionStyle(I) isa UniqueFusion`, the
+internal sectors are completely fixed. If `FusionStyle(I) isa MultipleFusion`, they can take
+different values.
+
+If `FusionStyle(I) isa GenericFusion`, we also need ``N-1`` additional labels ``μ_1``, …,
+``μ_{N-1}`` on vertices of the splitting tree to represent the multiplicity of the splitting.
+
+In our notation of the splitting basis ``X^{a_1a_2…a_N}_{c,α}`` used above, ``α`` is a
+collective label, i.e. ``α = (e_1, …, e_{N-2}; μ₁, … ,μ_{N-1})``. The orthogonality condition
 ``(X^{a_1a_2…a_N}_{c,α})^† ∘ X^{a_1a_2…a_N}_{c′,α′} = δ_{c,c′} δ_{α,α′} \mathrm{id}_c``,
-which now forces all internal lines ``e_k`` and vertex labels ``μ_l`` to be the same.
+forces all internal lines ``e_k`` and vertex labels ``μ_l`` to be the same.
 
-There is one subtle remark that we have so far ignored. Within the specific subtypes of
-`Sector`, we do not explicitly distinguish between ``R_a^*`` (simply denoted as ``a^*``
-and graphically depicted as an upgoing arrow ``a``) and ``R_{\bar{a}}`` (simply denoted as
-``\bar{a}`` and depicted with a downgoing arrow), i.e. between the dual space of ``R_a`` on
-which the conjugated irrep acts, or the irrep ``\bar{a}`` to which the complex conjugate of
-irrep ``a`` is isomorphic. This distinction is however important, when certain uncoupled
-sectors in the fusion tree actually originate from a dual space. We use the isomorphisms
-``Z_a:R_a^* → R_{\bar{a}}`` and its adjoint ``Z_a^†:R_{\bar{a}}→R_a^*``, as introduced in
-the section on [topological data of a fusion category](@ref ss_topologicalfusion), to build
-fusion and splitting trees that take the distinction between irreps and their conjugates
-into account. Hence, in the previous example, if e.g. the first and third space in the
-codomain and the second space in the domain of the tensor were dual spaces, the actual pair
-of splitting and fusion tree would look as
-
-![extended double fusion tree](img/tree-extended.svg)
-
-The presence of these isomorphisms will be important when we start to bend lines, to move
-uncoupled sectors from the incoming to the outgoing part of the fusion-splitting tree. Note
-that we can still represent the fusion tree as the adjoint of a corresponding splitting
-tree, because we also use the adjoint of the ``Z`` isomorphisms in the splitting part, and
-the ``Z`` isomorphism in the fusion part. Furthermore, the presence of the ``Z``
-isomorphisms does not affect the orthonormality.
-
-We represent splitting trees and their adjoints using a specific immutable type called
-`FusionTree` (which actually represents a splitting tree, but fusion tree is a more common
-term), defined as
+We represent splitting trees using a specific immutable type called `FusionTree`, defined as
 ```julia
 struct FusionTree{I<:Sector,N,M,L,T}
     uncoupled::NTuple{N,I}
@@ -1160,27 +1134,42 @@ struct FusionTree{I<:Sector,N,M,L,T}
     vertices::NTuple{L,T} # fixed to L = N-1
 end
 ```
-Here, the fields are probably self-explanotary. The `isdual` field indicates whether an
-isomorphism is present (if the corresponding value is `true`) or not. Note that the field
-`uncoupled` contains the sectors coming out of the splitting trees, before the possible
-``Z`` isomorphism, i.e. the splitting tree in the above example would have
-`sectors = (a₁, a₂, a₃, a₄)`. The `FusionTree` type has a number of basic properties and
-capabilities, such as checking for equality with `==` and support for
-`hash(f::FusionTree, h::UInt)`, as splitting and fusion trees are used as keys in look-up
-tables (i.e. `AbstractDictionary` instances) to look up certain parts of the data of a
-tensor. The type of `L` of the vertex labels can be `Nothing` when they are not needed
-(i.e. if `FusionStyle(I) isa MultiplicityFreeFusion`).
+The `isdual` field indicates whether an isomorphism ``Z`` is present or not for each
+uncoupled sectors. The presence of these isomorphisms will be important when we start to
+bend lines, e.g., to move uncoupled sectors from the incoming to the outgoing part of the
+fusion-splitting tree. In category language, ``a^*`` is the dual space of ``a`` on which the
+conjugated irrep acts, while ``\bar{a}`` is the space in the simple objects set and the
+corresponding irrep on it is isomorphic to the complex conjugate of irrep on ``a``. In our
+package, the `Sector` type represent the dual of simple object `a` as ``\bar{a}``. To obtain
+`a^*`, we use the isomorphisms ``Z_a: a^* → \bar{a}`` and its adjoint ``Z_a^†:\bar{a}→a^*``.
 
-`FusionTree` instances are not checked for consistency (i.e. valid fusion rules etc) upon
-creation, hence, they are assumed to be created correctly. The most natural way to create
-them is by using the `fusiontrees(uncoupled::NTuple{N,I}, coupled::I = one(I))` method,
-which returns an iterator over all possible fusion trees from a set of `N` uncoupled
-sectors to a given coupled sector, which by default is assumed to be the trivial sector of
-that group or fusion category (i.e. the identity object in categorical nomenclature). The
-return type of `fusiontrees` is a custom type `FusionTreeIterator` which conforms to the
-complete interface of an iterator, and has a custom `length` function that computes the
-number of possible fusion trees without iterating over all of them explicitly. This is best
-illustrated with some examples
+Note that the field `uncoupled` contains the sectors coming out of the splitting trees,
+before the possible ``Z`` isomorphism, i.e. in the following example has
+`uncoupled = (a₁, a₂, a₃, a₄)`.
+
+![extended double fusion tree](img/tree-extended.svg)
+
+Note that we can still represent a fusion tree as the adjoint of a corresponding splitting
+tree, because we also use the ``Z`` isomorphism in the fusion part, and the ``Z^{\dag}``
+isomorphisms in the splitting part. Furthermore, the presence of the ``Z`` isomorphisms does
+not affect the orthonormality.
+
+The type of `L` of the vertex labels can be `Nothing` when they are not needed, i.e. if
+`FusionStyle(I) isa MultiplicityFreeFusion`.
+
+The `FusionTree` type has a number of basic properties and capabilities, such as checking
+for equality with `==` and support for `hash(f::FusionTree, h::UInt)`, as splitting and
+fusion trees are used as keys in look-up tables (i.e. `AbstractDictionary` instances) to
+look up certain parts of the data of a tensor map.
+
+The `FusionTree` instances are not checked for consistency (i.e. valid fusion rules etc)
+upon creation, hence, they are assumed to be created correctly. They can be created by the
+`fusiontrees(uncoupled::NTuple{N,I}, coupled::I = one(I))` method, which returns an iterator
+over all possible splitting trees from a given coupled sector, which by default is assumed
+to be the trivial sector, to a given set of `N` uncoupled sectors. The return type of
+`fusiontrees` is a custom type `FusionTreeIterator` which conforms to the complete interface
+of an iterator, and has a custom `length` function that computes the number of possible
+fusion trees without iterating over all of them explicitly. For example,
 
 ```@repl sectors
 s = Irrep[SU₂](1/2)
@@ -1194,29 +1183,18 @@ length(iter)
 s2 = s ⊠ s
 collect(fusiontrees((s2,s2,s2,s2)))
 ```
-Note that `FusionTree` instances are shown (printed) in a way that is valid code to
-reproduce them, a property which also holds for both instances of `Sector` and instances of
-`VectorSpace`. All of those should be displayed in a way that can be copy pasted as valid
-code. Furthermore, we use contact to determine how to print e.g. a sector. In isolation,
+Note that `FusionTree` instances are shown in a way that can be copy pasted as valid
+code. Furthermore, we use contact to determine how to print a sector. In isolation,
 `s2` is printed as `(Irrep[SU₂](1/2) ⊠ Irrep[SU₂](1/2))`, however, within the fusion tree,
 it is simply printed as `(1/2, 1/2)`, because it will be converted back into a
 `ProductSector`, namely `Irrep[SU₂] ⊠ Irrep[SU₂]` by the constructor of
 `FusionTree{Irrep[SU₂] ⊠ Irrep[SU₂]}`.
 
-### Manipulations on a splitting tree without braiding
+### Planar manipulations on a splitting tree
 
-We now discuss elementary manipulations that we want to perform on or between splitting
-tree, which will form the building block for more
-general manipulations on a pair of a fusion and splitting tree discussed in the next
-subsection, and then for casting a general index manipulation of a tensor map as a linear
-operation in the basis of canonically ordered splitting and fusion trees. In this section,
-we will ignore the ``Z`` isomorphisms, as they are just trivially reshuffled under the
-different operations that we describe. These manipulations are used as low-level methods by
-the `TensorMap` methods discussed on the next page. As such, they are not exported by
-TensorXD.jl, nor do they overload similarly named methods from Julia Base (see `split` and
-`merge` below).
-
-The basic manipulations on splitting trees are:
+We now discuss elementary planar manipulations (without braiding) on splitting trees.
+These manipulations are used as low-level methods by the `TensorMap` methods. As such, they
+are not exported by `TensorXD.jl`, nor do they overload similarly named methods from `Base`.
 
 *   [split(f::FusionTree{I,N}, M::Int)](@ref TensorXD.split) :
     splits a fusion tree `f` into two trees `f1` and `f2`, such that `f1` has the first `M`
