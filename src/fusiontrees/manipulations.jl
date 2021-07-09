@@ -5,13 +5,15 @@
     split(f::FusionTree{I, N}, M::Int)
     -> (::FusionTree{I, M}, ::FusionTree{I, N-M+1})
 
-Split a fusion tree into two. The first tree has as uncoupled sectors the first `M`
-uncoupled sectors of the input tree `f`, whereas its coupled sector corresponds to the
-internal sector between uncoupled sectors `M` and `M+1` of the original tree `f`. The
-second tree has as first uncoupled sector that same internal sector of `f`, followed by
-remaining `N-M` uncoupled sectors of `f`. It couples to the same sector as `f`. This
-operation is the inverse of `insertat` in the sense that if
-`f1, f2 = split(f, M) ⇒ f == insertat(f2, 1, f1)`.
+Split a fusion tree `f` into `f1` and `f2` between the `M`th and `M+1`th uncoupled sector,
+and return `f1, f2`.
+
+The first tree `f1` has uncoupled sectors as the first `M` uncoupled sectors of the input
+tree `f`, and a coupled sector as the `M-1`th internal sector of `f`.
+
+The second tree `f2` has the first uncoupled sector as the coupled sector of `f1`, and the
+remaining uncoupled sectors as the remaining `N-M` uncoupled sectors of `f`. Its coupled
+sector is the same with that of `f`.
 """
 @inline function split(f::FusionTree{I, N}, M::Int) where {I, N}
     if M > N || M < 0
@@ -64,7 +66,7 @@ end
     -> <:AbstractDict{<:FusionTree{I, N₁+N₂-1}, <:Number}
 
 Attach a fusion tree `f2` to the uncoupled leg `i` of the fusion tree `f1` and bring it
-into a linear combination of fusion trees in standard form. This requires that
+into a linear combination of fusion trees in canonical form. This requires that
 `f2.coupled == f1.uncoupled[i]` and `f1.isdual[i] == false`.
 """
 function insertat(f1::FusionTree{I}, i::Int, f2::FusionTree{I, 0}) where {I}
@@ -72,7 +74,6 @@ function insertat(f1::FusionTree{I}, i::Int, f2::FusionTree{I, 0}) where {I}
     (f1.uncoupled[i] == f2.coupled && !f1.isdual[i]) ||
         throw(SectorMismatch("cannot connect $(f2.uncoupled) to $(f1.uncoupled[i])"))
     coeff = Fsymbol(one(I), one(I), one(I), one(I), one(I), one(I))[1,1,1,1]
-
     uncoupled = TupleTools.deleteat(f1.uncoupled, i)
     coupled = f1.coupled
     isdual = TupleTools.deleteat(f1.isdual, i)
@@ -89,7 +90,7 @@ function insertat(f1::FusionTree{I}, i::Int, f2::FusionTree{I, 0}) where {I}
     f = FusionTree(uncoupled, coupled, isdual, inner, vertices)
     return fusiontreedict(I)(f => coeff)
 end
-function insertat(f1::FusionTree{I}, i, f2::FusionTree{I, 1}) where {I}
+function insertat(f1::FusionTree{I}, i::Int, f2::FusionTree{I, 1}) where {I}
     # identity operation
     (f1.uncoupled[i] == f2.coupled && !f1.isdual[i]) ||
         throw(SectorMismatch("cannot connect $(f2.uncoupled) to $(f1.uncoupled[i])"))
@@ -98,8 +99,8 @@ function insertat(f1::FusionTree{I}, i, f2::FusionTree{I, 1}) where {I}
     f = FusionTree{I}(f1.uncoupled, f1.coupled, isdual′, f1.innerlines, f1.vertices)
     return fusiontreedict(I)(f => coeff)
 end
-function insertat(f1::FusionTree{I}, i, f2::FusionTree{I, 2}) where {I}
-    # elementary building block,
+function insertat(f1::FusionTree{I}, i::Int, f2::FusionTree{I, 2}) where {I}
+    # elementary building block
     (f1.uncoupled[i] == f2.coupled && !f1.isdual[i]) ||
         throw(SectorMismatch("cannot connect $(f2.uncoupled) to $(f1.uncoupled[i])"))
     uncoupled = f1.uncoupled
@@ -159,7 +160,7 @@ function insertat(f1::FusionTree{I}, i, f2::FusionTree{I, 2}) where {I}
         return newtrees
     end
 end
-function insertat(f1::FusionTree{I,N₁}, i, f2::FusionTree{I,N₂}) where {I,N₁,N₂}
+function insertat(f1::FusionTree{I,N₁}, i::Int, f2::FusionTree{I,N₂}) where {I,N₁,N₂}
     F = fusiontreetype(I, N₁ + N₂ - 1)
     (f1.uncoupled[i] == f2.coupled && !f1.isdual[i]) ||
         throw(SectorMismatch("cannot connect $(f2.uncoupled) to $(f1.uncoupled[i])"))

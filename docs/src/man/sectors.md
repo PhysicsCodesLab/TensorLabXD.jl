@@ -1077,8 +1077,8 @@ the basis of coupled sectors, i.e. they exhibit block sparsity. To exploit this 
 diagonal form, it is however essential that we know the basis transform from the individual
 uncoupled sectors appearing in the tensor product form of the domain and codomain, to the
 totally coupled sectors that label the different blocks. We refer to the latter as block
-sectors with [`blocksectors`](@ref) and [`blockdim`](@ref) defined on the type
-[`ProductSpace`](@ref).
+sectors and can be obtained by [`blocksectors`](@ref) and [`blockdim`](@ref) methods defined
+on the type [`ProductSpace`](@ref).
 
 This basis transform consists of a basis of inclusion map
 ``X^{a_1a_2…a_N}_{c,α}: R_c → R_{a_1} ⊗ R_{a_2} ⊗ … ⊗ R_{a_N}``, and projection map
@@ -1096,35 +1096,38 @@ manipulations that can be performed.
 
 ### Canonical representation
 
-In the canonical representation a tensor map, the domain takes the form
+In the canonical representation of a tensor map, the domain takes the form
 ``(((W_1 ⊗ W_2) ⊗ W_3) ⊗ … )⊗ W_{N_2})``, and the codomain takes the form ``(((V_1 ⊗ V_2)
 ⊗ V_3) ⊗ … )⊗ V_{N_1})``. In the fusion-splitting tree representation, we fuse the tensors
-sequentially by fusing two of them in each step using``X_{a,b}^{c,μ} : R_c → R_a ⊗ R_b`` and
-their adjoints.
+sequentially by fusing two of them in each step using ``X_{a,b}^{c,μ} : R_c → R_a ⊗ R_b``
+and their adjoints.
 
-Graphically, a tensor map with ``N_1=4`` and ``N_2=3`` is represented by
+Graphically, a fusion-splitting tree representation of a tensor map with ``N_1=4`` and
+``N_2=3`` is
 
 ![double fusion tree](img/tree-simple.svg)
 
-We can separate this tree into the fusing part ``(b_1⊗b_2)⊗b_3 → c`` and the splitting part
+We can separate this tree into the fusing part ``((b_1⊗b_2)⊗b_3) → c`` and the splitting part
 ``c→(((a_1⊗a_2)⊗a_3)⊗a_4)``. The fusion tree can be considered to be the adjoint
-of a corresponding splitting tree ``c→(b_1⊗b_2)⊗b_3``.
+of a corresponding splitting tree ``c→((b_1⊗b_2)⊗b_3)``.
 
-A splitting tree which goes from one coupled sectors ``c`` to ``N`` uncoupled sectors
+A splitting tree which goes from one coupled sector ``c`` to ``N`` uncoupled sectors
 ``a_1``, ``a_2``, …,``a_N`` needs ``N-2`` additional labels ``e_1``, …, ``e_{N-2}`` to
-represent the sectors on the internal lines. If `FusionStyle(I) isa UniqueFusion`, the
-internal sectors are completely fixed. If `FusionStyle(I) isa MultipleFusion`, they can take
-different values.
+represent the sectors of the internal lines. If `FusionStyle(I) isa UniqueFusion`, the
+internal sectors are completely fixed by the coupled and uncoupled sectors. If
+`FusionStyle(I) isa MultipleFusion`, they can take different values that satisfy the fusion
+rules.
 
 If `FusionStyle(I) isa GenericFusion`, we also need ``N-1`` additional labels ``μ_1``, …,
-``μ_{N-1}`` on vertices of the splitting tree to represent the multiplicity of the splitting.
+``μ_{N-1}`` on vertices of the splitting tree to represent the multiplicity of the fusion
+rule.
 
 In our notation of the splitting basis ``X^{a_1a_2…a_N}_{c,α}`` used above, ``α`` is a
 collective label, i.e. ``α = (e_1, …, e_{N-2}; μ₁, … ,μ_{N-1})``. The orthogonality condition
 ``(X^{a_1a_2…a_N}_{c,α})^† ∘ X^{a_1a_2…a_N}_{c′,α′} = δ_{c,c′} δ_{α,α′} \mathrm{id}_c``,
 forces all internal lines ``e_k`` and vertex labels ``μ_l`` to be the same.
 
-We represent splitting trees using a specific immutable type called `FusionTree`, defined as
+We represent splitting trees by a specific immutable type called `FusionTree`, defined as
 ```julia
 struct FusionTree{I<:Sector,N,M,L,T}
     uncoupled::NTuple{N,I}
@@ -1140,21 +1143,22 @@ bend lines, e.g., to move uncoupled sectors from the incoming to the outgoing pa
 fusion-splitting tree. In category language, ``a^*`` is the dual space of ``a`` on which the
 conjugated irrep acts, while ``\bar{a}`` is the space in the simple objects set and the
 corresponding irrep on it is isomorphic to the complex conjugate of irrep on ``a``. In our
-package, the `Sector` type represent the dual of simple object `a` as ``\bar{a}``. To obtain
-`a^*`, we use the isomorphisms ``Z_a: a^* → \bar{a}`` and its adjoint ``Z_a^†:\bar{a}→a^*``.
+package, we define the dual of simple object ``a`` as ``dual(a) := \bar{a}``.
+To obtain ``a^*``, we need use the isomorphisms ``Z_a: a^* → \bar{a}`` and its adjoint
+``Z_a^†:\bar{a}→a^*``.
 
 Note that the field `uncoupled` contains the sectors coming out of the splitting trees,
-before the possible ``Z`` isomorphism, i.e. in the following example has
+**before** the possible ``Z`` isomorphism, i.e. the following example has
 `uncoupled = (a₁, a₂, a₃, a₄)`.
 
 ![extended double fusion tree](img/tree-extended.svg)
 
-Note that we can still represent a fusion tree as the adjoint of a corresponding splitting
-tree, because we also use the ``Z`` isomorphism in the fusion part, and the ``Z^{\dag}``
-isomorphisms in the splitting part. Furthermore, the presence of the ``Z`` isomorphisms does
+Note that we can still represent a fusion tree as the adjoint of its corresponding splitting
+tree, since we use the ``Z`` isomorphism in the fusion part, and the ``Z^{\dagger}``
+isomorphisms in the splitting part. Furthermore, the presence of the ``Z`` isomorphisms do
 not affect the orthonormality.
 
-The type of `L` of the vertex labels can be `Nothing` when they are not needed, i.e. if
+The type of `L` of the vertex labels can be `Nothing` when
 `FusionStyle(I) isa MultiplicityFreeFusion`.
 
 The `FusionTree` type has a number of basic properties and capabilities, such as checking
@@ -1199,9 +1203,7 @@ are not exported by `TensorXD.jl`, nor do they overload similarly named methods 
 *   [split(f::FusionTree{I,N}, M::Int)](@ref TensorXD.split) :
     splits a fusion tree `f` into two trees `f1` and `f2`, such that `f1` has the first `M`
     uncoupled sectors of `f`, and `f2` the remaining `N-M`. This function is type stable if
-    `M` is a compile time constant.
-
-    Diagrammatically, for example, `M=4`, the function `split` returns
+    `M` is a compile time constant. Diagrammatically, for example, `M=4`:
 
     ![split](img/tree-split.svg)
 
