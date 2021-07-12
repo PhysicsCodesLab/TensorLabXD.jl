@@ -389,15 +389,14 @@ function foldleft(f1::FusionTree{I}, f2::FusionTree{I}) where I
                                     ((f2′, f1′), coeff) in foldright(f2, f1))
 end
 
-
-# COMPOSITE DUALITY MANIPULATIONS PART 1: Repartition and transpose
-# -> composite manipulations that depend on the duality (rigidity) and pivotal structure
-# -> planar manipulations that do not require braiding, everything is in Fsymbol (A/Bsymbol)
-# -> transpose expressed as cyclic permutation
 """
     cycleclockwise(f1::FusionTree{I}, f2::FusionTree{I}) where {I<:Sector}
 
 Clockwise cyclic permutation while preserving (N₁, N₂): foldright & bendleft
+
+# Arguments:
+- `f1`: splitting tree
+- `f2`: fusion tree
 """
 function cycleclockwise(f1::FusionTree{I}, f2::FusionTree{I}) where {I<:Sector}
     local newtrees
@@ -431,6 +430,10 @@ end
     cycleanticlockwise(f1::FusionTree{I}, f2::FusionTree{I}) where {I<:Sector}
 
 Anticlockwise cyclic permutation while preserving (N₁, N₂): foldleft & bendright
+
+# Arguments:
+- `f1`: splitting tree
+- `f2`: fusion tree
 """
 function cycleanticlockwise(f1::FusionTree{I}, f2::FusionTree{I}) where {I<:Sector}
     local newtrees
@@ -464,14 +467,16 @@ end
     repartition(f1::FusionTree{I, N₁}, f2::FusionTree{I, N₂}, N::Int) where {I, N₁, N₂}
     -> <:AbstractDict{Tuple{FusionTree{I, N}, FusionTree{I, N₁+N₂-N}}, <:Number}
 
-Input is a double fusion tree that describes the fusion of a set of incoming uncoupled
-sectors to a set of outgoing uncoupled sectors, represented using the individual trees of
-outgoing (`f1`) and incoming sectors (`f2`) respectively (with identical coupled sector
-`f1.coupled == f2.coupled`). Computes new trees and corresponding coefficients obtained from
-repartitioning the tree by bending incoming to outgoing sectors (or vice versa) in order to
-have `N` outgoing sectors, corresponding to the first `N` sectors out of the list
+Computes new trees and corresponding coefficients obtained from repartitioning the tree by
+bending incoming to outgoing sectors (or vice versa) in order to have `N` outgoing sectors,
+corresponding to the first `N` sectors out of the list
 ``(a_1, a_2, …, a_{N_1}, b_{N_2}^*, …, b_{1}^*)`` and `N₁+N₂-N` incoming sectors,
-corresponding to the dual of the last `N₁+N₂-N` sectors from the previous list, in reverse.
+corresponding to the dual of the last `N₁+N₂-N` sectors from the previous list in reverse
+order.
+
+# Arguments:
+- `f1`: splitting tree
+- `f2`: fusion tree
 """
 @inline function repartition(f1::FusionTree{I, N₁},
                         f2::FusionTree{I, N₂},
@@ -509,7 +514,6 @@ function _recursive_repartition(f1::FusionTree{I, N₁},
     end
 end
 
-# transpose double fusion tree
 const transposecache = LRU{Any, Any}(; maxsize = 10^5)
 const usetransposecache = Ref{Bool}(true)
 
@@ -520,11 +524,11 @@ const usetransposecache = Ref{Bool}(true)
 The input fusion tree pair has `n₁` outgoing and `n₂` incoming sectors. The output fusion
 tree has `N₁` outgoing corresponding to `p1` and `N₂` incoming sectors corresponding to `p2`.
 
-First use repartition to map the input splitting-fusion tree pair to a tree with only
-splitting tree. Then, map the permutations `p1` and `p2` to an equivalent permutation on the
-splitting tree.
+First use repartition to map the input fusion-splitting tree to a splitting tree. Then, map
+the permutations `p1` and `p2` to an equivalent permutation on the splitting tree, which
+is returned.
 
-Note that the sequence of the incoming objects of the fusion tree is reversed after
+Note that the sequence of the incoming sectors of the fusion tree is reversed after
 repartition into the splitting tree.
 """
 function linearizepermutation(p1::NTuple{N₁, Int}, p2::NTuple{N₂},
@@ -556,15 +560,14 @@ end
             p1::NTuple{N₁, Int}, p2::NTuple{N₂, Int}) where {I, N₁, N₂}
     -> <:AbstractDict{Tuple{FusionTree{I, N₁}, FusionTree{I, N₂}}, <:Number}
 
-This function is a combination of repartition and cyclic permutations without braiding.
-
-Input is a double fusion tree that describes the fusion of a set of incoming uncoupled
-sectors to a set of outgoing uncoupled sectors, represented using the individual trees of
-outgoing (`f1`) and incoming sectors (`f2`) respectively (with identical coupled sector
-`f1.coupled == f2.coupled`). Computes new trees and corresponding coefficients obtained from
-repartitioning and permuting the tree such that sectors `p1` become outgoing and sectors
+Computes new trees and corresponding coefficients obtained from repartitioning and cyclic
+permutating the fusion-splitting tree such that sectors `p1` become outgoing and sectors
 `p2` become incoming. It is required that the linearized permutation is cyclic to avoid
 braiding.
+
+# Arguments:
+- `f1`: splitting tree
+- `f2`: fusion tree
 """
 function Base.transpose(f1::FusionTree{I}, f2::FusionTree{I},
                     p1::IndexTuple{N₁}, p2::IndexTuple{N₂}) where {I<:Sector, N₁, N₂}
@@ -634,9 +637,98 @@ function _transpose((f1, f2, p1, p2)::TransposeKey{I,N₁,N₂}) where {I<:Secto
     return newtrees
 end
 
-# COMPOSITE DUALITY MANIPULATIONS PART 2: Planar traces
-# -> composite manipulations that depend on the duality (rigidity) and pivotal structure
-# -> planar manipulations that do not require braiding, everything is in Fsymbol (A/Bsymbol)
+"""
+    elementary_trace(f::FusionTree{I, N}, i) where {I<:Sector, N}
+
+Trace the ``i``th and ``i+1``th uncoupled sectors of splitting tree `f`. The trace is taken
+as the evaluation map.
+"""
+function elementary_trace(f::FusionTree{I, N}, i) where {I<:Sector, N}
+    (N > 1 && 1 <= i <= N) ||
+        throw(ArgumentError("Cannot trace outputs i=$i and i+1 out of only $N outputs"))
+    i < N || f.coupled == one(I) ||
+        throw(ArgumentError("Cannot trace outputs i=$N and 1 of fusion tree that couples to non-trivial sector"))
+
+    u = one(I)
+    T = typeof(Fsymbol(u,u,u,u,u,u)[1,1,1,1])
+    F = fusiontreetype(I, N-2)
+    newtrees = FusionTreeDict{F,T}()
+
+    j = mod1(i+1, N)
+    b = f.uncoupled[i]
+    b′ = f.uncoupled[j]
+    # if trace is zero, return empty dict
+    (b == dual(b′) && f.isdual[i] != f.isdual[j]) || return newtrees
+    if i < N
+        a = i == 1 ? one(I) : (i == 2 ? f.uncoupled[1] : f.innerlines[i-2])
+        d = i == N-1 ? f.coupled : f.innerlines[i]
+        a == d || return newtrees
+        uncoupled′ = TupleTools.deleteat(TupleTools.deleteat(f.uncoupled, i+1), i)
+        isdual′ = TupleTools.deleteat(TupleTools.deleteat(f.isdual, i+1), i)
+        coupled′ = f.coupled
+        if N <= 4
+            inner′ = ()
+        else
+            inner′ = i <= 2 ? Base.tail(Base.tail(f.innerlines)) :
+                        TupleTools.deleteat(TupleTools.deleteat(f.innerlines, i-1), i-2)
+        end
+        if N <= 3
+            vertices′ = ()
+        else
+            vertices′ = i <= 2 ? Base.tail(Base.tail(f.vertices)) :
+                        TupleTools.deleteat(TupleTools.deleteat(f.vertices, i), i-1)
+        end
+        f′ = FusionTree{I}(uncoupled′, coupled′, isdual′, inner′, vertices′)
+        coeff = sqrtdim(b)
+        if i > 1
+            c = f.innerlines[i-1]
+            if FusionStyle(I) isa MultiplicityFreeFusion
+                coeff *= Fsymbol(a, b, dual(b), a, c, one(I))
+            else
+                μ = f.vertices[i-1]
+                ν = f.vertices[i]
+                coeff *= Fsymbol(a, b, dual(b), a, c, one(I))[μ, ν, 1, 1]
+            end
+        end
+        if f.isdual[i]
+            coeff *= frobeniusschur(b)
+        end
+        push!(newtrees, f′ => coeff)
+        return newtrees
+    else # i == N
+        if N == 2
+            f′ = FusionTree{I}((), one(I), (), (), ())
+            coeff = sqrtdim(b)
+            if !(f.isdual[N])
+                coeff *= conj(frobeniusschur(b))
+            end
+            push!(newtrees, f′ => coeff)
+            return newtrees
+        end
+        uncoupled_ = Base.front(f.uncoupled)
+        inner_ = Base.front(f.innerlines)
+        coupled_ = f.innerlines[end]
+        @assert coupled_ == dual(b)
+        isdual_ = Base.front(f.isdual)
+        vertices_ = Base.front(f.vertices)
+        f_ = FusionTree(uncoupled_, coupled_, isdual_, inner_, vertices_)
+        fs = FusionTree((b,), b, (!f.isdual[1],), (), ())
+        for (f_′, coeff) = merge(fs, f_, one(I), 1)
+            f_′.innerlines[1] == one(I) || continue
+            uncoupled′ = Base.tail(Base.tail(f_′.uncoupled))
+            isdual′ = Base.tail(Base.tail(f_′.isdual))
+            inner′ = N <= 4 ? () : Base.tail(Base.tail(f_′.innerlines))
+            vertices′ = N <= 3 ? () : Base.tail(Base.tail(f_′.vertices))
+            f′ = FusionTree(uncoupled′, one(I), isdual′, inner′, vertices′)
+            coeff *= sqrtdim(b)
+            if !(f.isdual[N])
+                coeff *= conj(frobeniusschur(b))
+            end
+            newtrees[f′] = get(newtrees, f′, zero(coeff)) + coeff
+        end
+        return newtrees
+    end
+end
 
 function planar_trace(f1::FusionTree{I}, f2::FusionTree{I},
                     p1::IndexTuple{N₁}, p2::IndexTuple{N₂},
@@ -725,93 +817,7 @@ function planar_trace(f::FusionTree{I,N},
     return newtrees
 end
 
-# trace two neighbouring indices of a single fusion tree
-function elementary_trace(f::FusionTree{I, N}, i) where {I<:Sector, N}
-    (N > 1 && 1 <= i <= N) ||
-        throw(ArgumentError("Cannot trace outputs i=$i and i+1 out of only $N outputs"))
-    i < N || f.coupled == one(I) ||
-        throw(ArgumentError("Cannot trace outputs i=$N and 1 of fusion tree that couples to non-trivial sector"))
 
-    u = one(I)
-    T = typeof(Fsymbol(u,u,u,u,u,u)[1,1,1,1])
-    F = fusiontreetype(I, N-2)
-    newtrees = FusionTreeDict{F,T}()
-
-    j = mod1(i+1, N)
-    b = f.uncoupled[i]
-    b′ = f.uncoupled[j]
-    # if trace is zero, return empty dict
-    (b == dual(b′) && f.isdual[i] != f.isdual[j]) || return newtrees
-    if i < N
-        a = i == 1 ? one(I) : (i == 2 ? f.uncoupled[1] : f.innerlines[i-2])
-        d = i == N-1 ? f.coupled : f.innerlines[i]
-        a == d || return newtrees
-        uncoupled′ = TupleTools.deleteat(TupleTools.deleteat(f.uncoupled, i+1), i)
-        isdual′ = TupleTools.deleteat(TupleTools.deleteat(f.isdual, i+1), i)
-        coupled′ = f.coupled
-        if N <= 4
-            inner′ = ()
-        else
-            inner′ = i <= 2 ? Base.tail(Base.tail(f.innerlines)) :
-                        TupleTools.deleteat(TupleTools.deleteat(f.innerlines, i-1), i-2)
-        end
-        if N <= 3
-            vertices′ = ()
-        else
-            vertices′ = i <= 2 ? Base.tail(Base.tail(f.vertices)) :
-                        TupleTools.deleteat(TupleTools.deleteat(f.vertices, i), i-1)
-        end
-        f′ = FusionTree{I}(uncoupled′, coupled′, isdual′, inner′, vertices′)
-        coeff = sqrtdim(b)
-        if i > 1
-            c = f.innerlines[i-1]
-            if FusionStyle(I) isa MultiplicityFreeFusion
-                coeff *= Fsymbol(a, b, dual(b), a, c, one(I))
-            else
-                μ = f.vertices[i-1]
-                ν = f.vertices[i]
-                coeff *= Fsymbol(a, b, dual(b), a, c, one(I))[μ, ν, 1, 1]
-            end
-        end
-        if f.isdual[i]
-            coeff *= frobeniusschur(b)
-        end
-        push!(newtrees, f′ => coeff)
-        return newtrees
-    else # i == N
-        if N == 2
-            f′ = FusionTree{I}((), one(I), (), (), ())
-            coeff = sqrtdim(b)
-            if !(f.isdual[N])
-                coeff *= conj(frobeniusschur(b))
-            end
-            push!(newtrees, f′ => coeff)
-            return newtrees
-        end
-        uncoupled_ = Base.front(f.uncoupled)
-        inner_ = Base.front(f.innerlines)
-        coupled_ = f.innerlines[end]
-        @assert coupled_ == dual(b)
-        isdual_ = Base.front(f.isdual)
-        vertices_ = Base.front(f.vertices)
-        f_ = FusionTree(uncoupled_, coupled_, isdual_, inner_, vertices_)
-        fs = FusionTree((b,), b, (!f.isdual[1],), (), ())
-        for (f_′, coeff) = merge(fs, f_, one(I), 1)
-            f_′.innerlines[1] == one(I) || continue
-            uncoupled′ = Base.tail(Base.tail(f_′.uncoupled))
-            isdual′ = Base.tail(Base.tail(f_′.isdual))
-            inner′ = N <= 4 ? () : Base.tail(Base.tail(f_′.innerlines))
-            vertices′ = N <= 3 ? () : Base.tail(Base.tail(f_′.vertices))
-            f′ = FusionTree(uncoupled′, one(I), isdual′, inner′, vertices′)
-            coeff *= sqrtdim(b)
-            if !(f.isdual[N])
-                coeff *= conj(frobeniusschur(b))
-            end
-            newtrees[f′] = get(newtrees, f′, zero(coeff)) + coeff
-        end
-        return newtrees
-    end
-end
 
 # BRAIDING MANIPULATIONS:
 #-----------------------------------------------

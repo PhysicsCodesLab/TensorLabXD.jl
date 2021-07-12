@@ -1244,6 +1244,13 @@ are not exported by `TensorXD.jl`, nor do they overload similarly named methods 
 
     ![merge](img/tree-merge.svg)
 
+*   [elementary_trace(f::FusionTree{I, N}, i) where {I<:Sector, N}](@ref TensorXD.elementary_trace) :
+    takes the trace of the ``i``th and ``i+1~\mathrm{mod}~N``th outgoing sectors of the
+    splitting tree `f` by an evaluation map.
+    Diagrammatically, it is:
+
+    ![elementary-trace](img/tree-elementary-trace.svg)
+
 ### Planar manipulations on a fusion-splitting tree
 
 A fusion-splitting tree can be represented by two separate splitting trees `f1` and `f2`,
@@ -1286,17 +1293,17 @@ On a general fusion-splitting tree, we have some functions to bend the lines:
 ```julia
 bendright(f1::FusionTree{I, N₁}, f2::FusionTree{I, N₂}) where {I<:Sector, N₁, N₂}
 ```
-which bend the last uncoupled space of the splitting tress `f1` upward from right hand side
+which bends the last uncoupled space of the splitting tress `f1` upward from right hand side
 to be the last uncoupled space of new fusion tree constructed from `f2`. That is, map final
 splitting vertex `(a, b)<-c` of `f1` to fusion vertex `a<-(c, dual(b))`. Graphically, it is:
 
 ![line bendright](img/tree-bendright.svg)
 
-Taking the adjoint we get a related function
+Taking the adjoint we get a related function:
 ```julia
 bendleft(f1::FusionTree{I}, f2::FusionTree{I}) where I
 ```
-which bend the last uncoupled space of fusion tree `f2` downward from right hand side to be
+which bends the last uncoupled space of fusion tree `f2` downward from right hand side to be
 the last uncoupled space of the splitting tree constructed from `f1`. That is, map final
 fusion vertex `c<-(a, b)` of `f2` to splitting vertex `(c, dual(b))<-a`.
 
@@ -1304,7 +1311,7 @@ We could also bend the lines from the left hand side:
 ```julia
 foldright(f1::FusionTree{I, N₁}, f2::FusionTree{I, N₂}) where {I<:Sector, N₁, N₂}
 ```
-which bend the first uncoupled space of the splitting tree `f1` upward from left hand side
+which bends the first uncoupled space of the splitting tree `f1` upward from left hand side
 to be the first uncoupled space of new fusion tree constructed from `f2`. That is, map first
 splitting vertex `(a, b)<-c` of `f1` to fusion vertex `b<-(dual(a), c)`. Graphically, it is
 
@@ -1314,11 +1321,12 @@ Taking the adjoint we get a related function
 ```julia
 foldleft(f1::FusionTree{I}, f2::FusionTree{I}) where I
 ```
-which bend the first uncoupled space of the fusion tree `f2` downward from left hand side
+which bends the first uncoupled space of the fusion tree `f2` downward from left hand side
 to be the first uncoupled space of new splitting tree constructed from `f1`. That is, map
 first fusion vertex `c <- (a, b)` of `f2` to splitting vertex `(dual(a), c)<-b`.
 
-We also have two functions to realize cyclic permutations:
+The cyclic permutations of all lines of a fusion-splitting tree can be realized through the
+bending of lines:
 ```julia
 cycleclockwise(f1::FusionTree{I}, f2::FusionTree{I}) where {I<:Sector}
 ```
@@ -1336,8 +1344,8 @@ which takes a splitting tree `f1` with `N₁` outgoing sectors, a fusion tree `f
 incoming sectors, and applies line bending such that the resulting splitting and fusion
 trees have `N` outgoing sectors, corresponding to the first `N` sectors out of the list
 ``(a_1, a_2, …, a_{N_1}, b_{N_2}^*, …, b_{1}^*)`` and `N₁+N₂-N` incoming sectors,
-corresponding to the dual of the last `N₁+N₂-N` sectors from the previous list, in reverse.
-This return values are correctly inferred if `N` is a compile time constant.
+corresponding to the dual of the last `N₁+N₂-N` sectors from the previous list in reverse
+order. This return values are correctly inferred if `N` is a compile time constant.
 
 Graphically, for `N₁ = 4`, `N₂ = 3`, `N = 2` and some particular choice of `isdual` in both
 the fusion and splitting tree:
@@ -1362,6 +1370,8 @@ outgoing (`f1`) and incoming sectors (`f2`) respectively (with identical coupled
 repartitioning and permuting the tree such that sectors `p1` become outgoing and sectors
 `p2` become incoming. It is required that the linearized permutation is cyclic to avoid
 braiding.
+
+
 
 
 
