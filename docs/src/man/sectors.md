@@ -1138,7 +1138,7 @@ struct FusionTree{I<:Sector,N,M,L,T}
 end
 ```
 The `uncoupled` field is a list of ``N`` outgoing uncoupled sectors of the splitting tree in
-sequence `a_1,a_2,...,a_N`.
+sequence ``a_1,a_2,...,a_N``.
 
 The `coupled` field is the single input sector of the splitting tree.
 
@@ -1186,7 +1186,7 @@ upon creation, hence, they are assumed to be created correctly. They can be crea
 method
 ```julia
 fusiontrees(uncoupled::NTuple{N, I}, coupled::I = one(I),
-			isdual::NTuple{N, Bool} = ntuple(n->false, Val(N))) where {N, I<:Sector}
+    isdual::NTuple{N, Bool} = ntuple(n->false, Val(N))) where {N, I<:Sector}
 ```
 which returns an iterator `FusionTreeIterator` over all possible splitting trees with fixed
 uncoupled and coupled sectors. The `FusionTreeIterator` conforms to the complete interface
