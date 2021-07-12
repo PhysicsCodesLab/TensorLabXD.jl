@@ -1133,21 +1133,25 @@ struct FusionTree{I<:Sector,N,M,L,T}
     uncoupled::NTuple{N,I}
     coupled::I
     isdual::NTuple{N,Bool}
-    innerlines::NTuple{M,I} # fixed to M = N-2
-    vertices::NTuple{L,T} # fixed to L = N-1
+    innerlines::NTuple{M,I} # fixed M = N-2
+    vertices::NTuple{L,T} # fixed L = N-1
 end
 ```
+The `uncoupled` field is a list of ``N`` outgoing uncoupled sectors of the splitting tree in
+sequence `a_1,a_2,...,a_N`.
+
+The `coupled` field is the single input sector of the splitting tree.
+
 The `isdual` field indicates whether an isomorphism ``Z`` is present or not for each
 uncoupled sectors. The presence of these isomorphisms will be important when we start to
 bend lines, e.g., to move uncoupled sectors from the incoming to the outgoing part of the
 fusion-splitting tree. In category language, ``a^*`` is the dual space of ``a`` on which the
-conjugated irrep acts, while ``\bar{a}`` is the space in the simple objects set and the
-corresponding irrep on it is isomorphic to the complex conjugate of irrep on ``a``. In our
-package, we define the dual of simple object ``a`` as ``dual(a) := \bar{a}``.
-To obtain ``a^*``, we need use the isomorphisms ``Z_a: a^* → \bar{a}`` and its adjoint
-``Z_a^†:\bar{a}→a^*``.
+conjugated irrep acts, while ``\bar{a}`` is the space in the chosen set of simple objects
+and the corresponding irrep on it is isomorphic to the complex conjugate of irrep on ``a``.
+In our package, we define `dual(a)` as ``\bar{a}``. To obtain ``a^*``, we need use the
+isomorphisms ``Z_a: a^* → \bar{a}`` and its adjoint ``Z_a^†:\bar{a}→a^*``.
 
-Note that the field `uncoupled` contains the sectors coming out of the splitting trees,
+Note that the field `uncoupled` contains the sectors coming out of the splitting trees
 **before** the possible ``Z`` isomorphism, i.e. the following example has
 `uncoupled = (a₁, a₂, a₃, a₄)`.
 
@@ -1156,10 +1160,21 @@ Note that the field `uncoupled` contains the sectors coming out of the splitting
 Note that we can still represent a fusion tree as the adjoint of its corresponding splitting
 tree, since we use the ``Z`` isomorphism in the fusion part, and the ``Z^{\dagger}``
 isomorphisms in the splitting part. Furthermore, the presence of the ``Z`` isomorphisms do
-not affect the orthonormality.
+not affect the orthonormality since ``Z_a^{\dagger} \circ Z_a = \mathrm{id}_{a^*}`` and
+``Z_a\circ Z_a^{\dagger} = \mathrm{id}_{\bar{a}}``.
 
-The type of `L` of the vertex labels can be `Nothing` when
-`FusionStyle(I) isa MultiplicityFreeFusion`.
+The `innerlines` is a list of sectors on the inner lines of the splitting tree in the order
+that follows the sequence of the fusion. For example, the first inner line is the fusion
+of the first two uncoupled sector, and the second inner line is the fusion of the first
+inner line and the third uncoupled sector.
+
+The `vertices` is a list of labels on the vertices of the splitting tree in the order that
+follows the sequence of the fusion. For example, the first vertex label is the label for
+the fusion of the first two uncoupled sector, and the second vertex label is the label for
+fusion of the first inner line and the third uncoupled sector.
+
+The type `T` of the vertex labels is defined by the function `vertex_ind2label` for the
+sector `I`, and can be `Nothing` when `FusionStyle(I) isa MultiplicityFreeFusion`.
 
 The `FusionTree` type has a number of basic properties and capabilities, such as checking
 for equality with `==` and support for `hash(f::FusionTree, h::UInt)`, as splitting and
@@ -1168,10 +1183,13 @@ look up certain parts of the data of a tensor map.
 
 The `FusionTree` instances are not checked for consistency (i.e. valid fusion rules etc)
 upon creation, hence, they are assumed to be created correctly. They can be created by the
-`fusiontrees(uncoupled::NTuple{N,I}, coupled::I = one(I))` method, which returns an iterator
-over all possible splitting trees from a given coupled sector, which by default is assumed
-to be the trivial sector, to a given set of `N` uncoupled sectors. The return type of
-`fusiontrees` is a custom type `FusionTreeIterator` which conforms to the complete interface
+method
+```julia
+fusiontrees(uncoupled::NTuple{N, I}, coupled::I = one(I),
+			isdual::NTuple{N, Bool} = ntuple(n->false, Val(N))) where {N, I<:Sector}
+```
+which returns an iterator `FusionTreeIterator` over all possible splitting trees with fixed
+uncoupled and coupled sectors. The `FusionTreeIterator` conforms to the complete interface
 of an iterator, and has a custom `length` function that computes the number of possible
 fusion trees without iterating over all of them explicitly. For example,
 
@@ -1201,45 +1219,39 @@ These manipulations are used as low-level methods by the `TensorMap` methods. As
 are not exported by `TensorXD.jl`, nor do they overload similarly named methods from `Base`.
 
 *   [split(f::FusionTree{I,N}, M::Int)](@ref TensorXD.split) :
-    splits a fusion tree `f` into two trees `f1` and `f2`, such that `f1` has the first `M`
-    uncoupled sectors of `f`, and `f2` the remaining `N-M`. This function is type stable if
-    `M` is a compile time constant. Diagrammatically, for example, `M=4`:
+    splits a fusion tree `f` into two trees `f1` and `f2` such that `f1` has the first `M`
+    uncoupled sectors of `f` and `f2` has the remaining `N-M` uncoupled sectors of `f`.
+    This function is type stable if `M` is a compile time constant.
+    Diagrammatically, for example, `M=4`:
 
     ![split](img/tree-split.svg)
 
 *   [insertat(f1::FusionTree{I,N₁}, i::Int, f2::FusionTree{I,N₂})](@ref TensorXD.insertat) :
-    inserts a fusion tree `f2` at the `i`th uncoupled sector of fusion tree `f1` (this
-    requires that the coupled sector `f2` matches with the `i`th uncoupled sector of `f1`,
-    and that `!f1.isdual[i]`, i.e. that there is no ``Z``-isomorphism on the `i`th line of
-    `f1`), and recouple this into a linear combination of trees in canonical order, with
-    `N₁+N₂-1` uncoupled sectors.
-
-    `insertat(f2, 1, f1)` is the inverse of `split(f, M)` in the sense that
-    `insertat(f2, 1, f1)` should return a dictionary with a single key-value pair `f=>1`.
-
-    Diagrammatically, for example, `i=3`
+    inserts a fusion tree `f2` at the `i`th uncoupled sector of fusion tree `f1` and
+    recouple this into a linear combination of trees in canonical form with `N₁+N₂-1`
+    uncoupled sectors. This requires that the coupled sector `f2` matches with the `i`th
+    uncoupled sector of `f1`, and that `f1.isdual[i] == false`, i.e. that there is no
+    ``Z``-isomorphism on the `i`th uncoupled sector of `f1`.
+    Diagrammatically, for example, `i=3`:
 
     ![insertat](img/tree-insertat.svg)
 
 *   [merge(f1::FusionTree{I,N₁}, f2::FusionTree{I,N₂}, c::I, μ=nothing)](@ref TensorXD.merge) :
     merges two fusion trees `f1` and `f2` by fusing the coupled sectors of `f1` and `f2`
-    into a sector `c` (with vertex label `μ` if `FusionStyle(I) == GenericFusion()`),
-    and reexpressing the result as a linear combination of fusion trees with `N₁+N₂`
-    uncoupled sectors in canonical order. This is a simple application of `insertat`.
-    Diagrammatically, this operation is represented as:
+    into a sector `c` with vertex label `μ` and reexpressing the result as a linear
+    combination of fusion trees with `N₁+N₂` uncoupled sectors in canonical form.
+    Diagrammatically, it is:
 
     ![merge](img/tree-merge.svg)
 
-### Manipulations on a splitting - fusion tree pair without braiding
+### Planar manipulations on a fusion-splitting tree
 
-In this subsection we discuss manipulations that act on a splitting and fusion tree pair,
-which we will always treat as two separate trees `f1, f2`, where `f1` is the splitting tree
-and `f2` represents the fusion tree, and they should have `f1.coupled == f2.coupled`.
+A fusion-splitting tree can be represented by two separate splitting trees `f1` and `f2`,
+where `f1` represents the splitting part and `f2` represents the fusion part.
+Note the `f2` is still a splitting tree, i.e., an instance of the `FusionTree` type, and the
+true fusion tree is the adjoint of it. We should always have `f1.coupled == f2.coupled`.
 
-The most important manipulation on such a pair is to move sectors from one to the other.
-Given the canonical order of these trees, we exclusively use the *left duality* (see the
-section on [categories](@ref s_categories)), for which the evaluation and coevaluation maps
-establish isomorphisms between
+By successively applying the left coevaluation maps, we can establish isomorphisms between
 
 ``\mathrm{Hom}((((b_1 ⊗ b_2) ⊗ …) ⊗ b_{N_2}), (((a_1 ⊗ a_2) ⊗ …) ⊗ a_{N_1}))``
 
@@ -1247,46 +1259,40 @@ establish isomorphisms between
 
 `` ≂ \mathrm{Hom}(1, (((((((a_1 ⊗ a_2) ⊗ ...) ⊗ a_{N_1}) ⊗ b_{N_2}^*) ⊗ …) ⊗ b_2^*) ⊗ b_1^*) )``
 
-where the last morphism space is then labeled by the basis of only splitting trees. We can
-then use the manipulations from the previous section, and then again use the left duality
-to bring this back to a pair of splitting and fusion tree with `N₂′` incoming and `N₁′` outgoing
-sectors (with `N₁′ + N₂′ == N₁ + N₂`).
+where the last morphism space is labeled by the basis of only splitting trees. We can
+then use the manipulations from the previous subsection on the splitting trees, and then
+again use the left evaluation maps to bring this back to a fusion-splitting tree with
+`N₂′` incoming and `N₁′` outgoing sectors (with `N₁′ + N₂′ == N₁ + N₂`).
 
-We now discuss how to actually bend lines, and thus, move sectors from the incoming part
-(fusion tree) to the outgoing part (splitting tree). Hereby, we exploit the relations
-between the (co)evaluation (exact pairing) and the fusion tensors, discussed in
-[topological data of a fusion category](@ref ss_topologicalfusion). The main ingredient
-that we need is summarized in
+To realize this process using this package, we first need to fix the relations between the
+between the (co)evaluation maps and the fusion tensors.
+
+![coevaluation to fusion](img/tree-coevaluation-to-fusion.svg)
+
+Then, applying the right evaluation on the second sector of a splitting tensor thus yields
+a linear combination of fusion tensors with corresponding ``Z`` ismorphism:
 
 ![line bending](img/tree-linebending.svg)
 
-We will only need the B-symbol and not the A-symbol. Applying the right evaluation on the
-second sector of a splitting tensor thus yields a linear combination of fusion tensors
-(when `FusionStyle(I) == GenericFusion()`, or just a scalar times the corresponding
-fusion tensor otherwise), with corresponding ``Z`` ismorphism.
-
-However, we have to be careful if we bend a line on which a ``Z`` isomorphism (or its
-adjoint) is already present. Indeed, it is exactly for this operation that we explicitly
-need to take the presence of these isomorphisms into account. Indeed, we obtain the relation
+If we bend a line on which a ``Z`` isomorphism is already present, we obtain the relation
 
 ![dual line bending](img/tree-linebending2.svg)
 
 Hence, bending an `isdual` sector from the splitting tree to the fusion tree yields an
-additional Frobenius-Schur factor, and of course leads to a normal sector (which is no
-longer `isdual` and does thus not come with a ``Z``-isomorphism) on the fusion side.
+additional Frobenius-Schur factor, and leads to a normal sector on the fusion side.
 
-The corresponding function is:
+On a general fusion-splitting tree, we have some functions to bend the lines:
+
 ```julia
 bendright(f1::FusionTree{I, N₁}, f2::FusionTree{I, N₂}) where {I<:Sector, N₁, N₂}
 ```
 which bend the last uncoupled space of the splitting tress `f1` upward from right hand side
 to be the last uncoupled space of new fusion tree constructed from `f2`. That is, map final
-splitting vertex `(a, b)<-c` of `f1` to fusion vertex `a<-(c, dual(b))`.
+splitting vertex `(a, b)<-c` of `f1` to fusion vertex `a<-(c, dual(b))`. Graphically, it is:
 
-Taking the adjoint of this relation yields the required relation to transform a fusion
-tensor into a splitting tensor with an added ``Z^†`` isomorphism.
+![line bendright](img/tree-bendright.svg)
 
-The corresponding function is:
+Taking the adjoint we get a related function
 ```julia
 bendleft(f1::FusionTree{I}, f2::FusionTree{I}) where I
 ```
@@ -1294,22 +1300,23 @@ which bend the last uncoupled space of fusion tree `f2` downward from right hand
 the last uncoupled space of the splitting tree constructed from `f1`. That is, map final
 fusion vertex `c<-(a, b)` of `f2` to splitting vertex `(c, dual(b))<-a`.
 
-We could also bend the lines from the left hand side. The corresponding functions are
+We could also bend the lines from the left hand side:
 ```julia
 foldright(f1::FusionTree{I, N₁}, f2::FusionTree{I, N₂}) where {I<:Sector, N₁, N₂}
 ```
 which bend the first uncoupled space of the splitting tree `f1` upward from left hand side
 to be the first uncoupled space of new fusion tree constructed from `f2`. That is, map first
-splitting vertex `(a, b)<-c` of `f1` to fusion vertex `b<-(dual(a), c)`.
+splitting vertex `(a, b)<-c` of `f1` to fusion vertex `b<-(dual(a), c)`. Graphically, it is
 
-And
+![line foldright](img/tree-foldright.svg)
+
+Taking the adjoint we get a related function
 ```julia
 foldleft(f1::FusionTree{I}, f2::FusionTree{I}) where I
 ```
-which is the adjoint of `foldright` and bend the first uncoupled space of the fusion
-tree `f2` downward from left hand side to be the first uncoupled space of new splitting tree
-constructed from `f1`. That is, map first fusion vertex `c <- (a, b)` of `f2` to splitting
-vertex `(dual(a), c)<-b`.
+which bend the first uncoupled space of the fusion tree `f2` downward from left hand side
+to be the first uncoupled space of new splitting tree constructed from `f1`. That is, map
+first fusion vertex `c <- (a, b)` of `f2` to splitting vertex `(dual(a), c)<-b`.
 
 We also have two functions to realize cyclic permutations:
 ```julia

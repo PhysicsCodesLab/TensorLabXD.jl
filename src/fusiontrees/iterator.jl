@@ -1,11 +1,12 @@
-# FusionTreeIterator:
-# iterate over fusion trees for fixed coupled and uncoupled sector labels
-#==============================================================================#
-function fusiontrees(uncoupled::NTuple{N, I}, coupled::I = one(I),
-			isdual::NTuple{N, Bool} = ntuple(n->false, Val(N))) where {N, I<:Sector}
-    FusionTreeIterator{I, N}(uncoupled, coupled, isdual)
-end
+"""
+	struct FusionTreeIterator{I<:Sector, N}
+    	uncoupled::NTuple{N, I}
+    	coupled::I
+    	isdual::NTuple{N, Bool}
+	end
 
+Iterate over all possible splitting trees for fixed uncoupled and coupled sectors.
+"""
 struct FusionTreeIterator{I<:Sector, N}
     uncoupled::NTuple{N, I}
     coupled::I
@@ -58,8 +59,8 @@ end
 """
 	labelvertices(uncoupled::NTuple{N, I}, coupled::I, lines, vertices) where {I<:Sector, N}
 
-Return the vertices which is a `NTuple{L, T}`, where `L = N-1` and `T` is the type of the
-vertice labels. This form is used to construct the instance of FusionTree.
+Return the vertices with the label type of its elements defined by the function 
+`vertex_ind2label`. It is used to construct the instances of `FusionTree`.
 """
 labelvertices(uncoupled::NTuple{2, I}, coupled::I,
 				lines::Tuple{}, vertices::Tuple{Int}) where {I<:Sector} =
@@ -155,4 +156,15 @@ function Base.iterate(it::FusionTreeIterator{I, N} where {N}, state) where {I<:S
     vertexlabels = labelvertices(it.uncoupled, it.coupled, lines, vertices)
     f = FusionTree(it.uncoupled, it.coupled, it.isdual, lines, vertexlabels)
     return f, (lines, vertices, states)
+end
+
+"""
+	fusiontrees(uncoupled::NTuple{N, I}, coupled::I = one(I),
+				isdual::NTuple{N, Bool} = ntuple(n->false, Val(N))) where {N, I<:Sector}
+
+Return the iterator `FusionTreeIterator` for fixed uncoupled and coupled sectors.
+"""
+function fusiontrees(uncoupled::NTuple{N, I}, coupled::I = one(I),
+			isdual::NTuple{N, Bool} = ntuple(n->false, Val(N))) where {N, I<:Sector}
+    FusionTreeIterator{I, N}(uncoupled, coupled, isdual)
 end

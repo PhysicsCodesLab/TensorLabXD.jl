@@ -118,8 +118,8 @@ function insertat(f1::FusionTree{I}, i::Int, f2::FusionTree{I, 2}) where {I}
         f′ = FusionTree(uncoupled′, coupled, isdual′, inner′, vertices′)
         return fusiontreedict(I)(f′ => coeff)
     end
-    uncoupled′ = TupleTools.insertafter(TupleTools.setindex(uncoupled, b, i), i, (c,))
-    isdual′ = TupleTools.insertafter(TupleTools.setindex(isdual, isdualb, i), i, (isdualc,))
+    uncoupled′ = TupleTools.insertafter(Base.setindex(uncoupled, b, i), i, (c,))
+    isdual′ = TupleTools.insertafter(Base.setindex(isdual, isdualb, i), i, (isdualc,))
     a = i == 2 ? uncoupled[1] : inner[i-2]
     d = i == length(f1) ? coupled : inner[i-1]
     e′ = uncoupled[i]
@@ -201,9 +201,9 @@ end
 
 Merge two fusion trees together to a linear combination of fusion trees whose uncoupled
 sectors are those of `f1` followed by those of `f2`, and where the two coupled sectors of
-`f1` and `f2` are further fused to `c`. In case of
-`FusionStyle(I) == GenericFusion()`, also a degeneracy label `μ` for the fusion of
-the coupled sectors of `f1` and `f2` to `c` needs to be specified.
+`f1` and `f2` are further fused to `c`. In case of `FusionStyle(I) == GenericFusion()`,
+also a degeneracy label `μ` for the fusion of the coupled sectors of `f1` and `f2` to `c`
+needs to be specified.
 """
 function merge(f1::FusionTree{I, N₁}, f2::FusionTree{I, N₂},
                     c::I, μ = nothing) where {I, N₁, N₂}
@@ -223,12 +223,6 @@ function merge(f1::FusionTree{I, 0}, f2::FusionTree{I, 0}, c::I, μ =nothing) wh
         throw(SectorMismatch("cannot fuse sectors $(f1.coupled) and $(f2.coupled) to $c"))
     return fusiontreedict(I)(f1=>Fsymbol(c, c, c, c, c, c)[1,1,1,1])
 end
-
-# ELEMENTARY DUALITY MANIPULATIONS: A- and B-moves
-# -> elementary manipulations that depend on the duality (rigidity) and pivotal structure
-# -> planar manipulations that do not require braiding, everything is in Fsymbol (A/Bsymbol)
-# -> B-move (bendleft, bendright) is simple in standard basis
-# -> A-move (foldleft, foldright) is complicated, needs to be reexpressed in standard form
 
 """
     bendright(f1::FusionTree{I, N₁}, f2::FusionTree{I, N₂}) where {I<:Sector, N₁, N₂}
