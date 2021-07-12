@@ -1,6 +1,4 @@
-# BASIC MANIPULATIONS:
-# -> rewrite generic fusion tree in basis of fusion trees in standard form
-# -> only depend on Fsymbol
+# PLANAR MANIPULATIONS:
 """
     split(f::FusionTree{I, N}, M::Int)
     -> (::FusionTree{I, M}, ::FusionTree{I, N-M+1})
@@ -531,13 +529,13 @@ is returned.
 Note that the sequence of the incoming sectors of the fusion tree is reversed after
 repartition into the splitting tree.
 """
-function linearizepermutation(p1::NTuple{N₁, Int}, p2::NTuple{N₂},
+function linearizepermutation(p1::NTuple{N₁, Int}, p2::NTuple{N₂,Int},
                                 n₁::Int, n₂::Int) where {N₁, N₂}
     p1′ = ntuple(Val(N₁)) do n
-        p1[n] > n₁ ? n₂+2n₁+1-p1[n] : p1[n]
+        p1[n] > n₁ ? n₁+(n₂+n₁+1-p1[n]) : p1[n]
     end
     p2′ = ntuple(Val(N₂)) do n
-        p2[N₂+1-n] > n₁ ? n₂+2n₁+1-p2[N₂+1-n] : p2[N₂+1-n]
+        p2[N₂+1-n] > n₁ ? n₁+(n₂+n₁+1-p2[N₂+1-n]) : p2[N₂+1-n]
     end
     return (p1′..., p2′...)
 end
@@ -647,7 +645,8 @@ function elementary_trace(f::FusionTree{I, N}, i) where {I<:Sector, N}
     (N > 1 && 1 <= i <= N) ||
         throw(ArgumentError("Cannot trace outputs i=$i and i+1 out of only $N outputs"))
     i < N || f.coupled == one(I) ||
-        throw(ArgumentError("Cannot trace outputs i=$N and 1 of fusion tree that couples to non-trivial sector"))
+        throw(ArgumentError("Cannot trace outputs i=$N and 1 of fusion tree that
+                                couples to non-trivial sector"))
 
     u = one(I)
     T = typeof(Fsymbol(u,u,u,u,u,u)[1,1,1,1])
@@ -730,45 +729,14 @@ function elementary_trace(f::FusionTree{I, N}, i) where {I<:Sector, N}
     end
 end
 
-function planar_trace(f1::FusionTree{I}, f2::FusionTree{I},
-                    p1::IndexTuple{N₁}, p2::IndexTuple{N₂},
-                    q1::IndexTuple{N₃}, q2::IndexTuple{N₃}) where {I<:Sector, N₁, N₂, N₃}
+"""
+    planar_trace(f::FusionTree{I,N},
+                    q1::IndexTuple{N₃}, q2::IndexTuple{N₃}) where {I<:Sector, N, N₃}
 
-    N = N₁ + N₂ + 2N₃
-    @assert length(f1) + length(f2) == N
-    if N₃ == 0
-        return transpose(f1, f2, p1, p2)
-    end
-
-    linearindex = (ntuple(identity, Val(length(f1)))...,
-                    reverse(length(f1) .+ ntuple(identity, Val(length(f2))))...)
-
-
-    q1′ = TupleTools.getindices(linearindex, q1)
-    q2′ = TupleTools.getindices(linearindex, q2)
-    p1′, p2′ = let q′ = (q1′..., q2′...)
-        (map(l-> l - count(l .> q′), TupleTools.getindices(linearindex, p1)),
-            map(l-> l - count(l .> q′), TupleTools.getindices(linearindex, p2)))
-    end
-
-    u = one(I)
-    T = typeof(Fsymbol(u, u, u, u, u, u)[1, 1, 1, 1])
-    F₁ = fusiontreetype(I, N₁)
-    F₂ = fusiontreetype(I, N₂)
-    newtrees = FusionTreeDict{Tuple{F₁,F₂}, T}()
-    for ((f1′, f2′), coeff′) in repartition(f1, f2, N)
-        for (f1′′, coeff′′) in planar_trace(f1′, q1′, q2′)
-            for (f12′′′, coeff′′′) in transpose(f1′′, f2′, p1′, p2′)
-                coeff = coeff′ * coeff′′ * coeff′′′
-                if !iszero(coeff)
-                    newtrees[f12′′′] = get(newtrees, f12′′′, zero(coeff)) + coeff
-                end
-            end
-        end
-    end
-    return newtrees
-end
-
+Take the traces between `q1[k]`th and `q2[k]`th sector of the splitting tree `f`, where
+`1<=k<=N₃`. All the traces must be planar, i.e., no tracing lines cross with the outgoing
+lines nor cross with each other.
+"""
 function planar_trace(f::FusionTree{I,N},
                         q1::IndexTuple{N₃}, q2::IndexTuple{N₃}) where {I<:Sector, N, N₃}
 
@@ -817,12 +785,58 @@ function planar_trace(f::FusionTree{I,N},
     return newtrees
 end
 
+"""
+    planar_trace(f1::FusionTree{I}, f2::FusionTree{I},
+                p1::IndexTuple{N₁}, p2::IndexTuple{N₂},
+                q1::IndexTuple{N₃}, q2::IndexTuple{N₃}) where {I<:Sector, N₁, N₂, N₃}
 
+Take the traces between `q1[k]`th and `q2[k]`th sector of the fusion-splitting tree
+and the result is transposed according to `p1` and `p2`. We need to make sure that the
+traces are planar without any crossing between lines.
+
+# Arguments:
+- `f1`: splitting tree
+- `f2`: fusion tree
+"""
+function planar_trace(f1::FusionTree{I}, f2::FusionTree{I},
+                    p1::IndexTuple{N₁}, p2::IndexTuple{N₂},
+                    q1::IndexTuple{N₃}, q2::IndexTuple{N₃}) where {I<:Sector, N₁, N₂, N₃}
+
+    N = N₁ + N₂ + 2N₃
+    @assert length(f1) + length(f2) == N
+    if N₃ == 0
+        return transpose(f1, f2, p1, p2)
+    end
+
+    linearindex = (ntuple(identity, Val(length(f1)))...,
+                    reverse(length(f1) .+ ntuple(identity, Val(length(f2))))...)
+
+    q1′ = TupleTools.getindices(linearindex, q1)
+    q2′ = TupleTools.getindices(linearindex, q2)
+    p1′, p2′ = let q′ = (q1′..., q2′...)
+        (map(l-> l - count(l .> q′), TupleTools.getindices(linearindex, p1)),
+            map(l-> l - count(l .> q′), TupleTools.getindices(linearindex, p2)))
+    end
+
+    u = one(I)
+    T = typeof(Fsymbol(u, u, u, u, u, u)[1, 1, 1, 1])
+    F₁ = fusiontreetype(I, N₁)
+    F₂ = fusiontreetype(I, N₂)
+    newtrees = FusionTreeDict{Tuple{F₁,F₂}, T}()
+    for ((f1′, f2′), coeff′) in repartition(f1, f2, N)
+        for (f1′′, coeff′′) in planar_trace(f1′, q1′, q2′)
+            for (f12′′′, coeff′′′) in transpose(f1′′, f2′, p1′, p2′)
+                coeff = coeff′ * coeff′′ * coeff′′′
+                if !iszero(coeff)
+                    newtrees[f12′′′] = get(newtrees, f12′′′, zero(coeff)) + coeff
+                end
+            end
+        end
+    end
+    return newtrees
+end
 
 # BRAIDING MANIPULATIONS:
-#-----------------------------------------------
-# -> manipulations that depend on a braiding
-# -> requires both Fsymbol and Rsymbol
 """
     artin_braid(f::FusionTree, i; inv::Bool = false) -> <:AbstractDict{typeof(f), <:Number}
 

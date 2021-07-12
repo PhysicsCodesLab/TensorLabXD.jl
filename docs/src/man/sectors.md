@@ -1218,38 +1218,57 @@ We now discuss elementary planar manipulations (without braiding) on splitting t
 These manipulations are used as low-level methods by the `TensorMap` methods. As such, they
 are not exported by `TensorXD.jl`, nor do they overload similarly named methods from `Base`.
 
-*   [split(f::FusionTree{I,N}, M::Int)](@ref TensorXD.split) :
-    splits a fusion tree `f` into two trees `f1` and `f2` such that `f1` has the first `M`
-    uncoupled sectors of `f` and `f2` has the remaining `N-M` uncoupled sectors of `f`.
-    This function is type stable if `M` is a compile time constant.
-    Diagrammatically, for example, `M=4`:
+```julia
+split(f::FusionTree{I,N}, M::Int)
+```
+Split a fusion tree `f` into two trees `f1` and `f2` such that `f1` has the first `M`
+uncoupled sectors of `f` and `f2` has the remaining `N-M` uncoupled sectors of `f`.
+This function is type stable if `M` is a compile time constant.
+Diagrammatically, for example, `M=4`:
 
-    ![split](img/tree-split.svg)
+![split](img/tree-split.svg)
 
-*   [insertat(f1::FusionTree{I,N₁}, i::Int, f2::FusionTree{I,N₂})](@ref TensorXD.insertat) :
-    inserts a fusion tree `f2` at the `i`th uncoupled sector of fusion tree `f1` and
-    recouple this into a linear combination of trees in canonical form with `N₁+N₂-1`
-    uncoupled sectors. This requires that the coupled sector `f2` matches with the `i`th
-    uncoupled sector of `f1`, and that `f1.isdual[i] == false`, i.e. that there is no
-    ``Z``-isomorphism on the `i`th uncoupled sector of `f1`.
-    Diagrammatically, for example, `i=3`:
+```julia
+insertat(f1::FusionTree{I,N₁}, i::Int, f2::FusionTree{I,N₂})
+```
+Insert a fusion tree `f2` at the `i`th uncoupled sector of fusion tree `f1` and
+recouple this into a linear combination of trees in canonical form with `N₁+N₂-1`
+uncoupled sectors. This requires that the coupled sector `f2` matches with the `i`th
+uncoupled sector of `f1`, and that `f1.isdual[i] == false`, i.e. that there is no
+``Z``-isomorphism on the `i`th uncoupled sector of `f1`.
+Diagrammatically, for example, `i=3`:
 
-    ![insertat](img/tree-insertat.svg)
+![insertat](img/tree-insertat.svg)
 
-*   [merge(f1::FusionTree{I,N₁}, f2::FusionTree{I,N₂}, c::I, μ=nothing)](@ref TensorXD.merge) :
-    merges two fusion trees `f1` and `f2` by fusing the coupled sectors of `f1` and `f2`
-    into a sector `c` with vertex label `μ` and reexpressing the result as a linear
-    combination of fusion trees with `N₁+N₂` uncoupled sectors in canonical form.
-    Diagrammatically, it is:
+```julia
+merge(f1::FusionTree{I,N₁}, f2::FusionTree{I,N₂}, c::I, μ=nothing)
+```
+Merge two fusion trees `f1` and `f2` by fusing the coupled sectors of `f1` and `f2`
+into a sector `c` with vertex label `μ` and reexpressing the result as a linear
+combination of fusion trees with `N₁+N₂` uncoupled sectors in canonical form.
+Diagrammatically, it is:
 
-    ![merge](img/tree-merge.svg)
+![merge](img/tree-merge.svg)
 
-*   [elementary_trace(f::FusionTree{I, N}, i) where {I<:Sector, N}](@ref TensorXD.elementary_trace) :
-    takes the trace of the ``i``th and ``i+1~\mathrm{mod}~N``th outgoing sectors of the
-    splitting tree `f` by an evaluation map.
-    Diagrammatically, it is:
+```julia
+elementary_trace(f::FusionTree{I, N}, i) where {I<:Sector, N}
+```
+Take the trace of the ``i``th and ``i+1~\mathrm{mod}~N``th outgoing sectors of the
+splitting tree `f` by an evaluation map.
+Diagrammatically, it is:
 
-    ![elementary-trace](img/tree-elementary-trace.svg)
+![elementary-trace](img/tree-elementary-trace.svg)
+
+```julia
+planar_trace(f::FusionTree{I,N},q1::IndexTuple{N₃},
+                q2::IndexTuple{N₃}) where {I<:Sector, N, N₃}
+```
+Take the traces between `q1[k]`th and `q2[k]`th sector of the splitting tree `f`, where
+`1<=k<=N₃`. All the traces must be planar, i.e., no tracing lines cross with the outgoing
+lines nor cross with each other.
+Diagrammatically, for example, `q1 = (1,4,5)` and `q2 = (2,7,6)`:
+
+![planar-trace-splitting](img/tree-planar-trace-splitting.svg)
 
 ### Planar manipulations on a fusion-splitting tree
 
@@ -1257,6 +1276,8 @@ A fusion-splitting tree can be represented by two separate splitting trees `f1` 
 where `f1` represents the splitting part and `f2` represents the fusion part.
 Note the `f2` is still a splitting tree, i.e., an instance of the `FusionTree` type, and the
 true fusion tree is the adjoint of it. We should always have `f1.coupled == f2.coupled`.
+
+The order of the sectors in a fusion-splitting trees is `(f1.uncoupled..., f2.uncoupled...)`.
 
 By successively applying the left coevaluation maps, we can establish isomorphisms between
 
@@ -1357,19 +1378,26 @@ as value. Note that the summation is only over the ``κ_j`` labels, such that, i
 of `FusionStyle(I) isa MultiplicityFreeFusion`, the linear combination simplifies to
 a single term with a scalar coefficient.
 
-The transpose of the splitting-fusion tree pair can be realized by repartition and cyclic
-permutations without braiding:
+The transpose of the fusion-splitting tree that can be realized by repartition and cyclic
+permutations without braiding is given by
 ```julia
 transpose(f1::FusionTree{I}, f2::FusionTree{I},
         p1::NTuple{N₁, Int}, p2::NTuple{N₂, Int}) where {I, N₁, N₂}
 ```
-Input is a double fusion tree that describes the fusion of a set of incoming uncoupled
-sectors to a set of outgoing uncoupled sectors, represented using the individual trees of
-outgoing (`f1`) and incoming sectors (`f2`) respectively (with identical coupled sector
-`f1.coupled == f2.coupled`). Computes new trees and corresponding coefficients obtained from
-repartitioning and permuting the tree such that sectors `p1` become outgoing and sectors
-`p2` become incoming. It is required that the linearized permutation is cyclic to avoid
-braiding.
+which computes new trees and corresponding coefficients obtained from repartitioning and
+permuting the tree such that sectors `p1` become outgoing and sectors `p2` become incoming.
+It is required that the linearized permutation is cyclic to avoid braiding.
+
+The general planar trace of a fusion-splitting tree is given by
+```julia
+planar_trace(f1::FusionTree{I}, f2::FusionTree{I},
+            p1::IndexTuple{N₁}, p2::IndexTuple{N₂},
+            q1::IndexTuple{N₃}, q2::IndexTuple{N₃}) where {I<:Sector, N₁, N₂, N₃}
+```
+which takes the traces between `q1[k]`th and `q2[k]`th sector of the fusion-splitting tree
+and then transposes according to `p1` and `p2`. We need to make sure that the traces are
+planar without any crossings between lines.
+
 
 
 
