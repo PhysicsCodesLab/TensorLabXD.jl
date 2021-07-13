@@ -1,4 +1,5 @@
 # PLANAR MANIPULATIONS:
+# =========================================================================================#
 """
     split(f::FusionTree{I, N}, M::Int)
     -> (::FusionTree{I, M}, ::FusionTree{I, N-M+1})
@@ -837,6 +838,7 @@ function planar_trace(f1::FusionTree{I}, f2::FusionTree{I},
 end
 
 # BRAIDING MANIPULATIONS:
+# =========================================================================================#
 """
     artin_braid(f::FusionTree, i; inv::Bool = false) -> <:AbstractDict{typeof(f), <:Number}
 
@@ -1131,12 +1133,12 @@ end
             p1::NTuple{N₁, Int}, p2::NTuple{N₂, Int}) where {I, N₁, N₂}
     -> <:AbstractDict{Tuple{FusionTree{I, N₁}, FusionTree{I, N₂}}, <:Number}
 
-Input is a double fusion tree that describes the fusion of a set of incoming uncoupled
+Input is a fusion-splitting tree that describes the fusion of a set of incoming uncoupled
 sectors to a set of outgoing uncoupled sectors, represented using the individual trees of
 outgoing (`f1`) and incoming sectors (`f2`) respectively (with identical coupled sector
 `f1.coupled == f2.coupled`). Computes new trees and corresponding coefficients obtained from
 repartitioning and permuting the tree such that sectors `p1` become outgoing and sectors
-`p2` become incoming.
+`p2` become incoming. Work only in the case if `BraidingStyle(I) isa SymmetricBraiding`.
 """
 function permute(f1::FusionTree{I}, f2::FusionTree{I},
                     p1::IndexTuple{N₁}, p2::IndexTuple{N₂}) where {I<:Sector, N₁, N₂}

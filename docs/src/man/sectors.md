@@ -191,31 +191,33 @@ Base.isequal(f1::FusionTree{I, N}, f2::FusionTree{I, N}) where {I<:Sector, N}
 fusiontrees(uncoupled::NTuple{N, I}, coupled::I = one(I), isdual::NTuple{N, Bool} = ntuple(n->false, Val(N))) where {N, I<:Sector} # return the FusionTreeIterator over all possible fusion trees from a set of N uncoupled sectors to a given coupled sector
 Base.length(iter::FusionTreeIterator) # number of fusiontrees with fixed uncoupled objects and coupled object
 
- # Basic Manipulations
+ # Planar manipulations on a splitting tree
 split(f::FusionTree{I, N}, M::Int) # Split a fusion tree into two. The first tree has as uncoupled sectors the first `M` uncoupled sectors of the input tree `f`
 insertat(f::FusionTree{I, N₁}, i::Int, f2::FusionTree{I, N₂}) # Attach a fusion tree `f2` to the uncoupled leg `i` of the fusion tree `f1` and bring it into a linear combination of fusion trees in standard form.
 merge(f1::FusionTree{I, N₁}, f2::FusionTree{I, N₂}, c::I, μ = nothing) # Merge two fusion trees together to a linear combination of fusion trees whose uncoupled sectors are those of `f1` followed by those of `f2`, and where the two coupled sectors of `f1` and `f2` are further fused to `c`.
+elementary_trace(f::FusionTree{I, N}, i) where {I<:Sector, N} # Trace the ``i``th and ``i+1``th uncoupled sectors of splitting tree `f`.
+planar_trace(f::FusionTree{I,N}, q1::IndexTuple{N₃}, q2::IndexTuple{N₃}) where {I<:Sector, N, N₃} # Take the traces between `q1[k]`th and `q2[k]`th sector of the splitting tree `f`, where `1<=k<=N₃`.
+
+# Planar manipulations on a fusion-splitting tree
 bendright(f1::FusionTree{I, N₁}, f2::FusionTree{I, N₂}) where {I<:Sector, N₁, N₂} # map final splitting vertex (a, b)<-c to fusion vertex a<-(c, dual(b))
 bendleft(f1::FusionTree{I}, f2::FusionTree{I}) where I # map final fusion vertex c<-(a, b) to splitting vertex (c, dual(b))<-a
 foldright(f1::FusionTree{I, N₁}, f2::FusionTree{I, N₂}) where {I<:Sector, N₁, N₂} # map first splitting vertex (a, b)<-c to fusion vertex b<-(dual(a), c)
 foldleft(f1::FusionTree{I}, f2::FusionTree{I}) where I # map first fusion vertex c<-(a, b) to splitting vertex (dual(a), c)<-b
-
-# Manipulations using braiding
-
-# Manipulations without braiding
-
-iscyclicpermutation(p)
 cycleclockwise(f1::FusionTree{I}, f2::FusionTree{I}) where {I<:Sector} # clockwise cyclic permutation while preserving (N₁, N₂): foldright & bendleft
 cycleanticlockwise(f1::FusionTree{I}, f2::FusionTree{I}) where {I<:Sector} # anticlockwise cyclic permutation while preserving (N₁, N₂): foldleft & bendright
-repartition(f1::FusionTree{I, N₁}, f2::FusionTree{I, N₂}, N::Int) where {I, N₁, N₂} -> <:AbstractDict{Tuple{FusionTree{I, N}, FusionTree{I, N₁+N₂-N}}, <:Number}
-Base.transpose(f1::FusionTree{I}, f2::FusionTree{I}, p1::IndexTuple{N₁}, p2::IndexTuple{N₂}) where {I<:Sector, N₁, N₂}
-artin_braid(f::FusionTree, i; inv::Bool = false) -> <:AbstractDict{typeof(f), <:Number} # Perform an elementary braid (Artin generator) of neighbouring uncoupled indices `i` and `i+1` on a fusion tree `f`, and returns the result as a dictionary of output trees and corresponding coefficients.
-braid(f::FusionTree{<:Sector, N}, levels::NTuple{N, Int}, p::NTuple{N, Int}) -> <:AbstractDict{typeof(t), <:Number}
-permute(f::FusionTree, p::NTuple{N, Int}) -> <:AbstractDict{typeof(t), <:Number}
-braid(f1::FusionTree{I}, f2::FusionTree{I}, levels1::IndexTuple, levels2::IndexTuple, p1::IndexTuple{N₁}, p2::IndexTuple{N₂}) where {I<:Sector, N₁, N₂} -> <:AbstractDict{Tuple{FusionTree{I, N₁}, FusionTree{I, N₂}}, <:Number}
-permute(f1::FusionTree{I}, f2::FusionTree{I}, p1::NTuple{N₁, Int}, p2::NTuple{N₂, Int}) where {I, N₁, N₂} -> <:AbstractDict{Tuple{FusionTree{I, N₁}, FusionTree{I, N₂}}, <:Number}
-```
+repartition(f1::FusionTree{I, N₁}, f2::FusionTree{I, N₂}, N::Int) where {I, N₁, N₂} # new tree has N outgoing sectors
+Base.transpose(f1::FusionTree{I}, f2::FusionTree{I}, p1::IndexTuple{N₁}, p2::IndexTuple{N₂}) where {I<:Sector, N₁, N₂} # Computes new trees and corresponding coefficients obtained from repartitioning and cyclic permutating the fusion-splitting tree such that sectors `p1` become outgoing and sectors `p2` become incoming.
+planar_trace(f1::FusionTree{I}, f2::FusionTree{I}, p1::IndexTuple{N₁}, p2::IndexTuple{N₂}, q1::IndexTuple{N₃}, q2::IndexTuple{N₃}) where {I<:Sector, N₁, N₂, N₃} # Take the traces between `q1[k]`th and `q2[k]`th sector of the fusion-splitting tree and the result is transposed according to `p1` and `p2`.
 
+# Braiding manipulations on a splitting tree
+artin_braid(f::FusionTree, i; inv::Bool = false) # Perform an elementary braid (Artin generator) of neighbouring uncoupled indices `i` and `i+1` on a fusion tree `f`, and returns the result as a dictionary of output trees and corresponding coefficients.
+braid(f::FusionTree{<:Sector, N}, levels::NTuple{N, Int}, p::NTuple{N, Int}) # general braiding according to permutation p and levels
+permute(f::FusionTree, p::NTuple{N, Int}) # permutation when braiding is symmetric
+
+# Braiding manipulations on a fusion-splitting tree
+braid(f1::FusionTree{I}, f2::FusionTree{I}, levels1::IndexTuple, levels2::IndexTuple, p1::IndexTuple{N₁}, p2::IndexTuple{N₂}) where {I<:Sector, N₁, N₂} # Compute new trees and corresponding coefficients obtained from repartitioning and braiding the tree such that sectors `p1` become outgoing and sectors `p2` become incoming.
+permute(f1::FusionTree{I}, f2::FusionTree{I}, p1::NTuple{N₁, Int}, p2::NTuple{N₂, Int}) where {I, N₁, N₂} # permutation when braiding is symmetric
+```
 ### Others structures
 ```julia
 struct SectorSet{I<:Sector, F, S} # behaves as an iterator that applies x->convert(I, f(x)) on the elements of set; if f is not provided it is just taken as the function identity.
