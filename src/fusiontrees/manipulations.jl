@@ -841,12 +841,12 @@ end
     artin_braid(f::FusionTree, i; inv::Bool = false) -> <:AbstractDict{typeof(f), <:Number}
 
 Perform an elementary braid (Artin generator) of neighbouring uncoupled indices `i` and
-`i+1` on a fusion tree `f`, and returns the result as a dictionary of output trees and
+`i+1` on a splitting tree `f`, and returns the result as a dictionary of output trees and
 corresponding coefficients.
 
 The keyword `inv` determines whether index `i` will braid above or below index `i+1`, i.e.
 applying `artin_braid(f′, i; inv = true)` to all the outputs `f′` of
-`artin_braid(f, i; inv = false)` and collecting the results should yield a single fusion
+`artin_braid(f, i; inv = false)` and collecting the results should yield a single splitting
 tree `f` with coefficient `1`. This keyword has no effect if
 `BraidingStyle(sectortype(f)) isa SymmetricBraiding`.
 """
@@ -975,7 +975,6 @@ function permutation2swaps(perm)
     return swaps
 end
 
-# braid fusion tree
 """
     braid(f::FusionTree{<:Sector, N}, levels::NTuple{N, Int}, p::NTuple{N, Int})
     -> <:AbstractDict{typeof(t), <:Number}
@@ -1030,7 +1029,6 @@ function braid(f::FusionTree{I, N},
     end
 end
 
-# permute fusion tree
 """
     permute(f::FusionTree, p::NTuple{N, Int}) -> <:AbstractDict{typeof(t), <:Number}
 
@@ -1054,7 +1052,7 @@ const usebraidcache_nonabelian = Ref{Bool}(true)
             p1::IndexTuple{N₁}, p2::IndexTuple{N₂}) where {I<:Sector, N₁, N₂}
     -> <:AbstractDict{Tuple{FusionTree{I, N₁}, FusionTree{I, N₂}}, <:Number}
 
-Input is a fusion-splitting tree pair that describes the fusion of a set of incoming
+Input is a fusion-splitting tree that describes the fusion of a set of incoming
 uncoupled sectors to a set of outgoing uncoupled sectors, represented using the splitting
 tree `f1` and fusion tree `f2`, such that the incoming sectors `f2.uncoupled` are fused to
 `f1.coupled == f2.coupled` and then to the outgoing sectors `f1.uncoupled`. Compute new

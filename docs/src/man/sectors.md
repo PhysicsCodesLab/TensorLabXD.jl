@@ -1278,6 +1278,8 @@ Note the `f2` is still a splitting tree, i.e., an instance of the `FusionTree` t
 true fusion tree is the adjoint of it. We should always have `f1.coupled == f2.coupled`.
 
 The order of the sectors in a fusion-splitting trees is `(f1.uncoupled..., f2.uncoupled...)`.
+In other words, we label the uncoupled sectors of `f1` from `1` to `N₁`, followed by the
+uncoupled sectors of `f2` from `N₁+1` to `N₁+N₂`.
 
 By successively applying the left coevaluation maps, we can establish isomorphisms between
 
@@ -1398,106 +1400,94 @@ which takes the traces between `q1[k]`th and `q2[k]`th sector of the fusion-spli
 and then transposes according to `p1` and `p2`. We need to make sure that the traces are
 planar without any crossings between lines.
 
-
-
-
-
-
-The next operation we discuss is an elementary braid of two neighbouring sectors
-(indices), i.e. a so-called Artin braid or Artin generator of the braid group. Because
-these two sectors do not appear on the same fusion vertex, some recoupling is necessary.
-The following represents two different ways to compute the result of such a braid as a
-linear combination of new fusion trees in canonical order:
+### Braiding manipulations on a splitting tree
+An elementary braid of two neighbouring sectors of a splitting tree, i.e. a so-called Artin
+braid or Artin generator of the braid group, can be computed in two different ways:
 
 ![artin braid](img/tree-artinbraid.svg)
 
-While the upper path is the most intuitive, it requires two recouplings or F-moves (one
-forward and one reverse). On the other hand, the lower path requires only one (reverse) F-
-move, and two R-moves. The latter are less expensive to compute, and so the lower path is
-computationally more efficient. However, the end result should be the same, provided the
-pentagon and hexagon equations are satisfied. We always assume that these are satisfied for
-any new subtype of `Sector`, and it is up to the user to verify that they are when
-implementing new custom `Sector` types. This result is implemented in the function
-[`artin_braid(f::FusionTree, i; inv = false)`](@ref TensorXD.artin_braid) where `i`
-denotes the position of the first sector (i.e. labeled `b` in the above graph) which is then
-braided with the sector at position `i+1` in the fusion tree `f`. The keyword argument `inv`
-allows to select the inverse braiding operation, which amounts to replacing the R-matrix
-`Rsymbol(a,b,c)` with `Rsymbol(b,a,c)'` in the above steps. The result is returned as a
+While the upper path is the most intuitive, it requires two F-moves (one forward and one
+reverse) and one R-move. On the other hand, the lower path requires only one (reverse) F-
+move, and two R-moves. The R-move is less expensive to compute than F-move, thus the lower
+path is computationally more efficient. However, the final result should be the same,
+provided the pentagon and hexagon equations are satisfied. We always assume that these are
+satisfied for any subtype of `Sector`, and it is up to the user to verify that they are when
+implementing new custom `Sector` types.
+
+This Artin braid of a splitting tree is implemented by
+```julia
+artin_braid(f::FusionTree, i; inv = false)
+```
+where `i` denotes the position of the first sector (i.e. labeled `b` in the above graph)
+which is braided with the sector at position `i+1` in the splitting tree `f`. The keyword
+argument `inv` allows to select the inverse braiding operation. The result is returned as a
 dictionary with possible output fusion trees as keys and corresponding coefficients as
-value. In the case of `FusionStyle(I) isa UniqueFusion`, there is only one resulting fusion
-tree, with corresponding coefficient a complex phase (which is one for the bosonic
-representation theory of an Abelian group), and the result is a special
-`SingletonDict<:AbstractDict`, a `struct` type defined in TensorXD.jl to hold a single key
-value pair.
+value.
 
-With the elementary `artin_braid`, we can then compute a more general braid. For this, we
-provide an interface
-
-[`braid(f::FusionTree{I,N}, levels::NTuple{N,Int}, permutation::NTuple{N,Int})`](@ref)
-
-where the braid is specified as a permutation, such that the new sector at position `i` was
-originally at position `permutation[i]`, and where every uncoupled sector is also assigned
-a level or depth. The permutation is decomposed into swaps between neighbouring sectors,
-and when two sectors are swapped, their respective level will determine whether the left
-sector is braided over or under its right neighbor. This interface does not allow to
-specify the most general braid, and in particular will never wind one line around another,
-but can be used as a more general building block for arbitrary braids than the elementary
-Artin generators. A graphical example makes this probably more clear, i.e for
-`levels=(1,2,3,4,5)` and `permutation=(5,3,1,4,2)`, the corresponding braid is given by
+With the elementary `artin_braid`, we can then compute a more general braid by
+```julia
+braid(f::FusionTree{I,N}, levels::NTuple{N,Int}, p::NTuple{N,Int})
+```
+The braid is specified as a permutation `p`, such that the new sector at position `i`
+was originally at position `p[i]`. Every uncoupled sector is also assigned a level which can
+be thought as the depth in the third dimension. The permutation is decomposed into swaps
+between neighbouring sectors, and when two sectors are swapped, their respective level will
+determine whether the left sector is braided over or under its right neighbor (lower level
+goes over deeper level). This interface does not allow to specify the most general braid,
+and in particular will never wind one line around another, but can be used as a more general
+building block for arbitrary braids than the elementary Artin generators. A graphical
+example makes this probably more clear, i.e for `levels=(1,2,3,4,5)` and
+`permutation=(5,3,1,4,2)`, the corresponding braid is given by
 
 ![braid interface](img/tree-braidinterface.svg)
 
-that is, the first sector or space goes to position 3, and crosses over all other lines,
-because it has the lowest level (i.e. think of level as depth in the third dimension), and
+that is, the first sector or space goes to position 3, and crosses over all other lines, and
 so forth. We sketch this operation both as a general braid on the left hand side, and as a
 particular composition of Artin braids on the right hand side.
 
 When `BraidingStyle(I) == SymmetricBraiding()`, there is no distinction between applying
-the braiding or its inverse (i.e. lines crossing over or under each other in the graphical
-notation) and the whole operation simplifies down to a permutation. We then also support
-the interface
+the braiding or its inverse, and we can use the simplified `permute` method without `levels`
+parameter:
+```julia
+permute(f::FusionTree{I,N}, p::NTuple{N,Int})
+```
 
-[`permute(f::FusionTree{I,N}, permutation::NTuple{N,Int})`](@ref)
+### Braiding manipulations on a fusion-splitting tree
 
-
-With this basic function, we can now perform arbitrary combinations of braids or
-permutations with line bendings, to completely reshuffle where sectors appear. The
-interface provided for this is given by
-
-[`braid(f1::FusionTree{I,N₁}, f2::FusionTree{I,N₂}, levels1::NTuple{N₁,Int}, levels2::NTuple{N₂,Int}, p1::NTuple{N₁′,Int}, p2::NTuple{N₂′,Int})`](@ref)
-
+We can now perform arbitrary combinations of braids or permutations with line bendings, to
+completely reshuffle where sectors appear in a fusion-splitting tree.
+```julia
+braid(f1::FusionTree{I,N₁}, f2::FusionTree{I,N₂}, levels1::NTuple{N₁,Int},
+    levels2::NTuple{N₂,Int}, p1::NTuple{N₁′,Int}, p2::NTuple{N₂′,Int})
+```
 where we now have splitting tree `f1` with `N₁` outgoing sectors, a fusion tree `f2` with
 `N₂` incoming sectors, `levels1` and `levels2` assign a level or depth to the corresponding
 uncoupled sectors in `f1` and `f2`, and we represent the new configuration as a pair `p1`
 and `p2`. Together, `(p1..., p2...)` represents a permutation of length `N₁+N₂ = N₁′+N₂′`,
 where `p1` indicates which of the original sectors should appear as outgoing sectors in the
 new splitting tree and `p2` indicates which appear as incoming sectors in the new fusion
-tree. Hereto, we label the uncoupled sectors of `f1` from `1` to `N₁`, followed by the
-uncoupled sectors of `f2` from `N₁+1` to `N₁+N₂`. Note that simply repartitioning the
-splitting and fusion tree such that e.g. all sectors appear in the new splitting tree (i.e.
-are outgoing), amounts to chosing `p1 = (1,..., N₁, N₁+N₂, N₁+N₂-1, ... , N₁+1)` and
-`p2=()`, because the duality isomorphism reverses the order of the tensor product.
+tree.
 
 This routine is implemented by indeed first making all sectors outgoing using the
 `repartition` function discussed above, such that only splitting trees remain, then
 braiding those using the routine from the previous subsection such that the new outgoing
-sectors appear first, followed by the new incoming sectors (in reverse order), and then
+sectors appear first, followed by the new incoming sectors in reverse order, and then
 again invoking the `repartition` routine to bring everything in final form. The result is
-again returned as a dictionary where the keys are `(f1′,f2′)` and the values the
+again returned as a dictionary where the keys are `(f1′,f2′)` and the values are the
 corresponding coefficients.
 
-As before, there is a simplified interface for the case where
-`BraidingStyle(I) isa SymmetricBraiding` and the levels are not needed. This is simply
-given by
+When `BraidingStyle(I) isa SymmetricBraiding`, the levels are not needed and we can use the
+simplified `permute` method:
+```julia
+permute(f1::FusionTree{I,N₁}, f2::FusionTree{I,N₂}, p1::NTuple{N₁′,Int}, p2::NTuple{N₂′,Int})
+```
 
-[`permute(f1::FusionTree{I,N₁}, f2::FusionTree{I,N₂}, p1::NTuple{N₁′,Int}, p2::NTuple{N₂′,Int})`](@ref)
-
-The `braid` and `permute` routines for double fusion trees will be the main access point for
+The `braid` and `permute` routines for fusion-splitting trees will be the main access point for
 corresponding manipulations on tensors. As a consequence, results from this routine are
-memoized, i.e. they are stored in some package wide 'least-recently used' cache (from
+memorized, i.e. they are stored in some package wide 'least-recently used' cache (from
 [LRUCache.jl](https://github.com/JuliaCollections/LRUCache.jl)) that can be accessed as
 `TensorXD.braidcache`. By default, this cache stores up to `10^5` different `braid` or
-`permute` resuls, where one result corresponds to one particular combination of `(f1, f2,
+`permute` results, where each result corresponds to one particular combination of `(f1, f2,
 p1, p2, levels1, levels2)`. This should be sufficient for most algorithms. While there are
 currently no (official) access methods to change the default settings of this cache (one can
 always resort to `resize!(TensorXD.permutecache)` and other methods from LRUCache.jl), this
