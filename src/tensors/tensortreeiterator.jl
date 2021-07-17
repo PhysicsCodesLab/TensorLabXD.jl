@@ -12,8 +12,7 @@ struct TensorKeyIterator{I<:Sector, F₁<:FusionTree{I}, F₂<:FusionTree{I}}
 end
 
 """
-    struct TensorPairIterator{I<:Sector, F₁<:FusionTree{I},
-                                F₂<:FusionTree{I},A<:DenseMatrix}
+    struct TensorPairIterator{I<:Sector, F₁<:FusionTree{I}, F₂<:FusionTree{I},A<:DenseMatrix}
         rowr::SectorDict{I, FusionTreeDict{F₁, UnitRange{Int}}}
         colr::SectorDict{I, FusionTreeDict{F₂, UnitRange{Int}}}
         data::SectorDict{I, A}
@@ -45,12 +44,10 @@ end
 function Base.iterate(it::TensorKeyIterator)
     i = 1
     i > length(it.rowr) && return nothing
-    # since length(it.clor) = length(it.rowr), we don't need to test it.clor
     rowit, colit = it.rowr.values[i], it.colr.values[i]
 
     rownext = iterate(rowit)
     colnext = iterate(colit)
-    # while rownext === nothing || colnext === nothing: Julia did not infer that after while loop, both were not nothing
     while true
         if rownext === nothing
             i += 1

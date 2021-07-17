@@ -1,6 +1,5 @@
 # TensorMap & Tensor:
 # general tensor implementation with arbitrary symmetries
-#==========================================================#
 """
     struct TensorMap{S<:IndexSpace, N₁, N₂, ...} <: AbstractTensorMap{S, N₁, N₂}
 
@@ -20,7 +19,8 @@ For each fusion tree, the corresponding `UnitRange{Int}` gives the position of t
 uncoupled sectors of the fusion tree, and the length of it equals the dimension of the
 uncoupled sector in codomain/domain.
 
-The tatal length of the `UnitRange{Int}` for one block sector give the corresponding size of the data matrix of that block sector.
+The tatal length of the `UnitRange{Int}` for one block sector give the corresponding size
+of the data matrix of that block sector.
 """
 struct TensorMap{S<:IndexSpace, N₁, N₂, I<:Sector,
                     A<:Union{<:DenseMatrix,SectorDict{I,<:DenseMatrix}},
@@ -57,7 +57,8 @@ const TrivialTensorMap{S<:IndexSpace, N₁, N₂, A<:DenseMatrix} =
     tensormaptype(::Type{S}, N₁::Int, N₂::Int, ::Type{T}) where {S,T}
     tensormaptype(S, N₁, N₂ = 0)
 
-Return the correct tensormap type without giving the FusionTree type (and data type).
+Return the correct tensormap type without giving the type of data and the FusionTree.
+`T` is a subtype of `Number` or of `DenseMatrix`.
 """
 function tensormaptype(::Type{S}, N₁::Int, N₂::Int, ::Type{T}) where {S,T}
     I = sectortype(S)
@@ -107,9 +108,9 @@ hasblock(t::TrivialTensorMap, ::Trivial) = true
 hasblock(t::TensorMap, s::Sector) = haskey(t.data, s)
 
 """
-    blocks(t::TensorMap) -> Union{<:DenseMatrix,SectorDict{I,<:DenseMatrix}}
+    blocks(t::TensorMap)
 
-Return the data of the tensor map as a DenseMatrix or a sorted dictionary.
+Return the data of the tensor map as a `SingletonDict` (for trivial sectortype) or a `SectorDict`.
 """
 blocks(t::TensorMap{<:IndexSpace,N₁,N₂,Trivial}) where {N₁,N₂} =
     SingletonDict(Trivial()=>t.data)
@@ -123,7 +124,6 @@ Return the data of tensor map corresponding to the blcok sector `s` as a DenseMa
 block(t::TrivialTensorMap, ::Trivial) = t.data
 function block(t::TensorMap, s::Sector)
     sectortype(t) == typeof(s) || throw(SectorMismatch())
-#    A = valtype(t.data) # This line is useless
     if haskey(t.data, s)
         return t.data[s]
     else # at least one of the two matrix dimensions will be zero
@@ -135,7 +135,7 @@ end
     dim(t::TensorMap)
 
 Return the total dimension of the tensor map, i.e., the number of elements in all
-DenseMatrix of the data.
+DenseMatrix of the data, which is the same with the dimension of the corresponding HomSpace.
 """
 dim(t::TensorMap) = mapreduce(x->length(x[2]), +, blocks(t); init = 0)
 
@@ -253,7 +253,8 @@ function TensorMap(data::DenseArray, codom::ProductSpace{S,N₁}, dom::ProductSp
     end
 end
 
-function TensorMap(data::AbstractDict{<:Sector,<:DenseMatrix}, codom::ProductSpace{S,N₁}, dom::ProductSpace{S,N₂}) where {S<:IndexSpace, N₁, N₂}
+function TensorMap(data::AbstractDict{<:Sector,<:DenseMatrix}, codom::ProductSpace{S,N₁},
+                    dom::ProductSpace{S,N₂}) where {S<:IndexSpace, N₁, N₂}
     I = sectortype(S)
     I == keytype(data) || throw(SectorMismatch())
     if I == Trivial
@@ -307,7 +308,6 @@ function TensorMap(data::AbstractDict{<:Sector,<:DenseMatrix}, codom::ProductSpa
         return TensorMap{S, N₁, N₂, I, A, F₁, F₂}(data2, codom, dom, rowr, colr)
     end
 end
-
 
 TensorMap(f,
             ::Type{T},

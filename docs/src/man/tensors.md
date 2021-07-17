@@ -65,20 +65,47 @@ allind(t::AbstractTensorMap) # 1:N_1+N_2
 
 On instances:
 ```julia
-codomain(t::AbstractTensorMap, i)
-domain(t::AbstractTensorMap, i)
+codomian(t::AbstractTensorMap)
+codomain(t::AbstractTensorMap, i) # `i`th index space of the codomain of the tensor map `t`.
+domain(t::AbstractTensorMap)
+domain(t::AbstractTensorMap, i) # `i`th index space of the domain of the tensor map `t`.
 source(t::AbstractTensorMap) # gives domain
 target(t::AbstractTensorMap) # gives codomain
 space(t::AbstractTensorMap) # give HomSpace
-space(t::AbstractTensorMap, i::Int) = space(t)[i]
+space(t::AbstractTensorMap, i::Int) # `i`th index space of the HomSpace corresponding to the tensor map `t`.
 adjointtensorindex(t::AbstractTensorMap{<:IndexSpace, N₁, N₂}, i) # gives the index in the adjoint tensor which corresponds to the ith vector space in the original tensor
 adjointtensorindices(t::AbstractTensorMap, indices::IndexTuple)
-tensormaptype(::Type{S}, N₁::Int, N₂::Int, ::Type{T}) where {S,T}
-blocks(t::TensorMap) # gives data of TensorMap as SectorDict
-hasblock(t::TensorMap, s::Sector)
-block(t::TensorMap, s::Sector) # gives data for block with sector s
+tensormaptype(::Type{S}, N₁::Int, N₂::Int, ::Type{T}) where {S,T} # Return the correct tensormap type without giving the type of data and the FusionTree. `T` is a subtype of `Number` or of `DenseMatrix`.
+blocksectors(t::TensorMap) # Return an iterator over the different unique coupled sector labels
+hasblock(t::TensorMap, s::Sector) # Check whether the sector `s` is in the block sectors of `t`.
+blocks(t::TensorMap) # Return the data of the tensor map as a `SingletonDict` (for trivial sectortype) or a `SectorDict`.
+block(t::TensorMap, s::Sector) # Return the data of tensor map corresponding to the blcok sector `s` as a DenseMatrix.
+fusiontrees(t::TensorMap) # Return tbe TensorKeyIterator for all possible splitting and fusion tree pair in the tensor map.
+Base.getindex(t::TensorMap{<:IndexSpace,N₁,N₂,I}, f1::FusionTree{I,N₁}, f2::FusionTree{I,N₂}) # t[f1,f2]
+Base.getindex(t::TensorMap{<:IndexSpace,N₁,N₂,I}, sectors::Tuple{Vararg{I}}) # `sectors[1:N₁]` are the sectors in codomain; `sectors[N₁+1:N₁+N₂]` are the dual of each sector in the domain.
 ```
-### Other structures
+### Constructors
+```julia
+TensorMap(f, codom::ProductSpace{S,N₁}, dom::ProductSpace{S,N₂}) where {S<:IndexSpace, N₁, N₂}
+TensorMap(data::DenseArray, codom::ProductSpace{S,N₁}, dom::ProductSpace{S,N₂}; tol = sqrt(eps(real(float(eltype(data)))))) where {S<:IndexSpace, N₁, N₂}
+TensorMap(data::AbstractDict{<:Sector,<:DenseMatrix}, codom::ProductSpace{S,N₁}, dom::ProductSpace{S,N₂}) where {S<:IndexSpace, N₁, N₂}
+TensorMap(f,::Type{T}, codom::ProductSpace{S}, dom::ProductSpace{S}) where {S<:IndexSpace, T<:Number}
+TensorMap(::Type{T}, codom::ProductSpace{S}, dom::ProductSpace{S}) where {S<:IndexSpace, T<:Number}
+TensorMap(::UndefInitializer, ::Type{T}, codom::ProductSpace{S}, dom::ProductSpace{S}) where {S<:IndexSpace, T<:Number}
+TensorMap(::UndefInitializer, codom::ProductSpace{S}, dom::ProductSpace{S}) where {S<:IndexSpace}
+TensorMap(::Type{T}, codom::TensorSpace{S}, dom::TensorSpace{S}) where {T<:Number, S<:IndexSpace}
+TensorMap(dataorf, codom::TensorSpace{S}, dom::TensorSpace{S}) where {S<:IndexSpace}
+TensorMap(dataorf, ::Type{T}, codom::TensorSpace{S}, dom::TensorSpace{S}) where {T<:Number, S<:IndexSpace}
+TensorMap(codom::TensorSpace{S}, dom::TensorSpace{S}) where {S<:IndexSpace}
+TensorMap(dataorf, T::Type{<:Number}, P::TensorMapSpace{S}) where {S<:IndexSpace}
+TensorMap(dataorf, P::TensorMapSpace{S}) where {S<:IndexSpace}
+TensorMap(T::Type{<:Number}, P::TensorMapSpace{S}) where {S<:IndexSpace}
+TensorMap(P::TensorMapSpace{S}) where {S<:IndexSpace}
+Tensor(dataorf, T::Type{<:Number}, P::TensorSpace{S}) where {S<:IndexSpace}
+Tensor(dataorf, P::TensorSpace{S}) where {S<:IndexSpace}
+Tensor(T::Type{<:Number}, P::TensorSpace{S}) where {S<:IndexSpace}
+Tensor(P::TensorSpace{S}) where {S<:IndexSpace}
+```
 
 
 
@@ -107,7 +134,7 @@ normal matrix is also denoted as having size `m × n` or is constructed in Julia
 dimensional, and the seond integer `n` to the domain being `n`-dimensional. This also
 explains why we have consistently used the symbol ``W`` for spaces in the domain and ``V``
 for spaces in the codomain. A tensor map ``t:(W₁ ⊗ … ⊗ W_{N₂}) → (V₁ ⊗ … ⊗ V_{N₁})`` will
-be created in Julia as `TensorMap(..., V1 ⊗ ... ⊗ VN₁, W1 ⊗ ... ⊗ WN2)`.
+be created in Julia as `TensorMap(..., V1 ⊗ ... ⊗ VN₁, W1 ⊗ ... ⊗ WN₂)`.
 
 Furthermore, the abstract type `AbstractTensor{S,N}` is just a synonym for
 `AbstractTensorMap{S,N,0}`, i.e. for tensor maps with an empty domain, which is equivalent
@@ -124,7 +151,7 @@ be defined, to deal with sparse data, static data, diagonal data, etc...
 Before discussion how to construct and initalize a `TensorMap{S}`, let us discuss what is
 meant by 'tensor data' and how it can efficiently and compactly be stored. Let us first
 discuss the case `sectortype(S) == Trivial` sector, i.e. the case of no symmetries. In that
-case the data of a tensor `t = TensorMap(..., V1 ⊗ ... ⊗ VN₁, W1 ⊗ ... ⊗ WN2)` can just be
+case the data of a tensor `t = TensorMap(..., V1 ⊗ ... ⊗ VN₁, W1 ⊗ ... ⊗ WN₂)` can just be
 represented as a multidimensional array of size
 
 `(dim(V1), dim(V2), …, dim(VN₁), dim(W1), …, dim(WN₂))`
@@ -313,7 +340,7 @@ via `t[f₁,f₂]`, and is returned as a `StridedArray` of size
 implementation does not distinguish between `FusionStyle isa UniqueFusion` or
 `FusionStyle isa MultipleFusion`, in the former case the fusion tree is completely
 characterized by the uncoupled sectors, and so the subblocks can also be accessed as
-`t[(a1, …, aN₁), (b1, …, bN₂)]`. When there is no symmetry at all, i.e.
+`t[a1, …, aN₁,b1', …, bN₂']`. When there is no symmetry at all, i.e.
 `sectortype(t) == Trivial`, `t[]` returns the raw tensor data as a `StridedArray` of size
 `(dim(V1), …, dim(VN₁), dim(W1), …, dim(WN₂))`, whereas `block(t, Trivial())` returns the
 same data as a `DenseMatrix` of size `(dim(V1) * … * dim(VN₁), dim(W1) * … * dim(WN₂))`.

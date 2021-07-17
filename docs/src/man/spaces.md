@@ -57,7 +57,7 @@ const TensorMapSpace{S<:ElementarySpace, N₁, N₂} =
 On both `VectorSpace` instances and types:
 ```julia
 spacetype # type of ElementarySpace associated with a composite space or a tensor or a HomSpace
-field # field of a vector space or a tensor or a HomSpace
+field # field of a vector space or a tensor map or a HomSpace
 Base.oneunit # the corresponding vector space that represents the trivial 1D space isomorphic to the corresponding field
 sectortype # sector type of a space or a tensor or a HomSpace
 one(::S) where {S<:ElementarySpace} -> ProductSpace{S, 0}
@@ -70,15 +70,15 @@ sectors(P::ProductSpace{S, N}) # Return an iterator over all possible combinatio
 blocksectors(V::ElementarySpace) = sectors(V) # make ElementarySpace instances behave similar to ProductSpace instances
 blocksectors(P::ProductSpace) # Return an iterator over the different unique coupled sector labels
 blocksectors(W::HomSpace) # Return an iterator over the different unique coupled sector labels, i.e. the intersection of the different fusion outputs that can be obtained by fusing the sectors present in the domain, as well as from the codomain.
-blocksectors(t::TensorMap)
+blocksectors(t::TensorMap) # Return an iterator over the different unique coupled sector labels
 dim # total dimension of a vector space or a product space
 dim(V::ElementarySpace, ::Trivial) # return dim(V)
 dim(V::GradedSpace, c::I) # the degeneracy or multiplicity of sector c in a Graded Space
 dim(W::HomSpace) # Return the total dimension of a `HomSpace`, i.e. the number of linearly independent morphisms that can be constructed within this space.
 dim(P::ProductSpace, n::Int) # dim for the `n`th vector space of the product space
 dim(P::ProductSpace{S, N}, s::NTuple{N, sectortype(S)}) # Return the total degeneracy dimension corresponding to a tuple of sectors for each of the spaces in the tensor product, obtained as `prod(dims(P, s))``.
-dim(t::AbstractTensorMap) # dim for corresponding HomSpace
-dim(t::TensorMap)
+dim(t::AbstractTensorMap) # total dim for corresponding HomSpace
+dim(t::TensorMap) # Return the total dimension of the tensor map, i.e., the number of elements in all DenseMatrix of the data.
 dims(P::ProductSpace) # Return the dimensions of the spaces in the tensor product space as a tuple of integers.
 dims(P::ProductSpace{S, N}, s::NTuple{N, sectortype(S)}) # Return the degeneracy dimensions corresponding to a tuple of sectors `s` for each of the spaces in the tensor product `P`.
 blockdim(V::ElementarySpace, c::Sector) = dim(V, c) # make ElementarySpace instances behave similar to ProductSpace instances

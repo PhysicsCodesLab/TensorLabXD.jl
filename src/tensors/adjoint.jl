@@ -15,8 +15,7 @@ operation we create a new instance rather than change the original tensor map. T
 of the tensor map share its structure with the original tensor map, which is stored in the
 field `parent` of the type definition.
 """
-struct AdjointTensorMap{S<:IndexSpace, N₁, N₂, I<:Sector, A, F₁, F₂} <:
-                                                            AbstractTensorMap{S, N₁, N₂}
+struct AdjointTensorMap{S<:IndexSpace, N₁, N₂, I<:Sector, A, F₁, F₂} <: AbstractTensorMap{S, N₁, N₂}
     parent::TensorMap{S, N₂, N₁, I, A, F₂, F₁}
 end
 
