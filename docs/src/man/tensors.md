@@ -745,114 +745,113 @@ category, just like matrices. To a large extent, they follow the interface of `M
 Julia's `LinearAlgebra` standard library. Many methods from `LinearAlgebra` are (re)exported
 by TensorXD.jl, and can then us be used without `using LinearAlgebra` explicitly. In all
 of the following methods, the implementation acts directly on the underlying matrix blocks
-(typically using the same method) and never needs to perform any basis transforms.
+and never needs to perform any basis transforms.
 
-#### Compose tensor maps:
+1. Compose tensor maps:
 
-In particular, `AbstractTensorMap` instances can be composed, provided the domain of the
-first object coincides with the codomain of the second. Composing tensor maps uses the
-regular multiplication symbol as in `t = t1*t2`, which is also used for matrix
-multiplication. TensorXD.jl also supports (and exports) the mutating method
-`mul!(t, t1, t2)`.
+    The `AbstractTensorMap` instances can be composed, provided the domain of the
+    first object coincides with the codomain of the second. Composing tensor maps uses the
+    regular multiplication symbol as in `t = t1*t2`, which is also used for matrix
+    multiplication. TensorXD.jl also supports and exports the mutating method
+    `mul!(t, t1, t2)`.
 
-#### Invert a tensor map:
+2. Invert a tensor map:
 
-We can then also try to invert a tensor map using `inv(t)`, though this
-can only exist if the domain and codomain are isomorphic, which can e.g. be checked as
-`fuse(codomain(t)) == fuse(domain(t))`. If the inverse is composed with another tensor
-`t2`, we can use the syntax `t1\t2` or `t2/t1`. However, this syntax also accepts instances
-`t1` whose domain and codomain are not isomorphic, and then amounts to `pinv(t1)`, the
-Moore-Penrose pseudoinverse. This, however, is only really justified as minimizing the
-least squares problem if `spacetype(t) <: EuclideanSpace`.
+    We can invert a tensor map using `inv(t)`, though if the domain and codomain are
+    isomorphic, which can be checked by `fuse(codomain(t)) == fuse(domain(t))`. If the
+    inverse is composed with another tensor `t2`, we can use the syntax `t1\t2` or `t2/t1`.
+    However, this syntax also accepts instances `t1` whose domain and codomain are not
+    isomorphic, and then amounts to `pinv(t1)`, the Moore-Penrose pseudoinverse. This,  
+    however, is only really justified as minimizing the least squares problem if
+    `spacetype(t) <: EuclideanSpace`.
 
-#### Addition and multiplied by a scalar:
+3. Addition and multiplied by a scalar:
 
-`AbstractTensorMap` instances behave themselves as vectors (i.e. they are `𝕜`-linear) and
-so they can be multiplied by scalars and, if they live in the same space, i.e. have the same
-domain and codomain, they can be added to each other. There is also a `zero(t)`, the
-additive identity, which produces a zero tensor with the same domain and codomain as `t`.
+    `AbstractTensorMap` instances behave themselves as vectors (i.e. they are `𝕜`-linear)
+    and so they can be multiplied by scalars and, if they live in the same space, i.e.
+    have the same domain and codomain, they can be added to each other. There is also a
+    `zero(t)`, the additive identity, which produces a zero tensor with the same domain and
+    codomain as `t`.
 
-#### Fill and copy:
+4. Fill and copy:
 
-`TensorMap` supports basic Julia methods such as `fill!` and `copy!`, as well
-as `copy(t)` to create a copy with independent data.
+    `TensorMap` supports basic Julia methods such as `fill!` and `copy!`, as well
+    as `copy(t)` to create a copy with independent data.
 
-#### In-place methods: `axpy!`, `axpby!`, `lmul!`, `rmul!` and `mul!`:
+5. In-place methods: `axpy!`, `axpby!`, `lmul!`, `rmul!` and `mul!`:
 
-Aside from basic `+` and `*` operations, TensorXD.jl reexports a number of efficient
-in-place methods from `LinearAlgebra`, such as `axpy!` (for `y ← α * x + y`), `axpby!`
-(for `y ← α * x + β * y`), `lmul!` and `rmul!` (for `y ← α*y` and `y ← y*α`, which is
-typically the same) and `mul!`, which can also be used for out-of-place scalar
-multiplication `y ← α*x`.
+    Aside from basic `+` and `*` operations, TensorXD.jl reexports a number of efficient
+    in-place methods from `LinearAlgebra`, such as `axpy!` (for `y ← α * x + y`), `axpby!`
+    (for `y ← α * x + β * y`), `lmul!` and `rmul!` (for `y ← α*y` and `y ← y*α`, which is
+    typically the same) and `mul!`, which can also be used for out-of-place scalar
+    multiplication `y ← α*x`.
 
-#### Norm and dot:
+6. Norm and dot:
 
-For `t::AbstractTensorMap{S}` where `S<:EuclideanSpace`, henceforth referred to as
-a `(Abstract)EuclideanTensorMap`, we can compute `norm(t)`, and for two such instances, the
-inner product `dot(t1, t2)`, provided `t1` and `t2` have the same domain and codomain.
+    For `t::AbstractTensorMap{S}` where `S<:EuclideanSpace`, henceforth referred to as
+    a `(Abstract)EuclideanTensorMap`, we can compute `norm(t)`, and for two such instances,
+    the inner product `dot(t1, t2)`, provided `t1` and `t2` have the same domain and
+    codomain.
 
-#### Normalize:
+7. Normalize:
 
-Furthermore, there is `normalize(t)` and `normalize!(t)` to return a scaled version of `t`
-with unit norm. These operations should also exist for `S<:InnerProductSpace`, but requires
-an interface for defining a custom inner product in these spaces. Currently, there is no
-concrete subtype of `InnerProductSpace` that is not a subtype of `EuclideanSpace`. In
-particular, `CartesianSpace`, `ComplexSpace` and `GradedSpace` are all subtypes
-of `EuclideanSpace`.
+    For `(Abstract)EuclideanTensorMap`, `normalize(t)` and `normalize!(t)` return a scaled
+    version of `t` with unit norm. These operations should also exist for
+    `S<:InnerProductSpace`, but requires an interface for defining a custom inner product
+    in these spaces. Currently, there is no concrete subtype of `InnerProductSpace` that is
+    not a subtype of `EuclideanSpace`. In particular, `CartesianSpace`, `ComplexSpace` and
+    `GradedSpace` are all subtypes of `EuclideanSpace`.
 
-#### Adjoint:
+8. Adjoint:
 
-With instances `t::AbstractEuclideanTensorMap` there is associated an adjoint operation,
-given by `adjoint(t)` or simply `t'`, such that `domain(t') == codomain(t)` and
-`codomain(t') == domain(t)`. Note that for an instance `t::TensorMap{S,N₁,N₂}`, `t'` is
-simply stored in a wrapper called `AdjointTensorMap{S,N₂,N₁}`, which is another subtype of
-`AbstractTensorMap`. This should be mostly unvisible to the user, as all methods should work
-for this type as well. It can be hard to reason about the index order of `t'`, i.e. index
-`i` of `t` appears in `t'` at index position `j = TensorXD.adjointtensorindex(t, i)`,
-where the latter method is typically not necessary and hence unexported. There is also a
-plural `TensorXD.adjointtensorindices` to convert multiple indices at once. Note that,
-because the adjoint interchanges domain and codomain, we have
-`space(t', j) == space(t, i)'`.
+    With instances `t::AbstractEuclideanTensorMap` there is associated an adjoint operation,
+    given by `adjoint(t)` or simply `t'`, such that `domain(t') == codomain(t)` and
+    `codomain(t') == domain(t)`. Note that for an instance `t::TensorMap{S,N₁,N₂}`, `t'` is
+    simply stored in a wrapper called `AdjointTensorMap{S,N₂,N₁}`, which is another subtype
+    of `AbstractTensorMap`. This should be mostly unvisible to the user, as all methods     
+    should work for this type as well. It can be hard to reason about the index order of    
+    `t'`, i.e. index `i` of `t` appears in `t'` at index position
+    `j = TensorXD.adjointtensorindex(t, i)`, where the latter method is typically not   
+    necessary and hence unexported. There is also a plural `TensorXD.adjointtensorindices`
+    to convert multiple indices at once. Note that, because the adjoint interchanges domain
+    and codomain, we have `space(t', j) == space(t, i)'`.
 
-#### Equal and approximate:
+9. Equal and approximate:
 
-`AbstractTensorMap` instances can be tested for exact (`t1 == t2`) or
-approximate (`t1 ≈ t2`) equality, though the latter requires `norm` can be computed.
+    `AbstractTensorMap` instances can be tested for exact (`t1 == t2`) or
+    approximate (`t1 ≈ t2`) equality, though the latter requires `norm` can be computed.
 
-#### Multiplicative identity:
+10. Multiplicative identity:
 
-When tensor map instances are endomorphisms, i.e. they have the same domain and codomain,
-there is a multiplicative identity which can be obtained as `one(t)` or `one!(t)`, where the
-latter overwrites the contents of `t`. The multiplicative identity on a space `V` can also
-be obtained using `id(A, V)` as discussed [above](@ref ss_tensor_construction), such that
-for a general homomorphism `t′`, we have `t′ == id(codomain(t′))*t′ == t′*id(domain(t′))`.
+    When tensor map instances are endomorphisms, i.e. they have the same domain and
+    codomain, there is a multiplicative identity which can be obtained as `one(t)` or   
+    `one!(t)`, where the latter overwrites the contents of `t`. The multiplicative identity
+    on a space `V` can also be obtained using `id(A, V)`, such that for a general
+    homomorphism `t`, we have `t == id(codomain(t))*t == t*id(domain(t))`.
 
-#### Trace and exp:
+11. Trace and exp:
 
-Returning to the case of endomorphisms `t`, we can compute the trace via `tr(t)` and
-exponentiate them using `exp(t)`, or if the contents of `t` can be destroyed in the
-process, `exp!(t)`. Furthermore, there are a number of tensor factorizations for both
-endomorphisms and general homomorphism that we discuss below.
+    For case of endomorphisms `t`, we can compute the trace via `tr(t)` and
+    exponentiate them using `exp(t)`, or if the contents of `t` can be destroyed in the
+    process, `exp!(t)`.
 
-#### Tensor product:
+12. Tensor product:
 
-Finally, there are a number of operations that also belong in this paragraph because of
-their analogy to common matrix operations. The tensor product of two `TensorMap` instances
-`t1` and `t2` is obtained as `t1 ⊗ t2` and results in a new `TensorMap` with
-`codomain(t1⊗t2) = codomain(t1) ⊗ codomain(t2)` and
-`domain(t1⊗t2) = domain(t1) ⊗ domain(t2)`.
+    The tensor product of two `TensorMap` instances `t1` and `t2` is obtained as `t1 ⊗ t2`
+    and results in a new `TensorMap` with `codomain(t1⊗t2) = codomain(t1) ⊗ codomain(t2)`   
+    and `domain(t1⊗t2) = domain(t1) ⊗ domain(t2)`.
 
-#### catdomain and catcodomain:
+13. catdomain and catcodomain:
 
-If we have two `TensorMap{S,N,1}` instances `t1`
-and `t2` with the same codomain, we can combine them in a way that is analogous to `hcat`,
-i.e. we stack them such that the new tensor `catdomain(t1, t2)` has also the same codomain,
-but has a domain which is `domain(t1) ⊕ domain(t2)`. Similarly, if `t1` and `t2` are of
-type `TensorMap{S,1,N}` and have the same domain, the operation `catcodomain(t1, t2)`
-results in a new tensor with the same domain and a codomain given by
-`codomain(t1) ⊕ codomain(t2)`, which is the analogy of `vcat`. Note that direct sum only
-makes sense between `ElementarySpace` objects, i.e. there is no way to give a tensor
-product meaning to a direct sum of tensor product spaces.
+    If we have two `TensorMap{S,N,1}` instances `t1` and `t2` with the same codomain, we    
+    can combine them in a way that is analogous to `hcat`, i.e. we stack them such that the
+    new tensor `catdomain(t1, t2)` has also the same codomain, but has a domain which is    
+    `domain(t1) ⊕ domain(t2)`.
+    Similarly, if `t1` and `t2` are of type `TensorMap{S,1,N}` and have the same domain,
+    the operation `catcodomain(t1, t2)` results in a new tensor with the same domain and a  
+    codomain given by `codomain(t1) ⊕ codomain(t2)`, which is the analogy of `vcat`. Note   
+    that direct sum only makes sense between `ElementarySpace` objects, i.e. there is no    
+    way to give a tensor product meaning to a direct sum of tensor product spaces.
 
 Time for some more examples:
 ```@repl tensors
@@ -1288,7 +1287,7 @@ In the case of trivial twists, we can deform the diagram such that we first comb
 morphism with a number of coevaluations ``η`` so as to represent it as a tensor, i.e. with a
 trivial domain. We can then rearrange the morphism to be all aligned up horizontally, where
 the original morphism compositions are now being performed by evaluations ``ϵ``. This
-process will generate a number of crossings and twists, where the latter can be omitted
+process will generate a number of crossings and twists. The twists can be omitted
 because they act trivially. Similarly, double crossings can also be omitted. As a
 consequence, the diagram, or the morphism it represents, is completely specified by the
 tensors it is composed of, and which indices between the different tensors are connect, via
