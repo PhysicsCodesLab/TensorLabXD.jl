@@ -39,7 +39,8 @@ end
 """
     adjoint!(tdst::AbstractEuclideanTensorMap, tsrc::AbstractEuclideanTensorMap)
 
-Extend `LinearAlgebra.adjoint!`. Conjugate transpose the tensor map `tsrc` and store the result in the preallocated tensor map `tdst`.
+Extend `LinearAlgebra.adjoint!`. Conjugate transpose the tensor map `tsrc` and store the
+result in the preallocated tensor map `tdst`.
 """
 function LinearAlgebra.adjoint!(tdst::AbstractEuclideanTensorMap,
                                 tsrc::AbstractEuclideanTensorMap)
@@ -251,7 +252,9 @@ end
 """
     ^(t::AbstractTensorMap, p::Integer)
 
-Extend `Base.^`. Return??????
+Extend `Base.^`. Creat a new tensor map that equals to `t t t ...` (`p` multiplications).
+
+Note: `Base.power_by_squaring(x,p)` is calculating `^` for any `x` supporting `*`.
 """
 Base.:^(t::AbstractTensorMap, p::Integer) =
     p < 0 ? Base.power_by_squaring(inv(t), -p) : Base.power_by_squaring(t, p)
@@ -498,9 +501,9 @@ end
                 t2::AbstractTensorMap{S, N₁, 1}) where {S, N₁}
 
 Return the horizontally concatenation of two tensor maps with length `1` domain and the same
-codomain. A new tensor map is created, whose domain is a product space with only one vector
-space which is the direct sum of two vector spaces in the domain of `t1` and `t2`, and the
-codomain is still the same with `t1` (or `t2`).
+length of codomain. A new tensor map is created, whose domain is a product space with one
+vector space which is the direct sum of two vector spaces in the domain of `t1` and `t2`,
+and the codomain is still the same with `t1` (or `t2`).
 """
 function catdomain(t1::AbstractTensorMap{S, N₁, 1},
                     t2::AbstractTensorMap{S, N₁, 1}) where {S, N₁}
@@ -521,13 +524,13 @@ function catdomain(t1::AbstractTensorMap{S, N₁, 1},
 end
 
 """
-    atcodomain(t1::AbstractTensorMap{S, 1, N₂},
+    catcodomain(t1::AbstractTensorMap{S, 1, N₂},
                 t2::AbstractTensorMap{S, 1, N₂}) where {S, N₂}
 
 Return the vertically concatenation of two tensor maps with length `1` codomain and the same
-domain. A new tensor map is created, whose codomain is a product space with only one vector
-space which is the direct sum of two vector spaces in the codomain of `t1` and `t2`, and the
-domain is still the same with `t1` (or `t2`).
+length of domain. A new tensor map is created, whose codomain is a product space with one
+vector space which is the direct sum of two vector spaces in the codomain of `t1` and `t2`,
+and the domain is still the same with `t1` (or `t2`).
 """
 function catcodomain(t1::AbstractTensorMap{S, 1, N₂},
                         t2::AbstractTensorMap{S, 1, N₂}) where {S, N₂}
@@ -660,7 +663,8 @@ end
 """
     id([A::Type{<:DenseMatrix} = Matrix{Float64},] space::VectorSpace) -> TensorMap
 
-Construct the identity endomorphism on space `space`, i.e. return a `t::TensorMap` with `domain(t) == codomain(t) == V`, where `storagetype(t) = A` can be specified.
+Construct the identity endomorphism on space `space`, i.e. return a `t::TensorMap` with
+`domain(t) == codomain(t) == V`, where `storagetype(t) = A` can be specified.
 """
 id(::Type{A}, P::ProductSpace) where {A<:DenseMatrix} =
     one!(TensorMap(s->A(undef, s), P, P))
@@ -669,8 +673,7 @@ id(A, V::ElementarySpace) = id(A, ProductSpace(V))
 
 """
     isomorphism([A::Type{<:DenseMatrix} = Matrix{Float64},]
-                    cod::VectorSpace, dom::VectorSpace)
-    -> TensorMap
+                    cod::VectorSpace, dom::VectorSpace) -> TensorMap
 
 Return a `t::TensorMap` that implements a specific isomorphism between the codomain `cod`
 and the domain `dom`, and for which `storagetype(t)` can optionally be chosen to be of type

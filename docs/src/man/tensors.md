@@ -48,6 +48,19 @@ struct TensorPairIterator{I<:Sector, F₁<:FusionTree{I}, F₂<:FusionTree{I}, A
 end
 
 const TensorIterator{I<:Sector, F₁<:FusionTree{I}, F₂<:FusionTree{I}} = Union{TensorKeyIterator{I, F₁, F₂}, TensorPairIterator{I, F₁, F₂}}
+
+struct AdjointTensorMap{S<:IndexSpace, N₁, N₂, I<:Sector, A, F₁, F₂} <: AbstractTensorMap{S, N₁, N₂}
+    parent::TensorMap{S, N₂, N₁, I, A, F₂, F₁}
+end
+
+const AdjointTrivialTensorMap{S<:IndexSpace, N₁, N₂, A<:DenseMatrix} =
+    AdjointTensorMap{S, N₁, N₂, Trivial, A, Nothing, Nothing}
+
+const EuclideanTensorSpace = TensorSpace{<:EuclideanSpace}
+const EuclideanTensorMapSpace = TensorMapSpace{<:EuclideanSpace}
+const AbstractEuclideanTensorMap = AbstractTensorMap{<:EuclideanTensorSpace}
+const EuclideanTensorMap = TensorMap{<:EuclideanTensorSpace}
+[Q]: Could we define the `AbstractTensorMap{<:EuclideanTensorSpace}`? EuclideanTensorSpace is not an index space.
 ```
 ### Properties
 On both instances and types:
@@ -105,11 +118,63 @@ Tensor(dataorf, T::Type{<:Number}, P::TensorSpace{S}) where {S<:IndexSpace}
 Tensor(dataorf, P::TensorSpace{S}) where {S<:IndexSpace}
 Tensor(T::Type{<:Number}, P::TensorSpace{S}) where {S<:IndexSpace}
 Tensor(P::TensorSpace{S}) where {S<:IndexSpace}
+Base.adjoint(t::TensorMap) = AdjointTensorMap(t)
+Base.adjoint(t::AdjointTensorMap) = t.parent
+zero(t::AbstractTensorMap) # Creat a tensor that is similar to the tensor map `t` with all `0` in the data.
+one!(t::AbstractTensorMap) # Overwrite the tensor map `t` by a tensor map in which every matrix in data is an identity matrix.
+one(t::AbstractTensorMap) # Creat a tensor map that similar to tensor map `t` and with identity matrices in data.
+id([A::Type{<:DenseMatrix} = Matrix{Float64},] space::VectorSpace) # Construct the identity endomorphism on space `space`, i.e. return a `t::TensorMap` with `domain(t) == codomain(t) == V`, where `storagetype(t) = A` can be specified.
+isomorphism([A::Type{<:DenseMatrix} = Matrix{Float64},] cod::VectorSpace, dom::VectorSpace) # Return a `t::TensorMap` that implements a specific isomorphism between the codomain `cod` and the domain `dom`。
+unitary([A::Type{<:DenseMatrix} = Matrix{Float64},] cod::VectorSpace, dom::VectorSpace) # Return a `t::TensorMap` that implements a specific unitary isomorphism between the codomain `cod` and the domain `dom`, for which `spacetype(dom)` (`== spacetype(cod)`) must be a subtype of `EuclideanSpace`.
+isometry([A::Type{<:DenseMatrix} = Matrix{Float64},] cod::VectorSpace, dom::VectorSpace)
 ```
 
+### Linear Operations
+```julia
+copy!(tdst::AbstractTensorMap, tsrc::AbstractTensorMap)
+copy(t::AbstractTensorMap)
+fill!(t::AbstractTensorMap, value::Number)
+adjoint!(tdst::AbstractEuclideanTensorMap, tsrc::AbstractEuclideanTensorMap)
+mul!(t1::AbstractTensorMap, t2::AbstractTensorMap, α::Number)
+mul!(t1::AbstractTensorMap, α::Number, t2::AbstractTensorMap)
+mul!(tC::AbstractTensorMap, tA::AbstractTensorMap, tB::AbstractTensorMap, α = true, β = false)
+-(t::AbstractTensorMap)
+*(t::AbstractTensorMap, α::Number)
+*(α::Number, t::AbstractTensorMap)
+*(t1::AbstractTensorMap, t2::AbstractTensorMap)
+rmul!(t::AbstractTensorMap, α::Number) = mul!(t, t, α)
+lmul!(α::Number, t::AbstractTensorMap) = mul!(t, α, t)
+axpy!(α::Number, t1::AbstractTensorMap, t2::AbstractTensorMap)
++(t1::AbstractTensorMap, t2::AbstractTensorMap)
+-(t1::AbstractTensorMap, t2::AbstractTensorMap)
+axpby!(α::Number, t1::AbstractTensorMap, β::Number, t2::AbstractTensorMap)
+exp!(t::TensorMap)
+exp(t::AbstractTensorMap)
+inv(t::AbstractTensorMap)
+^(t::AbstractTensorMap, p::Integer)
+pinv(t::AbstractTensorMap; kwargs...)
+Base.:(\)(t1::AbstractTensorMap, t2::AbstractTensorMap)
+/(t1::AbstractTensorMap, t2::AbstractTensorMap)
+/(t::AbstractTensorMap, α::Number)
+Base.:\(α::Number, t::AbstractTensorMap)
+:cos, :sin, :tan, :cot, :cosh, :sinh, :tanh, :coth, :atan, :acot, :asinh
+:sqrt, :log, :asin, :acos, :acosh, :atanh, :acoth
+dot(t1::AbstractEuclideanTensorMap, t2::AbstractEuclideanTensorMap) # Return the elementwise dot product of the data between two tensor maps.
+norm(t::AbstractEuclideanTensorMap, p::Real = 2) # Return the norm of the tensor map `t` as the norm of the true block diagonal matrix which representing the tensor map.
+normalize!(t::AbstractTensorMap, p::Real = 2) # Replace the tensor map `t` with the normalize one which has `norm(t,p)==1`.
+normalize(t::AbstractTensorMap, p::Real = 2) #  Creat a new tensor map that is similar to `t` and has the same data with  `normalize!(t, p)`.
+tr(t::AbstractTensorMap) # Return the trace of the true block diagonal matrix that represent the tensor map.
+sylvester(A::AbstractTensorMap, B::AbstractTensorMap, C::AbstractTensorMap) # it computes the solution `X` to the Sylvester equation `AX + XB + C = 0`
+catdomain(t1::AbstractTensorMap{S, N₁, 1}, t2::AbstractTensorMap{S, N₁, 1}) where {S, N₁}
+catcodomain(t1::AbstractTensorMap{S, 1, N₂}, t2::AbstractTensorMap{S, 1, N₂}) where {S, N₂}
+⊗(t1::AbstractTensorMap{S}, t2::AbstractTensorMap{S}, ...) # results in a new `TensorMap` instance whose codomain is `codomain(t1) ⊗ codomain(t2)` and whose domain is `domain(t1) ⊗ domain(t2)`.
+⊠(t1::AbstractTensorMap{<:EuclideanSpace{ℂ}}, t2::AbstractTensorMap{<:EuclideanSpace{ℂ}}) # Return the deligne product of tensors.
+```
 
+### Index manipulations
+```julia
 
-
+```
 
 
 
@@ -682,7 +747,7 @@ by TensorXD.jl, and can then us be used without `using LinearAlgebra` explicitly
 of the following methods, the implementation acts directly on the underlying matrix blocks
 (typically using the same method) and never needs to perform any basis transforms.
 
-1. Compose tensor maps:
+#### Compose tensor maps:
 
 In particular, `AbstractTensorMap` instances can be composed, provided the domain of the
 first object coincides with the codomain of the second. Composing tensor maps uses the
@@ -690,7 +755,7 @@ regular multiplication symbol as in `t = t1*t2`, which is also used for matrix
 multiplication. TensorXD.jl also supports (and exports) the mutating method
 `mul!(t, t1, t2)`.
 
-2. Invert a tensor map:
+#### Invert a tensor map:
 
 We can then also try to invert a tensor map using `inv(t)`, though this
 can only exist if the domain and codomain are isomorphic, which can e.g. be checked as
@@ -700,33 +765,33 @@ can only exist if the domain and codomain are isomorphic, which can e.g. be chec
 Moore-Penrose pseudoinverse. This, however, is only really justified as minimizing the
 least squares problem if `spacetype(t) <: EuclideanSpace`.
 
-3. Addition and multiplied by a scalar:
+#### Addition and multiplied by a scalar:
 
 `AbstractTensorMap` instances behave themselves as vectors (i.e. they are `𝕜`-linear) and
 so they can be multiplied by scalars and, if they live in the same space, i.e. have the same
 domain and codomain, they can be added to each other. There is also a `zero(t)`, the
 additive identity, which produces a zero tensor with the same domain and codomain as `t`.
 
-4. Fill and copy:
+#### Fill and copy:
 
-In addition, `TensorMap` supports basic Julia methods such as `fill!` and `copyto!`, as well
+`TensorMap` supports basic Julia methods such as `fill!` and `copy!`, as well
 as `copy(t)` to create a copy with independent data.
 
-5. In-place methods: `axpy!`, `axpby!`, `lmul!`, `rmul!` and `mul!`:
+#### In-place methods: `axpy!`, `axpby!`, `lmul!`, `rmul!` and `mul!`:
 
-Aside from basic `+` and `*`
-operations, TensorXD.jl reexports a number of efficient in-place methods from
-`LinearAlgebra`, such as `axpy!` (for `y ← α * x + y`), `axpby!` (for `y ← α * x + β * y`),
-`lmul!` and `rmul!` (for `y ← α*y` and `y ← y*α`, which is typically the same) and `mul!`,
-which can also be used for out-of-place scalar multiplication `y ← α*x`.
+Aside from basic `+` and `*` operations, TensorXD.jl reexports a number of efficient
+in-place methods from `LinearAlgebra`, such as `axpy!` (for `y ← α * x + y`), `axpby!`
+(for `y ← α * x + β * y`), `lmul!` and `rmul!` (for `y ← α*y` and `y ← y*α`, which is
+typically the same) and `mul!`, which can also be used for out-of-place scalar
+multiplication `y ← α*x`.
 
-6. Norm and dot:
+#### Norm and dot:
 
 For `t::AbstractTensorMap{S}` where `S<:EuclideanSpace`, henceforth referred to as
 a `(Abstract)EuclideanTensorMap`, we can compute `norm(t)`, and for two such instances, the
 inner product `dot(t1, t2)`, provided `t1` and `t2` have the same domain and codomain.
 
-7. Normalize:
+#### Normalize:
 
 Furthermore, there is `normalize(t)` and `normalize!(t)` to return a scaled version of `t`
 with unit norm. These operations should also exist for `S<:InnerProductSpace`, but requires
@@ -735,7 +800,7 @@ concrete subtype of `InnerProductSpace` that is not a subtype of `EuclideanSpace
 particular, `CartesianSpace`, `ComplexSpace` and `GradedSpace` are all subtypes
 of `EuclideanSpace`.
 
-8. Adjoint:
+#### Adjoint:
 
 With instances `t::AbstractEuclideanTensorMap` there is associated an adjoint operation,
 given by `adjoint(t)` or simply `t'`, such that `domain(t') == codomain(t)` and
@@ -749,12 +814,12 @@ plural `TensorXD.adjointtensorindices` to convert multiple indices at once. Note
 because the adjoint interchanges domain and codomain, we have
 `space(t', j) == space(t, i)'`.
 
-9. Equal and approximate:
+#### Equal and approximate:
 
-`AbstractTensorMap` instances can furthermore be tested for exact (`t1 == t2`) or
+`AbstractTensorMap` instances can be tested for exact (`t1 == t2`) or
 approximate (`t1 ≈ t2`) equality, though the latter requires `norm` can be computed.
 
-10. Multiplicative identity:
+#### Multiplicative identity:
 
 When tensor map instances are endomorphisms, i.e. they have the same domain and codomain,
 there is a multiplicative identity which can be obtained as `one(t)` or `one!(t)`, where the
@@ -762,14 +827,14 @@ latter overwrites the contents of `t`. The multiplicative identity on a space `V
 be obtained using `id(A, V)` as discussed [above](@ref ss_tensor_construction), such that
 for a general homomorphism `t′`, we have `t′ == id(codomain(t′))*t′ == t′*id(domain(t′))`.
 
-11. Trace and exp:
+#### Trace and exp:
 
 Returning to the case of endomorphisms `t`, we can compute the trace via `tr(t)` and
 exponentiate them using `exp(t)`, or if the contents of `t` can be destroyed in the
 process, `exp!(t)`. Furthermore, there are a number of tensor factorizations for both
 endomorphisms and general homomorphism that we discuss below.
 
-12. Tensor product:
+#### Tensor product:
 
 Finally, there are a number of operations that also belong in this paragraph because of
 their analogy to common matrix operations. The tensor product of two `TensorMap` instances
@@ -777,9 +842,9 @@ their analogy to common matrix operations. The tensor product of two `TensorMap`
 `codomain(t1⊗t2) = codomain(t1) ⊗ codomain(t2)` and
 `domain(t1⊗t2) = domain(t1) ⊗ domain(t2)`.
 
-13. catdomain and catcodomain:
+#### catdomain and catcodomain:
 
- If we have two `TensorMap{S,N,1}` instances `t1`
+If we have two `TensorMap{S,N,1}` instances `t1`
 and `t2` with the same codomain, we can combine them in a way that is analogous to `hcat`,
 i.e. we stack them such that the new tensor `catdomain(t1, t2)` has also the same codomain,
 but has a domain which is `domain(t1) ⊕ domain(t2)`. Similarly, if `t1` and `t2` are of
@@ -1255,7 +1320,7 @@ where the latter syntax is known as NCON-style, and labels the unconnected or ou
 indices with negative integers, and the contracted indices with positive integers.
 
 A number of remarks are in order. TensorOperations.jl accepts both integers and any valid
-variable name as dummy label for indices, and everything in between `[ ]` is not resolved in
+variable name as dummy label for indices, and everything in `[ ]` is not resolved in
 the current context but interpreted as a dummy label. Here, we label the indices of a
 `TensorMap`, like `A::TensorMap{S,N₁,N₂}`, in a linear fashion, where the first position
 corresponds to the first space in `codomain(A)`, and so forth, up to position `N₁`. Index
