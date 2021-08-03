@@ -1,10 +1,10 @@
 # FIELDS:
-#==========================================================================================#
 """
     abstract type Field end
 
 Abstract type at the top of the type hierarchy for denoting fields over which vector spaces
-(or more generally, linear categories) can be defined. Two common fields are `ℝ` and `ℂ`, representing the field of real or complex numbers respectively.
+(or more generally, linear categories) can be defined. Two common fields are `ℝ` and `ℂ`,
+representing the field of real or complex numbers respectively.
 """
 abstract type Field end
 
@@ -41,7 +41,6 @@ Base.show(io::IO, ::RealNumbers) = print(io, "ℝ")
 Base.show(io::IO, ::ComplexNumbers) = print(io, "ℂ")
 
 # VECTOR SPACES:
-#==========================================================================================#
 """
     abstract type VectorSpace end
 
@@ -335,7 +334,6 @@ fuse(V1::VectorSpace, V2::VectorSpace, V3::VectorSpace...) =
 # calling fuse on V1 and V2 will allow these to be `ProductSpace`
 
 # Partial order for vector spaces
-#==============================================================================#
 """
     ismonomorphic(V1::VectorSpace, V2::VectorSpace)
     V1 ≾ V2

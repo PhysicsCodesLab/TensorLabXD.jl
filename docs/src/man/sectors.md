@@ -9,6 +9,7 @@ using LinearAlgebra
 # General Sector
 abstract type Sector end
 struct SectorValues{I<:Sector} end  # Singleton type to represent an iterator over the possible values of type `I`, whose instance is obtained as `values(I)`.
+const SectorDict{K, V} = SortedVectorDict{K, V}
 
 abstract type FusionStyle end
 struct UniqueFusion <: FusionStyle end # unique fusion output when fusion two sectors
@@ -139,6 +140,7 @@ struct FusionTreeIterator{I<:Sector, N}
 end # iterate over fusion trees for fixed coupled and uncoupled sector labels
 
 fusiontreedict(I) = FusionStyle(I) isa UniqueFusion ? SingletonDict : FusionTreeDict
+const FusionTreeDict{K, V} = Dict{K, V}
 
 const transposecache = LRU{Any, Any}(; maxsize = 10^5)
 const usetransposecache = Ref{Bool}(true)
@@ -165,7 +167,7 @@ FusionStyle(a::Sector) = FusionStyle(typeof(a))
 fusiontensor(a::I, b::I, c::I) where {I<:AbstractIrrep{G<:Group}} # Return the fusiontensor ``X^{ab}_{c,μ}: c → a ⊗ b`` as a rank-4 tensor with size `(dim(a),dim(b),dim(c),Int(Nsymbol(a,b,c)))`.
 ⊗(a::I, b::I) where {I<:Sector}  # Return an iterator of elements of `c::I` that appear in the fusion product `a ⊗ b`.
 Nsymbol(a::I, b::I, c::I) where {I<:Sector} -> Integer # Return an `Integer` representing the number of times `c` appears in the fusion product `a ⊗ b`. Could be a `Bool` if `FusionStyle(I) == UniqueFusion()` or `SimpleFusion()`.
-Fsymbol(a::I, b::I, c::I, d::I, e::I, f::I) where {I<:Sector}
+Fsymbol(a::I, b::I, c::I, d::I, e::I, f::I) where {I<:Sector} # Fsymbol(a,b,c,d,e,f)[μ,ν,κ,λ]
 vertex_ind2label(k::Int, a::I, b::I, c::I) where {I<:Sector} # Convert the index `k` of the fusion vertex (a,b)->c into a label.
 vertex_labeltype(I::Type{<:Sector}) -> Type # Return the type of labels for the fusion vertices of sectors of type `I`.
 dim(a::Sector) # Return the (quantum) dimension of the sector `a`.

@@ -885,7 +885,7 @@ foreach(println, (domain(t4), domain(t6), domain(t8)))
 norm(t8) ≈ norm(t4)*norm(t6)
 ```
 
-## Index manipulations
+## Planar index manipulations
 
 In many cases, the bipartition of tensor indices (i.e. `ElementarySpace` instances) between
 the codomain and domain is not fixed throughout the different operations that need to be
@@ -893,8 +893,8 @@ performed on that tensor map, i.e. we want to use the duality to move spaces fro
 codomain and vice versa. Furthermore, we want to use the braiding to reshuffle the order of
 the indices.
 
-For this, we use an interface that is closely related to that for manipulating splitting-
-fusion tree pairs, namely [`braid`](@ref) and [`permute`](@ref), with the interface
+## Braiding index manipulations
+
 
 ```julia
 braid(t::AbstractTensorMap{S,N₁,N₂}, levels::NTuple{N₁+N₂,Int},

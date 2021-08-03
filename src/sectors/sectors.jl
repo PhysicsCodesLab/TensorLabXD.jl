@@ -260,7 +260,7 @@ function frobeniusschur(a::Sector)
     if FusionStyle(a) isa UniqueFusion || FusionStyle(a) isa SimpleFusion
         sign(Fsymbol(a, conj(a), a, a, one(a), one(a)))
     else
-        sign(Fsymbol(a, conj(a), a, a, one(a), one(a))[1])
+        sign(Fsymbol(a, conj(a), a, a, one(a), one(a))[1,1,1,1])
     end
 end
 

@@ -43,15 +43,14 @@ abstract type CompositeSpace{S<:ElementarySpace} <: VectorSpace end
 struct ProductSpace{S<:ElementarySpace, N} <: CompositeSpace{S}
     spaces::NTuple{N, S}
 end
+const TensorSpace{S<:ElementarySpace} = Union{S, ProductSpace{S}}
 
 # Space of Morphisms
 struct HomSpace{S<:ElementarySpace, P1<:CompositeSpace{S}, P2<:CompositeSpace{S}}
     codomain::P1
     domain::P2
 end
-const TensorSpace{S<:ElementarySpace} = Union{S, ProductSpace{S}}
-const TensorMapSpace{S<:ElementarySpace, N₁, N₂} =
-    HomSpace{S, ProductSpace{S, N₁}, ProductSpace{S, N₂}}
+const TensorMapSpace{S<:ElementarySpace, N₁, N₂} = HomSpace{S, ProductSpace{S, N₁}, ProductSpace{S, N₂}}
 ```
 ### Properties
 On both `VectorSpace` instances and types:
@@ -83,7 +82,7 @@ dims(P::ProductSpace) # Return the dimensions of the spaces in the tensor produc
 dims(P::ProductSpace{S, N}, s::NTuple{N, sectortype(S)}) # Return the degeneracy dimensions corresponding to a tuple of sectors `s` for each of the spaces in the tensor product `P`.
 blockdim(V::ElementarySpace, c::Sector) = dim(V, c) # make ElementarySpace instances behave similar to ProductSpace instances
 blockdim(P::ProductSpace, c::Sector) # Return the total dimension of a coupled sector `c` in the product space
-hassector # whether a vector space `V` has a subspace corresponding to sector `a` with non-zero multiplicity
+hassector(V::ElementarySpace, a::Sector) # whether a vector space `V` has a subspace corresponding to sector `a` with non-zero multiplicity
 hassector(P::ProductSpace{S, N}, s::NTuple{N, sectortype(S)}) # Query whether `P` has a non-zero degeneracy of sector `s`, representing a combination of sectors on the individual tensor indices.
 Base.axes(V::ElementarySpace) # the axes of an elementary space as `1:dim(V)`
 Base.axes(V::ElementarySpace, a::Sector) # axes corresponding to the sector `a` in an elementary space as a UnitRange.
@@ -102,7 +101,8 @@ flip(V::ElementarySpace) # flip(V)==V̅^*
 ⊕ # direct sum of the elementary spaces `V1`, `V2`, ...
 ⊗ # representing the tensor product of several elementary vector spaces
 Base.:*(V1::VectorSpace, V2::VectorSpace) = ⊗(V1, V2)
-fuse # returns a single vector space that is isomorphic to the fusion product of the individual spaces
+fuse(V1::S, V2::S, V3::S...) where {S<:ElementarySpace} # returns a single vector space that is isomorphic to the fusion product of the individual spaces
+fuse(P::ProductSpace{S}) where {S<:ElementarySpace}
 ismonomorphic # Return whether there exist monomorphisms from `V1` to `V2`, i.e. 'injective' morphisms with left inverses.
 isepimorphic # Return whether there exist epimorphisms from `V1` to `V2`, i.e. 'surjective' morphisms with right inverses.
 isisomorphic # Return if `V1` and `V2` are isomorphic, meaning that there exists isomorphisms from `V1` to `V2`, i.e. morphisms with left and right inverses.
@@ -130,6 +130,8 @@ domain(W::HomSpace) # domain of a HomSpace.
 ### Constructors
 ```julia
 # Cartesian and Complex Space
+CartesianSpace(d::Integer = 0; dual = false) # Constructed by an integer number which is the dim of the space
+ComplexSpace(d::Integer = 0; dual = false)
 CartesianSpace(dim::Pair; dual = false) # Constructed by (Trivial(),d)
 ComplexSpace(dim::Pair; dual = false)
 CartesianSpace(dims::AbstractDict; kwargs...) # Constructed by (Trivial() => d)

@@ -282,9 +282,6 @@ function trace!(α, tsrc::AbstractTensorMap{S}, β, tdst::AbstractTensorMap{S, N
 
     I = sectortype(S)
     if I === Trivial
-        cod = codomain(tsrc)
-        dom = domain(tsrc)
-        n = length(cod)
         pdata = (p1..., p2...)
         TO._trace!(α, tsrc[], β, tdst[], pdata, q1, q2)
     # elseif FusionStyle(I) isa UniqueFusion

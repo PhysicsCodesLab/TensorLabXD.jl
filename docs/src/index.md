@@ -1,5 +1,7 @@
 # TensorXD.jl
 
+This package is a modified version of Jutho's package [TensorKit.jl](https://github.com/Jutho/TensorKit.jl).
+
 *A Julia package for large-scale tensor computations, with a hint of category theory.*
 
 ```@meta
