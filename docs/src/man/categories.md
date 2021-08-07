@@ -43,8 +43,8 @@ source and target. The flow from source to target, and thus the direction of mor
 composition ``f ∘ g`` (sometimes known as the flow of time) can be chosen left to right
 (like the arrow in ``f:W→V``), right to left (like the composition order ``f ∘ g``, or the
 matrix product), bottom to top (quantum field theory convention) or top to bottom (quantum
-circuit convention). Throughout this manual, we stick to this latter convention (which is
-not very common in manuscripts on category theory):
+circuit convention). Throughout this manual, we stick to the top to bottom convention (which
+is not very common in manuscripts on category theory):
 
 ![composition](img/diagram_morphism.svg)
 
@@ -85,7 +85,7 @@ The *product* of two categories ``C`` and ``C′``, denoted ``C × C′``, is th
 objects ``\mathrm{Ob}(C×C′) = \mathrm{Ob}(C) × \mathrm{Ob}(C′)``, whose elements are denoted
 as tuples ``(V,V′)``, and morphisms
 ``\mathrm{Hom}_{C×C′}((W,W′), (V,V′)) = \mathrm{Hom}_{C}(W,V) × \mathrm{Hom}_{C′}(W′,V′)``.
-Composition acts as ``(f,f′) ∘ (g,g′) = (f∘f′, g∘g′)`` and the identity is given by
+Composition acts as ``(f,f′) ∘ (g,g′) = (f∘g, f′∘g′)`` and the identity is given by
 ``\mathrm{id}_{V,V′} = (\mathrm{id}_V, \mathrm{id}_{V′})``. In a similar fashion, we can
 define the *product of functors* ``F:C→D`` and ``F′:C′→D′`` as a functor
 ``F×F′: (C×C′)→(D×D′)`` mapping objects ``(V,V′)`` to ``(F(V), F′(V′))`` and morphisms
@@ -114,8 +114,8 @@ to be a **tensor category** (a.k.a. a *monoidal category*), if it has
 
 In terms of functors and natural transformations, ``⊗`` is a functor from the product
 category ``C × C`` to ``C``. Furthermore, the left (or right) unitor ``λ`` (or ``ρ``) is a
-natural isomorphism between a nameless functor ``C→C`` that maps objects ``V → I ⊗ V`` (or
-``V→V ⊗ I``) and the identity functor ``1_C``. Similarly, the associator ``α`` is a natural
+natural isomorphism between a nameless functor ``C→C`` that maps objects ``I ⊗ V → V  `` (or
+``V ⊗ I→V``) and the identity functor ``1_C``. Similarly, the associator ``α`` is a natural
 isomorphism between the two functors ``⊗(⊗ × 1_C)`` and ``⊗(1_C × ⊗)`` from ``C × C × C``
 to ``C``.  In a ``k``-linear category, the tensor product of morphisms is also a bilinear
 operation. A monoidal category is said to be *strict* if ``I ⊗ V = V = V ⊗ I`` and
@@ -146,15 +146,15 @@ turn any tensor category into a strict tensor category (see Section XI.5 of [^ka
 The different natural isomorphisms involving the unit object have various relations, such
 as ``λ_{V⊗W} ∘ α_{I,V,W} = λ_V ⊗ \mathrm{id}_W`` and ``λ_I = ρ_I : I ⊗ I → I``. The last
 relation defines an isomorphism between ``I ⊗ I`` and ``I``, which can also be used to
-state that for ``f, g ∈ End_C(I)``, ``f ∘ g = ρ_I ∘ (f ⊗ g) ∘ λ_I^{-1} = g ∘ f``. Hence, the
-tensor product of morphisms in ``End_C(I)`` can be related to morphism composition in
-``End_C(I)``, and furthermore, the monoid of endomorphisms ``End_C(I)`` is commutative
-(abelian). In the case of a ``𝕜``-linear category, it is an abelian ``𝕜``-algebra. In the
-case of ``\mathbf{Vect}``, ``\mathrm{End}(I)`` is indeed isomorphic to the field of scalars
-``𝕜``. We return to the general case where ``End_C(I)`` is isomorphic to ``𝕜`` itself in
-the section on [pre-fusion categories](@ref ss_fusion).
+state that for ``f, g ∈ \mathrm{End}_C(I)``, ``f ∘ g = ρ_I ∘ (f ⊗ g) ∘ λ_I^{-1} = g ∘ f``.
+Hence, the tensor product of morphisms in ``\mathrm{End}_C(I)`` can be related to morphism
+composition in ``\mathrm{End}_C(I)``, and the monoid of endomorphisms ``\mathrm{End}_C(I)``
+is commutative. In the case of a ``𝕜``-linear category, it is an abelian ``𝕜``-algebra. In
+the case of ``\mathbf{Vect}``, ``\mathrm{End}(I)`` is indeed isomorphic to the field of
+scalars ``𝕜``. We return to the general case where ``\mathrm{End}_C(I)`` is isomorphic to
+``𝕜`` itself in the section on [pre-fusion categories](@ref ss_fusion).
 
-Furthermore, *Mac Lane's coherence theorem* states that the triangle and pentagon
+The *Mac Lane's coherence theorem* states that the triangle and pentagon
 condition are sufficient to ensure that any consistent diagram made of associators and
 left and right unitors (involving all possible objects in ``C``) commutes. For what
 concerns the graphical notation, the natural isomorphisms will not be represented and we
@@ -184,16 +184,16 @@ particular, the category ``\mathbf{SVect}_𝕜`` contains ``\mathbf{Vect}_𝕜``
 (monoidal) subcategory, by only selecting those objects ``V`` for which ``V_1 = 0``. We
 will return to the example of ``\mathbf{SVect}`` throughout the remainder of this page.
 
-Finally, we generalize the notion of a functor between monoidal categories. A *monoidal
+We generalize the notion of a functor between monoidal categories. A *monoidal
 functor* between two tensor categories ``(C, ⊗_C, I_C, α_C, λ_C, ρ_C)`` and
 ``(D, ⊗_D, I_D, α_D, λ_D, ρ_D)`` is a functor ``F:C→D`` together with two monoidal
 constraints, namely
-*   a morphism ``F₀:I_D → F(I_C)``;
+*   a morphism ``F_0:I_D → F(I_C)``;
 *   a natural transformation
     ``F_2={F_2(X,Y): F(X) ⊗_D F(Y) → F(X ⊗_C Y), ∀ X,Y∈ \mathrm{Ob}(C)}``
     between the functors ``⊗_D(F×F)`` and ``F ⊗_C`` from ``C×C`` to ``D``.
 A *monoidal natural transformation* ``φ`` between two monoidal functors ``F:C→D`` and
-``G:C→D``is a natural transformation ``φ:F⟶G`` that furthermore satisfies
+``G:C→D`` is a natural transformation ``φ:F→G`` that furthermore satisfies
 *   ``φ_{I_C} F_0 = G_0``;
 *   ``∀ X,Y ∈ \mathrm{Ob}(C)``: ``φ_{X ⊗ Y} F_2(X,Y) = G_2(X,Y)(φ_X ⊗ φ_Y)``.
 
@@ -219,13 +219,14 @@ the category ``\mathcal{C} = (C, ⊗, I, α, λ, ρ)``
 Another property of the category ``\mathbf{Vect}`` that we want to generalize is the notion
 of duals. For a vector space ``V``, i.e. an object of  ``\mathbf{Vect}``, the dual ``V^*``
 is itself a vector space. Evaluating the action of dual vector on a vector can, because of
-linearity, be interpreted as a morphism from ``V^* ⊗ V`` to ``I``. Note that elements of a
-vector space ``V`` have no categorical counterpart in themselves, but can be interpreted as
-morphism from ``I`` to ``V``. To map morphisms from ``\mathrm{Hom}(W,V)`` to elements of
-``V ⊗ W^*``, i.e. morphisms in ``\mathrm{Hom}(I, V ⊗ W^*)``, we use another morphism
-``\mathrm{Hom}(I, W ⊗ W^*)`` which can be considered as the inverse of the evaluation map.
+linearity, be interpreted as a morphism from ``V^* ⊗ V`` to ``I`` (called the evalution map).
+Note that elements of a vector space ``V`` have no categorical counterpart in themselves,
+but can be interpreted as morphism from ``I`` to ``V``. To map morphisms from
+``\mathrm{Hom}(W,V)`` to elements of ``V ⊗ W^*``, i.e. morphisms in
+``\mathrm{Hom}(I, V ⊗ W^*)``, we use another morphism ``\mathrm{Hom}(I, W ⊗ W^*)`` which
+can be considered as the inverse of the evaluation map.
 
-Hence, duality in a monoidal category is defined via an *exact paring*, i.e. two families
+The duality in a monoidal category is defined via an *exact paring*, i.e. two families
 of non-degenerate morphisms, the evaluation (or co-unit) ``ϵ_V: {}^{∨}V ⊗ V → I`` and the
 coevaluation (or unit) ``η_V: I → V ⊗ {}^{∨}V`` which satisfy the "snake rules":
 
@@ -275,8 +276,10 @@ In particular, one could choose ``\tilde{ϵ}_{{}^{∨}V} = ϵ_V`` and thus defin
 right dual of ``{}^{∨}V``. While there might be other choices, this choice must at least be
 isomorphic, such that ``({}^{∨}V)^{∨} ≂ V``.
 
-If objects ``V`` and ``W`` have left (respectively right) duals, than for a morphism ``f ∈ \mathrm{Hom}(W,V)``, we furthermore define the left (respectively right)
-*transpose* ``{}^{∨}f ∈ \mathrm{Hom}({}^{∨}V, {}^{∨}W)`` (respectively  ``f^{∨} ∈ \mathrm{Hom}(V^{∨}, W^{∨})``) as
+If objects ``V`` and ``W`` have left (respectively right) duals, than for a morphism
+``f ∈ \mathrm{Hom}(W,V)``, we furthermore define the left (respectively right)
+*transpose* ``{}^{∨}f ∈ \mathrm{Hom}({}^{∨}V, {}^{∨}W)`` (respectively  
+``f^{∨} ∈ \mathrm{Hom}(V^{∨}, W^{∨})``) as
 
 ![transpose](img/diagram-transpose.svg)
 
@@ -306,7 +309,7 @@ nor do the exact pairings enable us to construct an isomorphism between ``{}^{�
 For finite-dimensional vector spaces, however, ``{}^{∨∨}V`` and ``V``, or thus ``{}^{∨}V``
 and ``V^{∨}`` are known to be isomorphic. The categorical generalization is that of a
 **pivotal category** (or sovereign category), i.e. a monoidal category with two-sided duals
-``X^* = {}^{∨}X = X^{∨} = X^*`` such that the left and right duality functor coincide, and
+``X^* = {}^{∨}X = X^{∨}`` such that the left and right duality functor coincide, and
 thus also the left and right transpose of morphisms, i.e.
 ``f^* = {}^{∨}f = f^{∨} ∈ \mathrm{Hom}(V^*,W^*)`` for any ``f∈\mathrm{Hom}(W,V)``. Given that
 ``\tilde{ϵ}_{X}`` and ``\tilde{η}_{X}`` can be interpreted as an exact pairing ``ϵ_{X^*}``
@@ -326,10 +329,9 @@ graphical representation and suppress the natural isomorphism ``δ``. Note, as a
 suggested by the graphical notation above, that we can interpret transposing a morphism as
 rotating its graphical notation by 180 degrees (either way).
 
-Furthermore, in a pivotal category, we can define a map from ``\mathrm{End}(V)``, the
-endomorphisms of an object ``V`` to endomorphisms of the identity object ``I``, i.e. the
-field of scalars in the case of the category ``\mathbf{Vect}``, known as the trace of
-``f``. In fact, we can define both a left trace as
+Furthermore, in a pivotal category, we can define a map
+``\mathrm{End}(V)\rightarrow \mathrm{End}(I)``, known as the trace of ``f``.
+In fact, we can define a left trace as
 
 ``\mathrm{tr}_{\mathrm{l}}(f) = ϵ_V ∘ (\mathrm{id}_{V^*} ⊗ f) ∘ \tilde{η}_V``
 
@@ -376,16 +378,29 @@ and can be negative in the case of the supertrace. Both are valid choices to mak
 While duality and the pivotal structure allow to move vector spaces back and forth between
 the domain (source) and codomain (target) of a tensor map, reordering vector spaces within
 the domain or codomain of a tensor map , i.e. within a tensor product
-``V_1 ⊗ V_2 ⁠⊗ … V_N`` requires additional structure. In particular, we need at the very
-least a **braided tensor category** ``C``, which is endowed with a *braiding* ``τ``, i.e. a
-natural isomorphism ``{τ_{V,W}:V⊗W → W⊗V}_{V,W ∈ \mathrm{Ob}(C)}`` between the functors ``⊗`` and
-``⊗^{\mathrm{op}}`` such that ``τ_{V,V′}∘(f ⊗ g) = (g ⊗ f)∘τ_{W,W′}`` for any morphisms
-``f ∈ \mathrm{Hom}(W,V)`` and ``g ∈ \mathrm{Hom}(W′,V′)``. A valid braiding needs to satisfy a coherence
-condition with the associator ``α`` known as the *hexagon equation*, which expresses that
-the braiding is ``⊗``-multiplicative, i.e.
-``τ_{U,V⊗W} = (\mathrm{id}_V ⊗ τ_{U,W})(τ_{U,V}⊗\mathrm{id}_W)`` and
-``τ_{U⊗V,W} = (τ_{U,W}⊗\mathrm{id}_VW)(\mathrm{id}_U ⊗ τ_{V,W})`` (where the associator
-has been omitted). We also have ``λ_V ∘ τ_{V,I} = ρ_{V,I}``, ``ρ_V ∘ τ_{I,V} = λ_{V}`` and
+``V_1 ⊗ V_2 ⁠⊗ … V_N`` requires additional structure.
+
+We need a **braided tensor category** ``C``, which is endowed with a *braiding* ``τ``, i.e.,
+a natural isomorphism ``τ_{V,W}:V⊗W → W⊗V`` with ``V,W ∈ \mathrm{Ob}(C)}`` between the
+functors ``⊗`` and ``⊗^{\mathrm{op}}`` such that
+
+``τ_{V,V′}∘(f ⊗ g) = (g ⊗ f)∘τ_{W,W′}``
+
+for any morphisms ``f ∈ \mathrm{Hom}(W,V)`` and ``g ∈ \mathrm{Hom}(W′,V′)``.
+
+A valid braiding needs to satisfy a coherence condition with the associator ``α``
+known as the *hexagon equation*, which expresses that the braiding is ``⊗``-multiplicative,
+i.e.,
+
+``τ_{U,V⊗W} = (\mathrm{id}_V ⊗ τ_{U,W})(τ_{U,V}⊗\mathrm{id}_W)``
+
+and
+
+``τ_{U⊗V,W} = (τ_{U,W}⊗\mathrm{id}_V)(\mathrm{id}_U ⊗ τ_{V,W})``
+
+(where the associator has been omitted).
+
+We also have ``λ_V ∘ τ_{V,I} = ρ_{V}``, ``ρ_V ∘ τ_{I,V} = λ_{V}`` and
 ``τ_{V,I} = τ_{I,V}^{-1}`` for any ``V ∈ \mathrm{Ob}(C)``.
 
 The braiding isomorphism ``τ_{V,W}`` and its inverse are graphically represented as the
@@ -401,13 +416,27 @@ where the expression on the right hand side, ``τ_{W,V}∘τ_{V,W}`` can generic
 simplified. Hence, for general braidings, there is no unique choice to identify a tensor in
 ``V⊗W`` and ``W⊗V``, as the isomorphisms ``τ_{V,W}``, ``τ_{W,V}^{-1}``,
 ``τ_{V,W} ∘ τ_{W,V} ∘ τ_{V,W}``, … mapping from ``V⊗W`` to ``W⊗V`` can all be different. In
-order for there to be a unique map from ``V_1 ⊗ V_2 ⁠⊗ … V_N`` to any permutation of the
+order for there to be a unique map from ``V_1 ⊗ V_2 ⁠⊗ … ⊗ V_N`` to any permutation of the
 objects in this tensor product, the braiding needs to be *symmetric*, i.e.
 ``τ_{V,W} = τ_{W,V}^{-1}`` or, equivalently ``τ_{W,V} ∘ τ_{V,W} = \mathrm{id}_{V⊗W}``. The
 resulting category is then referred to as a **symmetric tensor category**. In a graphical
 representation, it means that there is no distinction between over- and under- crossings
 and, as such, lines can just cross, where the crossing represents the action of
 ``τ_{V,W} = τ_{W,V}^{-1}``.
+
+From the definition of the braiding, we know that
+
+![braidingdefinition](img/diagram-braidingdefinition.svg)
+
+then we could abtain
+
+![braidingandfusion](img/diagram-braidingandfusion.svg)
+
+This relation can also be obtained from the hexagon equation.
+
+The braiding also satisfy the Yang-Baxter equation, i.e., a line can be moved over or under a crossing between two other lines:
+
+![YangBaxter](img/diagram-YangBaxter.svg)
 
 In the case of the category ``\mathbf{Vect}`` a valid braiding consists of just flipping
 the the objects/morphisms involved, e.g. for a simple cartesian tensor, permuting the
@@ -430,11 +459,11 @@ that
 ``θ_{V⊗W} = τ_{W,V} ∘ (θ_W ⊗ θ_V) ∘ τ_{V,W} = (θ_V ⊗ θ_W) ∘ τ_{W,V} ∘ τ_{V,W}.``
 
 In particular, a braided pivotal category is balanced, as we can even define two such
-twists, namely a left and right twist given by
+twists, namely a left twist given by
 
 ``θ^{\mathrm{l}}_V = (ϵ_V ⊗ \mathrm{id}_V)(\mathrm{id}_{V*} ⊗ τ_{V,V}) (\tilde{η}_V ⊗ \mathrm{id}_V)``
 
-and
+and a right twist given by
 
 ``θ^{\mathrm{r}}_V = (\mathrm{id}_V ⊗ \tilde{ϵ}_V)(τ_{V,V} ⊗ \mathrm{id}_{V*})(\mathrm{id}_V ⊗ ϵ_V)``
 
@@ -475,7 +504,11 @@ trace, which is spherical, i.e.
 
 ``\mathrm{tr}(f) = ϵ_V ∘ τ_{V,V^*} ∘ (( θ_V ∘ f) ⊗ \mathrm{id}_{V^*}) ∘ η_V = ϵ_V ∘ (\mathrm{id}_{V^*} ⊗ (f ∘ θ_V)) ∘ τ_{V,V^*} ∘ η_V``
 
-Note finally, that a ribbon category where the braiding is symmetric, is known as a
+and graphically
+
+![spherical trace](img/diagram-sphericaltrace.svg)
+
+A ribbon category where the braiding is symmetric, is known as a
 **compact closed category**. For a symmetric braiding, the trivial twist
 ``θ_V = \mathrm{id}_V`` is always a valid choice, but it might not be the choice that one
 necessarily want to use. Let us study the case of ``\mathbf{SVect}`` again. Reinvoking our
@@ -508,10 +541,12 @@ Sometimes also the symbol ``*`` is used instead of ``†``, however we have alre
 ``*`` to denote dual objects and transposed morphisms in the case of a pivotal category.
 
 If the category is ``ℂ``-linear, the dagger functor is often assumed to be antilinear, i.e.
-``(λ f)^† = \bar{λ} f^†`` for ``λ ∈ ℂ`` and ``f ∈ \mathrm{Hom}(V,W)``. In a dagger
+``(λ f)^† = \bar{λ} f^†`` for ``λ ∈ ℂ`` and ``f ∈ \mathrm{Hom}(V,W)``.
+
+In a dagger
 category, a morphism ``f:W→V`` is said to be *unitary* if it is an isomorphism and
-``f^{-1} = f^†``. Furthermore, an endomorphism ``f:V→V`` is *hermitian* or self-adjoint if
-``f^† = f``. Finally, we will also use the term *isometry* for a morphism ``f:W→V`` which has
+``f^{-1} = f^†``. An endomorphism ``f:V→V`` is *hermitian* or self-adjoint if
+``f^† = f``. We will also use the term *isometry* for a morphism ``f:W→V`` which has
 a left inverse ``f^†``, i.e. such that ``f^† ∘ f = \mathrm{id}_W``, but for which
 ``f ∘ f^†`` is not necessarily the identity (but rather some orthogonal projector, i.e. a
 hermitian idempotent in ``\mathrm{End}(V)``).
@@ -544,10 +579,10 @@ The (right) twist defined via the pivotal structure now becomes
 and is itself unitary. Even for a symmetric category, the twist defined as such must not be
 the identity, as we discuss for the ``\mathbf{SVect}`` example below.
 
-Finally, the dagger allows to define two Hermitian forms on the morphisms, namely
+The dagger allows to define two Hermitian forms on the morphisms, namely
 ``⟨ f, g ⟩_{\mathrm{l}/\mathrm{r}} = \mathrm{tr}_{\mathrm{l}/\mathrm{r}}(f^† g)``, which
 coincide for a spherical category. For a *unitary ``𝕜``-linear category*, these Hermitian
-forms should be positive definite and thus define an inner product on each of the
+forms should be positive definite and thus define an **inner product** on each of the
 homomorphism spaces ``\mathrm{Hom}(W,V)``. In particular then, dimensions of objects are
 positive, as they satisfy
 ``\mathrm{dim}_{\mathrm{l}/\mathrm{r}}(V) = ⟨ \mathrm{id}_V, \mathrm{id}_V ⟩_{\mathrm{l}/\mathrm{r}}``.
@@ -560,8 +595,8 @@ pivotal and in fact spherical, and categories with a braiding to be ribbon categ
 dagger ribbon category where the braiding is symmetric, i.e. a dagger category which is
 also a compact closed category and where the right (co)evaluation is given via the dagger
 of the left (co)evaluation is called a **dagger compact** category. This is the playground
-of quantum mechanics of bosonic and fermionic systems. However, we also allow for non-
-symmetric braiding in TensorXD.jl, though this functionality is currently much more
+of quantum mechanics of bosonic and fermionic systems. However, we also allow
+for non-symmetric braiding in TensorXD.jl, though this functionality is currently much more
 limited.
 
 Again studying the category ``\mathbf{SVect}_{ℂ}`` (now explicitly over the complex
@@ -589,13 +624,14 @@ background of working with symmetries. We first need two new concepts:
     ``y^α = x_α^†`` in order to obtain an orthogonal direct sum decomposition.
 
 *   A **simple object** ``V ∈ \mathrm{Ob}(C)`` of a ``𝕜``-linear category ``C`` is an
-    object for which ``End_C(V) ≂ 𝕜``, i.e. the algebra of endomorphisms on ``V`` is
-    isomorphic to the field (or ring) ``𝕜``. As ``End_C(V)`` always contains the identity
+    object for which ``\mathrm{End}_C(V) ≂ 𝕜``, i.e. the algebra of endomorphisms on ``V`` is
+    isomorphic to the field (or ring) ``𝕜``. As ``\mathrm{End}_C(V)`` always contains the identity
     morphism ``\mathrm{id}_V``, and this must be the only linearly independent endomorphism
     if ``V`` is a simple object, the isomorphism between ``\mathrm{End}_C(V)`` and ``𝕜``
-    is typically of the form ``k ∈ 𝕜 ↔ k \mathrm{id}_V ∈ End_C(V)``. In particular, for
+    is typically of the form ``k ∈ 𝕜 ↔ k \mathrm{id}_V ∈ \mathrm{End}_C(V)``. In particular, for
     ``\mathbf{SVect}`` and its subcategory ``\mathbf{Vect}``, the unit object ``I`` is a
-    simple object.
+    simple object. (Remind that ``I = \mathbb{k}`` in ``\mathbf{Vect}`` and
+    ``I = I_0\oplus I_1 = \mathbb{k}\oplus 0`` in ``\mathbf{SVect}``.)
 
 In particular, for a pivotal ``𝕜``-linear category where ``I`` is simple, it holds that
 the left and right dimensions of any simple object ``V`` are invertible in ``𝕜``, and that
@@ -604,9 +640,11 @@ any endomorphism ``f ∈ \mathrm{End}(V)`` can be written as
 ``f = (\mathrm{dim}_\mathrm{l}(V))^{-1} \mathrm{tr}_{\mathrm{l}}(f) \mathrm{id}_V =
 (\mathrm{dim}_\mathrm{r}(V))^{-1} \mathrm{tr}_{\mathrm{r}}(f) \mathrm{id}_V``
 
+since ``f = k \mathrm{id}_V`` and ``\mathrm{tr}(f) = k \mathrm{tr}(\mathrm{id}_V)``.
+
 Strictly speaking, this holds only if the category is non-degenerate, which means that
-``I`` is simple and that any non-degenerate pairing ``e:V ⊗ W → I`` induces a non-
-degenerate pairing ``\mathrm{Hom}(I,V) ⊗ \mathrm{Hom}(I,W) → \mathrm{End}(I)``. This
+``I`` is simple and that any non-degenerate pairing ``e:V ⊗ W → I`` induces a non-degenerate
+pairing ``\mathrm{Hom}(I,V) ⊗ \mathrm{Hom}(I,W) → \mathrm{End}(I)``. This
 property is always satisfied for a **pre-fusion category** ``C``, i.e. a monoidal ``𝕜``-
 linear category having a set ``\mathcal{S} ⊂ \mathrm{Ob}(C)`` of simple objects
 ``\mathcal{S}=\{I, V_1, V_2, \ldots\}`` such that
@@ -662,13 +700,17 @@ between the representations on the source and target:
 
 ``\mathrm{Hom}_C(W,V) = \{f ∈ \mathrm{Hom}_{\mathbf{Vect}}(W,V)| u_V(g) ∘ f = f ∘ u_W(g), ∀ g ∈ G\}.``
 
-Note that the ``u_V(g)`` is itself generally not an element from ``End_C(V)``. Simple
+Note that the ``u_V(g)`` is itself generally not an element from ``\mathrm{End}_C(V)``. Simple
 objects ``V_a`` are those corresponding irreducible representations (irreps) ``a`` of the
-group ``\mathsf{G}``, for which Schur's lemma implies ``End_C(V_a) ≂ 𝕜`` and
+group ``\mathsf{G}``, for which Schur's lemma implies ``\mathrm{End}_C(V_a) ≂ 𝕜`` and
 ``\mathrm{Hom}_C(V_a, V_b) = 0`` if ``a`` and ``b`` are not equivalent irreps. On the dual
 space ``V^*``, the group acts with the contragradient representation, i.e.
 ``u_{V^*}(g) = ((u_V(g))^{-1})^* = u_V(g^{-1})^*``, where one should remind that ``^*``
-denotes the transpose. For a finite group or compact Lie group, we can introduce a dagger
+denotes the transpose of the representation matrix. (The form of the representation on the
+dual space can be determined by the requirement that applying the symmetry operation on the
+all legs of the evaluation map leave it invariant:
+``\langle m|\otimes |n\rangle =\sum_k \langle m| (u_V(g))^{-1}_{mk}u_V(g)_{kn}|n\rangle = \sum_k u_V(g^-1)^*_{km}\langle m|u_V(g)_{kn}|n\rangle``.)
+For a finite group or compact Lie group, we can introduce a dagger
 and restrict to unitary representations, such that ``u_V(g)^{-1} = u_V(g)^†`` and the
 contragradient representation becomes the complex conjugated representation, denoted as
 ``u_{V^*}(g) = \bar{u}_V(g)``. The resulting category can then be given the structure of a
@@ -717,7 +759,7 @@ indices, leading to the associativity constraint
 
 The corresponding inclusion maps can be chosen as
 
-``X_{d,(eμν)}^{abc} = (X_{e,μ}^{ab} ⊗ \mathrm{id}_c) ∘ X_{dν}^{e,c} : d→(a⊗b)⊗c.``
+``X_{d,(eμν)}^{abc} = (X_{e,μ}^{ab} ⊗ \mathrm{id}_c) ∘ X_{d,ν}^{ec} : d→(a⊗b)⊗c.``
 
 and
 
@@ -783,7 +825,7 @@ all possible duals of ``a`` must be isomorphic, and thus there is a single repre
 Let us now be somewhat careful with respect to the isomorphism between ``a^*`` and
 ``\bar{a}``. If ``\bar{a} ≠ a``, we can basically choose the representative of that
 isomorphism class as ``\bar{a} = a^*``. However, this choice might not be valid if
-``\bar{a}=a``, as in that case the choice is already fixed, and might be different from
+``\bar{a}=a``, as in that case the choice is already fixed, and ``a^*`` might be different from
 ``a``. To give a concrete example, the ``j=1/2`` representation of ``\mathsf{SU}_2`` has a
 dual (contragradient, but because of unitarity, complex conjugated) representation which is
 isomorphic to itself, but not equal. In the context of tensors in quantum physics, we would
@@ -794,14 +836,17 @@ element, ``Z_a``, which is a unitary isomorphism such that
 ``Z_a^\dagger ∘ Z_a = \mathrm{id}_{a^*}`` and
 ``Z_a ∘ Z_a^\dagger = \mathrm{id}_{\bar{a}}``. Using the transpose, we obtain
 ``Z_a^* ∈ \mathrm{Hom}(\bar{a}^*,a)``, and thus it is proportional to ``Z_{\bar{a}}``, i.e.
-``Z_a^* = χ_a Z_{\bar{a}}`` with ``χ_a`` a complex phase (assuming ``𝕜 = ℂ``). Another
-transpose results in ``Z_{\bar{a}}^* = χ_{\bar{a}} Z_a`` with
-``χ_{\bar{a}} = \overline{χ_{a}}``, where bar of a scalar quantity denotes its complex
-conjugate to avoid confusion with the transpose functor. If ``a``and ``\bar{a}`` are
+``Z_a^* = χ_a Z_{\bar{a}}`` with ``χ_a`` a complex phase (assuming ``𝕜 = ℂ``). Since both of
+``Z^*_a`` and ``Z_{\overline{a}}`` are unitary, we have ``\overline{\chi_a}\chi_a = 1``.
+Do the transpose for again, we get
+``(Z_{a}^*)^* = \chi_{a}Z_{\overline{a}}^* =  \chi_{a}\chi_{\overline{a}}Z_a = Z_a``, thus
+``\overline{\chi_{a}}=\chi_{\overline{a}}``, where bar of a scalar quantity denotes its
+complex conjugate. If ``a``and ``\bar{a}`` are
 distinct, we can essentially choose ``Z_{\bar{a}}`` such that ``χ_a`` is ``1``. However,
-for ``a=\bar{a}``, the value of ``χ_a`` cannot be changed, but must satisfy ``χ_a^2 = 1``,
-or thus ``χ_a = ±1``. This value is a topological invariant known as the
-*Frobenius-Schur indicator*. Graphically, we represent this isomorphism and its relations as
+for ``a=\bar{a}``, the value of ``χ_a`` cannot be changed, but must satisfy
+``\overline{\chi_{a}}=\chi_{a}``, thus ``χ_a = ±1``. This value is a topological invariant
+known as the *Frobenius-Schur indicator*. Graphically, we represent this isomorphism and
+its relations as
 
 ![Zisomorphism](img/diagram-Zisomorphism.svg)
 
@@ -907,11 +952,21 @@ or graphically
 
 ![simpletwist](img/diagram-simpletwist.svg)
 
-Henceforth, we reserve ``θ_a`` for the scalar value itself. Note that ``θ_a = θ_{\bar{a}}``
+Henceforth, we reserve ``θ_a`` for the scalar value itself, that is, ``θ_a`` is the value of
+the `8`-type braiding and called as **topological spin**
+
+![topologicalspin](img/diagram-topologicalspin.svg)
+
+
+Note that ``θ_a = θ_{\bar{a}}``
 as our category is spherical and thus a ribbon category, and that the defining relation of
 a twist implies
 
 ``[R^{ba}_c]^κ_μ [R^{ab}_c]^μ_ν = \frac{\theta_c}{θ_a θ_b} δ^κ_ν``
+
+or graphically
+
+![twistproperty](img/diagram-twistproperty.svg)
 
 If ``a = \bar{a}``, we can furthermore relate the twist, the braiding and the Frobenius-
 Schur indicator via ``θ_a χ_a R^{aa}_1 =1``, because of
@@ -937,6 +992,10 @@ topological sectors in topological quantum states of matter. Thereto, one define
 modular S matrix, defined as
 
 ``S_{a,b} = \frac{1}{D} \mathrm{tr}(τ_{a,b} ∘ τ_{b,a}) = \frac{1}{D} ∑_c N^{ab}_c d_c \frac{θ_c}{θ_a θ_b}.``
+
+or graphically
+
+![Smatrix](img/diagram-Smatrix.svg)
 
 The normalization constant is given by ``D = \sqrt{\sum_a d_a^2}``, and thus truly requires
 a fusion category with a finite number of (isomorphism classes of) simple objects. For a
