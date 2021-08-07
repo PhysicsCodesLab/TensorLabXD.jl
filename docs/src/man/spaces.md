@@ -332,14 +332,15 @@ Base.getindex(W::TensorMapSpace{<:IndexSpace, N₁, N₂}, i) where {N₁, N₂}
 ## [VectorSpace type](@id ss_vectorspace_type)
 
 From the [Introduction](@ref s_intro), it should be clear that an important aspect in the
-definition of a tensor (map) is specifying the vector spaces and their structure in the domain and codomain of the map. The starting point is an abstract type `VectorSpace`
+definition of a tensor (map) is specifying the vector spaces and their structure in the
+domain and codomain of the map. The starting point is an abstract type `VectorSpace`
 ```julia
 abstract type VectorSpace end
 ```
 which is actually a too restricted name. All instances of subtypes of `VectorSpace` will
 represent objects in ``𝕜``-linear monoidal categories, but this can go beyond normal
 vector spaces (i.e. objects in the category ``\mathbf{Vect}``) and even beyond objects of
-``\mathbf{SVect}``. However, in order not to make the remaining discussion to abstract
+``\mathbf{SVect}``. However, in order not to make the remaining discussion too abstract
 or complicated, we will simply refer to subtypes of `VectorSpace` instead of specific
 categories, and to spaces (i.e. `VectorSpace` instances) instead of objects from these
 categories. In particular, we define two abstract subtypes
@@ -421,7 +422,7 @@ methods
 For convenience, the dual of a space `V` can also be obtained as `V'`.
 
 There is concrete type `GeneralSpace` which is completely characterized by its field `𝕜`,
-its dimension and whether its the dual and/or complex conjugate of $𝕜^d$.
+its dimension and whether its the dual and/or complex conjugate of ``𝕜^d``.
 ```julia
 struct GeneralSpace{𝕜} <: ElementarySpace{𝕜}
     d::Int
@@ -435,18 +436,16 @@ We furthermore define the abstract type
 abstract type InnerProductSpace{𝕜} <: ElementarySpace{𝕜} end
 ```
 to contain all vector spaces `V` which have an inner product and thus a canonical mapping
-from `dual(V)` to `V` (for `𝕜 ⊆ ℝ`) or from `dual(V)` to `conj(V)` (otherwise). This
-mapping is provided by the metric, but no further support for working with metrics is
-currently implemented.
+from `dual(V)` to `conj(V)`. This mapping is provided by the metric, but no further support
+for working with metrics is currently implemented.
 
 Finally there is
 ```julia
 abstract type EuclideanSpace{𝕜} <: InnerProductSpace{𝕜} end
 ```
 to contain all spaces `V` with a standard Euclidean inner product (i.e. where the metric is
-the identity). These spaces have the natural isomorphisms `dual(V) == V` (for `𝕜 == ℝ`)
-or `dual(V) == conj(V)` (for ` 𝕜 == ℂ`). In the language of the previous section on
-[categories](@ref s_categories), this subtype represents
+the identity). These spaces have the natural isomorphisms `dual(V) == conj(V)`. In the
+language of the previous section on [categories](@ref s_categories), this subtype represents
 [dagger or unitary categories](@ref ss_adjoints), and support an `adjoint` operation. In
 particular, we have two concrete types
 ```julia
@@ -459,16 +458,16 @@ struct ComplexSpace <: EuclideanSpace{ℂ}
 end
 ```
 to represent the Euclidean spaces $ℝ^d$ or $ℂ^d$ without further inner structure. They can
-be created using the syntax `CartesianSpace(d) == ℝ^d == ℝ[d]` and
-`ComplexSpace(d) == ℂ^d == ℂ[d]`, or
-`ComplexSpace(d, true) == ComplexSpace(d; dual = true) == (ℂ^d)' == ℂ[d]'` for the
-dual space of the latter. Note that the brackets are required because of the precedence
+be created using the syntax `CartesianSpace(d) == ℝ^d == ℝ[](d)` and
+`ComplexSpace(d) == ℂ^d == ℂ[](d)`, or
+`ComplexSpace(d, true) == ComplexSpace(d; dual = true) == (ℂ^d)' == ℂ[](d)'` for the
+dual space of ``\mathbb{C}^d``. Note that the brackets are required because of the precedence
 rules, since `d' == d` for `d::Integer`.
 
 Some examples:
 ```@repl TensorXD
 dim(ℝ^10)
-(ℝ^10)' == ℝ^10 == ℝ[10] == ℝ[](10)
+(ℝ^10)' == ℝ^10 == ℝ[](10)
 isdual((ℂ^5))
 isdual((ℂ^5)')
 isdual((ℝ^5)')
@@ -477,9 +476,9 @@ typeof(ℝ^3)
 spacetype(ℝ^3)
 spacetype(ℝ[])
 ```
-Note that `ℝ[]` and `ℂ[]` are synonyms for `CartesianSpace` and `ComplexSpace` respectively,
-such that yet another syntax is e.g. `ℂ[](d)`. This is not very useful in itself, and is
-motivated by its generalization to `GradedSpace`. We refer to the subsection on
+Note that `ℝ[]` and `ℂ[]` are synonyms for `CartesianSpace` and `ComplexSpace` respectively.
+This is not very useful in itself, and is motivated by its generalization to `GradedSpace`.
+We refer to the subsection on
 [graded spaces](@ref s_rep) on the [next page](@ref s_sectorsrepfusion) for further
 information about `GradedSpace`, which is another subtype of `EuclideanSpace{ℂ}`
 with an inner structure corresponding to the irreducible representations of a group, or more
@@ -526,8 +525,8 @@ spacetype(V1 ⊗ V2)
 spacetype(ProductSpace{ComplexSpace,3})
 ```
 Here, the new function `dims` maps `dim` to the individual spaces in a `ProductSpace` and
-returns the result as a tuple. Note that the rationale for the last result was explained in
-the subsection on [duality](@ref ss_dual) in the introduction to
+returns the result as a tuple. Note that the rationale for ``dual(V1 ⊗ V2)`` was
+explained in the subsection on [duality](@ref ss_dual) in the introduction to
 [category theory](@ref s_categories).
 
 Following Julia's Base library, the function `one` applied to a `ProductSpace{S,N}` returns
@@ -593,11 +592,11 @@ Vector spaces of the same `spacetype` can be given a partial order, based on whe
 exist injective morphisms (a.k.a *monomorphisms*) or surjective morphisms (a.k.a.
 *epimorphisms*) between them. In particular, we define `ismonomorphic(V1, V2)`, with
 Unicode synonym `V1 ≾ V2` (obtained as `\precsim+TAB`), to express whether there exist
-monomorphisms in `V1→V2`. Similarly, we define `isepimorphic(V1, V2)`, with Unicode
+monomorphisms in `V1 → V2`. Similarly, we define `isepimorphic(V1, V2)`, with Unicode
 synonym `V1 ≿ V2` (obtained as `\succsim+TAB`), to express whether there exist
-epimorphisms in `V1→V2`. Finally, we define `isisomorphic(V1, V2)`, with Unicode
+epimorphisms in `V1 → V2`. Finally, we define `isisomorphic(V1, V2)`, with Unicode
 alternative `V1 ≅ V2` (obtained as `\cong+TAB`), to express whether there exist
-isomorphism in `V1→V2`. In particular `V1 ≅ V2` if and only if `V1 ≾ V2 && V1 ≿ V2`.
+isomorphism in `V1 → V2`. In particular `V1 ≅ V2` if and only if `V1 ≾ V2 && V1 ≿ V2`.
 
 For completeness, we also export the strict comparison operators `≺` and `≻` (`\prec+TAB` and `\succ+TAB`), with definitions
 ```julia
@@ -608,7 +607,7 @@ However, as we expect these to be less commonly used, no ASCII alternative is pr
 
 In the context of `spacetype(V) <: EuclideanSpace`, `V1 ≾ V2` implies that there exists
 isometries ``W:V1 → V2`` such that ``W^† ∘ W = \mathrm{id}_{V1}``, while `V1 ≅ V2` implies
-that there exist unitaries ``U:V1→V2`` such that ``U^† ∘ U = \mathrm{id}_{V1}`` and
+that there exist unitaries ``U:V1 → V2`` such that ``U^† ∘ U = \mathrm{id}_{V1}`` and
 ``U ∘ U^† = \mathrm{id}_{V2}``.
 
 Note that spaces that are isomorphic are not necessarily equal. One can be a dual space,
