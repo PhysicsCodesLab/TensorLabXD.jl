@@ -555,6 +555,16 @@ function iscyclicpermutation(p)
 end
 
 """
+    iscyclicpermutation(v1, v2)
+
+Check whether `v1` is a cyclic permutation of `v2`.
+"""
+function iscyclicpermutation(v1, v2)
+    length(v1) == length(v2) || return false
+    return iscyclicpermutation(indexin(v1, v2))
+end
+
+"""
     transpose(f1::FusionTree{I}, f2::FusionTree{I},
             p1::NTuple{N₁, Int}, p2::NTuple{N₂, Int}) where {I, N₁, N₂}
     -> <:AbstractDict{Tuple{FusionTree{I, N₁}, FusionTree{I, N₂}}, <:Number}

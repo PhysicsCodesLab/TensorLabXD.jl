@@ -381,7 +381,7 @@ the domain or codomain of a tensor map , i.e. within a tensor product
 ``V_1 ⊗ V_2 ⁠⊗ … V_N`` requires additional structure.
 
 We need a **braided tensor category** ``C``, which is endowed with a *braiding* ``τ``, i.e.,
-a natural isomorphism ``τ_{V,W}:V⊗W → W⊗V`` with ``V,W ∈ \mathrm{Ob}(C)}`` between the
+a natural isomorphism ``τ_{V,W}:V⊗W → W⊗V`` with ``V,W ∈ \mathrm{Ob}(C)`` between the
 functors ``⊗`` and ``⊗^{\mathrm{op}}`` such that
 
 ``τ_{V,V′}∘(f ⊗ g) = (g ⊗ f)∘τ_{W,W′}``
@@ -953,7 +953,7 @@ or graphically
 ![simpletwist](img/diagram-simpletwist.svg)
 
 Henceforth, we reserve ``θ_a`` for the scalar value itself, that is, ``θ_a`` is the value of
-the `8`-type braiding and called as **topological spin**
+the 8-type braiding and called as **topological spin**
 
 ![topologicalspin](img/diagram-topologicalspin.svg)
 
