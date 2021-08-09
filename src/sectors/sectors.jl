@@ -99,7 +99,6 @@ Extend `Base.isless()`. Give a partial order between simple objects in Sector `I
 Base.isless(a::I, b::I) where {I<:Sector} = isless(a,b)
 
 # Fusion
-#===============================================================================#
 abstract type FusionStyle end
 struct UniqueFusion <: FusionStyle end # unique fusion output when fusion two sectors
 
@@ -128,6 +127,8 @@ Return the type of fusion behavior of sector `I`, which can be either
     of ``SU(3)``).
 There is an abstract supertype `MultipleFusion` of which both `SimpleFusion` and
 `GenericFusion` are subtypes.
+
+Each secteor should implement this function to indicate which fusion style it has.
 """
 FusionStyle(a::Sector) = FusionStyle(typeof(a))
 
@@ -287,20 +288,7 @@ function Bsymbol(a::I, b::I, c::I) where {I<:Sector}
     end
 end
 
-# Not necessary
-function Asymbol(a::I, b::I, c::I) where {I<:Sector}
-    if FusionStyle(I) isa UniqueFusion || FusionStyle(I) isa SimpleFusion
-        (sqrtdim(a)*sqrtdim(b)*isqrtdim(c))*
-            conj(frobeniusschur(a)*Fsymbol(dual(a), a, b, b, one(a), c))
-    else
-        reshape((sqrtdim(a)*sqrtdim(b)*isqrtdim(c))*
-                    conj(frobeniusschur(a)*Fsymbol(dual(a), a, b, b, one(a), c)),
-                (Nsymbol(a, b, c), Nsymbol(dual(a), c, b)))
-    end
-end
-
 # Braiding
-#===============================================================================#
 abstract type BraidingStyle end # generic braiding
 abstract type HasBraiding <: BraidingStyle end
 struct NoBraiding <: BraidingStyle end
@@ -333,6 +321,8 @@ Return the type of braiding and twist behavior of simple objects of type `I`, wh
 Note that `Bosonic` and `Fermionic` are subtypes of `SymmetricBraiding`, which means that
 braids are in fact equivalent to crossings (i.e. braiding twice is an identity:
 `isone(Rsymbol(b,a,c)*Rsymbol(a,b,c)) == true`) and permutations are uniquely defined.
+
+Each secteor should implement this function to indicate which braiding style it has.
 """
 BraidingStyle(a::Sector) = BraidingStyle(typeof(a))
 

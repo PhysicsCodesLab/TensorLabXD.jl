@@ -2,7 +2,7 @@
 
 ```@setup sectors
 using TensorXD
-using LinearAlgebra
+import LinearAlgebra.I
 ```
 ### Types
 ```julia
@@ -286,14 +286,13 @@ Let the different irreps or sectors be labeled as ``a``, ``b``, ``c``, … First
 we need to specify the *fusion rules* ``a ⊗ b = ⨁ N^{ab}_{c} c`` with ``N^{ab}_{c}`` some
 non-negative integers. There should always exists a unique trivial sector ``u`` (called the
 identity object ``I`` or ``1`` in the language of categories) such that
-``a ⊗ u = a = u ⊗ a``. Furthermore, there should exist a unique sector ``\bar{a}``
+``a ⊗ u = a = u ⊗ a``. There should exist a unique sector ``\bar{a}``
 such that ``N^{a\bar{a}}_{u} = 1``, whereas for all ``b \neq \bar{a}``,
 ``N^{ab}_{u} = 0``. For unitary irreps of groups, ``\bar{a}`` corresponds to the
 complex conjugate of the representation ``a``, or a representation isomorphic to it.
-(**This solves my question about why we call the sector ``\bar{a}`` as complex conjugate
-of ``a`` in the codes even for anyons.**) Forexample, for the representations of ``\mathsf{SU}_2``,
-the trivial sector corresponds to spin zero and all irreps are self-dual (i.e. ``a = \bar{a}``), meaning
-that the conjugate representation is isomorphic to the non-conjugated one (they are however not
+For example, for the representations of ``\mathsf{SU}_2``, the trivial sector corresponds
+to spin zero and all irreps are self-dual (i.e. ``a = \bar{a}``), meaning that the conjugate
+representation is isomorphic to the non-conjugated one (they are not
 equal but related by a similarity transform).
 
 The meaning of the fusion rules is that the space of transformations ``R_a ⊗ R_b → R_c``
@@ -301,11 +300,11 @@ The meaning of the fusion rules is that the space of transformations ``R_a ⊗ R
 basis consisting of unitary tensor maps ``X^{ab}_{c,μ} : R_c → R_a ⊗ R_b`` with
 ``μ = 1, …, N^{ab}_c`` such that
 
-``(X^{ab}_{c,μ})^† X^{ab}_{c,ν} = δ_{μ,ν} \mathrm{id}_{R_c}``
+``(X^{ab}_{c,μ})^†\circ X^{ab}_{c,ν} = δ_{μ,ν} \mathrm{id}_{R_c}``
 
 and
 
-``\sum_{c} \sum_{μ = 1}^{N^{ab}_c} X^{ab}_{c,μ} (X^{ab}_{c,μ})^\dagger = \mathrm{id}_{R_a ⊗ R_b}``
+``\sum_{c} \sum_{μ = 1}^{N^{ab}_c} X^{ab}_{c,μ}\circ (X^{ab}_{c,μ})^\dagger = \mathrm{id}_{R_a ⊗ R_b}``
 
 The tensors ``X^{ab}_{c,μ}`` are the splitting tensors, their hermitian conjugate are the
 fusion tensors. They are only determined up to a unitary basis transform within the space,
@@ -333,9 +332,7 @@ There is a graphical representation associated with the fusion tensors and their
 
 ![summary](img/tree-summary.svg)
 
-As always, we refer to the subsection on [topological data of a unitary fusion category](@ref ss_topologicalfusion) for further details.
-
-Finally, for the implementation, it will be useful to distinguish between an number of
+For the implementation, it will be useful to distinguish between an number of
 different possibilities regarding the fusion rules. If, for every ``a`` and ``b``, there is
 a unique ``c`` such that ``a ⊗ b = c`` (i.e. ``N^{ab}_{c} = 1`` and ``N^{ab}_{c′} = 0`` for
 all other ``c′``), the category is abelian. Indeed, the representations of a group have this
@@ -449,8 +446,8 @@ New sector types `I<:Sector` should then indicate which fusion style they have b
 
 In a similar manner, it is useful to distinguish between different styles of braiding.
 Remember that for group representations, braiding acts as swapping or permuting the vector
-spaces involved. By definition, applying this operation twice leads us back to the original
-situation. If that is the case, the braiding is said to be symmetric. For more general
+spaces involved. If applying this operation twice leads us back to the original
+situation, the braiding is symmetric. For more general
 fusion categories, associated with the physics of anyonic particles, this is generally not
 the case and, as a result, permutations of tensor indices are not unambiguously defined.
 The correct description is in terms of the braid group. This will be discussed in more
@@ -499,9 +496,9 @@ The `Trivial` sector type is special cased in the construction of tensors, so th
 these definitions are not actually used.
 
 The most important class of sectors are irreducible representations of groups, for which we
-have an abstract supertype `AbstractIrrep{G}` that is parameterized on the type of group `G`. While
-the specific implementations of `AbstractIrrep{G}` depend on `G`, one can easily obtain the
-concrete type without knowing its name as `Irrep[G]`.
+have an abstract supertype `AbstractIrrep{G}` that is parameterized on the type of group `G`.
+While the specific implementations of `AbstractIrrep{G}` depend on `G`, one can easily
+obtain the concrete type without knowing its name as `Irrep[G]`.
 
 A number of groups have been defined, namely
 ```julia
@@ -527,7 +524,8 @@ For all group irreps, the braiding style is bosonic
 abstract type AbstractIrrep{G<:Group} <: Sector end # irreps have integer quantum dimensions
 BraidingStyle(::Type{<:AbstractIrrep}) = Bosonic()
 ```
-while we gather some more common functionality for irreps of abelian groups (which exhaust all possibilities of fusion categories with abelian fusion)
+while we gather some more common functionality for irreps of abelian groups (which exhaust
+all possibilities of fusion categories with abelian fusion)
 ```julia
 const AbelianIrrep{G} = AbstractIrrep{G} where {G<:AbelianGroup}
 FusionStyle(::Type{<:AbelianIrrep}) = UniqueFusion()
@@ -591,7 +589,7 @@ findindex(::SectorValues{U1Irrep}, c::U1Irrep) = (n = twice(c.charge); 2*abs(n)+
 The `getindex` definition just below the type definition provides the mechanism to get the
 concrete type as `Irrep[G]` for a given group `G`. Here, `IrrepTable` is the singleton type
 of which the constant `Irrep` is the only instance. The `Base.convert` definition allows to
-convert real numbers to the corresponding type of sector, and thus to omit the type
+convert real numbers to the instance of corresponding sector, and thus to omit the type
 information of the sector whenever this is clear from the context.
 
 In the definition of `U1Irrep`, `HalfInt<:Number` is a Julia type defined in
@@ -694,11 +692,11 @@ end
 A final non-abelian representation theory is that of the semidirect product
 ``\mathsf{U}₁ ⋉ ℤ_2``, where in the context of quantum systems, this occurs in the case of
 systems with particle hole symmetry and the non-trivial element of ``ℤ_2`` acts as charge
-conjugation ``C``. It has the effect of interchaning ``\mathsf{U}_1`` irreps ``n`` and
+conjugation ``C``. It has the effect of interchanging ``\mathsf{U}_1`` irreps ``n`` and
 ``-n``, and turns them together in a joint 2-dimensional index, except for the case
 ``n=0``. Irreps are therefore labeled by integers ``n ≧ 0``, however for ``n=0`` the ``ℤ₂``
 symmetry can be realized trivially or non-trivially, resulting in an even and odd one-
-dimensional irrep with ``\mathsf{U})_1`` charge ``0``. Given
+dimensional irrep with ``\mathsf{U}_1`` charge ``0``. Given
 ``\mathsf{U}_1 ≂ \mathsf{SO}_2``, this group is also simply known as ``\mathsf{O}_2``, and
 the two representations with `` n = 0`` are the scalar and pseudo-scalar, respectively.
 However, because we also allow for half integer representations, we refer to it as
@@ -911,7 +909,7 @@ decomposition, such that two different but equal instances created independently
 match.
 
 If `IteratorSize(values(I)) isa Union{HasLength, HasShape}`, the degeneracy dimensions
-`n_a` are stored for all sectors `a ∈ values(I)` (also if `n_a == 0`) in a tuple, more
+``n_a`` are stored for all sectors `a ∈ values(I)` (also if ``n_a == 0``) in a tuple, more
 specifically a `NTuple{N, Int}` with `N = length(values(I))`. The methods
 `getindex(values(I), i)` and `findindex(values(I), a)` are used to map between a sector
 `a ∈ values(I)` and a corresponding index `i ∈ 1:N`. As `N` is a compile time constant,
@@ -965,11 +963,11 @@ more convenient to specify the sector type explicitly (using one of the many ali
 provided), since then the sectors are automatically converted to the correct type; compare
 ```@repl sectors
 Vect[Irrep[U₁]](0=>3, 1=>2, -1=>1) ==
-    ℂ[U1Irrep(0)=>3, U1Irrep(1)=>2, U1Irrep(-1)=>1] == U1Space(0=>3, 1=>2, -1=>1)
+    GradedSpace(U1Irrep(0)=>3, U1Irrep(1)=>2, U1Irrep(-1)=>1) == U1Space(0=>3, 1=>2, -1=>1)
 ```
 The fact that `Rep[G]` also works with product groups makes it easy to specify e.g.
 ```@repl sectors
-Rep[ℤ₂ × SU₂]((0,0) => 3, (1,1/2) => 2, (0,1) => 1) == ℂ[(Z2Irrep(0) ⊠ SU2Irrep(0)) => 3, (Z2Irrep(1) ⊠ SU2Irrep(1/2)) => 2, (Z2Irrep(0) ⊠ SU2Irrep(1)) => 1]
+Rep[ℤ₂ × SU₂]((0,0) => 3, (1,1/2) => 2, (0,1) => 1) == GradedSpace((Z2Irrep(0) ⊠ SU2Irrep(0)) => 3, (Z2Irrep(1) ⊠ SU2Irrep(1/2)) => 2, (Z2Irrep(0) ⊠ SU2Irrep(1)) => 1)
 ```
 
 ### Methods
@@ -980,10 +978,11 @@ returns an iterator over the different sectors `a` with non-zero `n_a`, for othe
 `ElementarySpace` types it returns `(Trivial(),)`. The degeneracy dimensions `n_a` can be
 extracted as `dim(V, a)`, it properly returns `0` if sector `a` is not present in the
 decomposition of `V`. With [`hassector(V, a)`](@ref) one can check if `V` contains a sector
-`a` with `dim(V,a)>0`. Finally, `dim(V)` returns the total dimension of the space `V`, i.e.
-``∑_a n_a d_a`` or thus `dim(V) = sum(dim(V,a) * dim(a) for a in sectors(V))`. Note that a
+`a` with `dim(V,a)>0`. The `dim(V)` returns the total dimension of the space `V`, i.e.
+``∑_a n_a d_a``. Note that a
 representation space `V` has certain sectors `a` with dimensions `n_a`, then its dual `V'`
-will report to have sectors `dual(a)`, and `dim(V', dual(a)) == n_a`. There is a subtelty
+will report to have sectors `dual(a)`, and `dim(V', dual(a)) == n_a`.
+There is a subtelty
 regarding the difference between the dual of a representation space ``R_a^*``, on which the
 conjugate representation acts, and the representation space of the irrep `dual(a)==conj(a)`
 that is isomorphic to the conjugate representation, i.e. ``R_{\overline{a}} ≂ R_a^*`` but
@@ -1257,7 +1256,7 @@ Diagrammatically, it is:
 ```julia
 elementary_trace(f::FusionTree{I, N}, i) where {I<:Sector, N}
 ```
-Take the trace of the ``i``th and ``i+1~\mathrm{mod}~N``th outgoing sectors of the
+Take the trace of the ``i``th and ``(i+1~\mathrm{mod}~N)``th outgoing sectors of the
 splitting tree `f` by an evaluation map.
 Diagrammatically, it is:
 
