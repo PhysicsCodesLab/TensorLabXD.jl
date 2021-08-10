@@ -327,7 +327,10 @@ The full derivation of the above argument is
 \begin{aligned}
 t &= \sum_{a_1,...,a_{N_1}}\sum_{b_1,...,b_{N_2}}\sum_{i = 1}^{n_{a_1}*\cdots *n_{a_{N_1}}}
 \sum_{j = 1}^{n_{b_1}*\cdots *n_{b_{N_2}}} t^{ij}_{(a_1,...,a_{N_1}),(b_1,...,b_{N_2})}\\
-&= sss
+&=  \sum_{a_1,...,a_{N_1}}\sum_{b_1,...,b_{N_2}}\sum_{i = 1}^{n_{a_1}*\cdots *n_{a_{N_1}}}
+\sum_{j = 1}^{n_{b_1}*\cdots *n_{b_{N_2}}}\sum_{c_a,\alpha}\sum_{c_b,\beta}
+X^{a_1...a_{N_1}}_{c_a,\alpha}\circ t^{i,j,c_a,c_b}_{(a_1,...,a_{N_1})\alpha,(b_1,...,b_{N_2})\beta}
+\circ (X^{b_1...b_{N_2}}_{c_b,\beta})^{\dag}
 \end{aligned}
 ```
 
