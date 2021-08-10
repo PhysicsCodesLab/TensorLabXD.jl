@@ -60,7 +60,6 @@ const EuclideanTensorSpace = TensorSpace{<:EuclideanSpace}
 const EuclideanTensorMapSpace = TensorMapSpace{<:EuclideanSpace}
 const AbstractEuclideanTensorMap = AbstractTensorMap{<:EuclideanTensorSpace}
 const EuclideanTensorMap = TensorMap{<:EuclideanTensorSpace}
-[Q]: Could we define the `AbstractTensorMap{<:EuclideanTensorSpace}`? EuclideanTensorSpace is not an index space.
 ```
 ### Properties
 On both instances and types:
@@ -249,7 +248,7 @@ sectors `(a1, a2, …, aN₁) ∈ sectors(V1 ⊗ V2 ⊗ … ⊗ VN₁)` and
 the form of a multidimensional array with size
 `(dim(V1, a1), …, dim(VN₁, aN₁), dim(W1, b1), …, dim(WN₂, bN₂))`, or equivalently, a matrix
 of with row size `dim(V1, a1)*…*dim(VN₁, aN₁) == dim(codomain, (a1, …, aN₁))` and column
-size `dim(W1, b1)*…*dim(WN₂, aN₂) == dim(domain, (b1, …, bN₂))`.
+size `dim(W1, b1)*…*dim(WN₂, bN₂) == dim(domain, (b1, …, bN₂))`.
 
 However, there are multiple combinations of `(a1, …, aN₁)` giving rise to the same `c`, and
 so there is data associated with all of these, as well as all possible combinations of
@@ -265,7 +264,8 @@ sectors that fuse to the same `c`, and the resulting block diagonal representati
 emerge. This basis transform is thus a permutation, which is a unitary operation, that will
 cancel or go through trivially for linear algebra operations such as composing tensor maps
 (matrix multiplication) or tensor factorizations such as a singular value decomposition. For
-such linear algebra operations, we can thus directly act on these diagonal blocks that emerge after a basis transform, provided that the
+such linear algebra operations, we can thus directly act on these diagonal blocks that
+emerge after a basis transform, provided that the
 partition of the tensor indices in domain and codomain of the tensor are in line with our
 needs. For example, composing two tensor maps amounts to multiplying the matrices
 corresponding to the same `c` (provided that its subblocks labeled by the different
@@ -310,7 +310,7 @@ unitary basis transform which makes this matrix representation block diagonal, m
 specifically, of the form ``⨁_{c} B_c ⊗ 𝟙_{c}``, where ``B_c`` denotes `block(t,c)` and
 ``𝟙_{c}`` is an identity matrix of size `(dim(c), dim(c))`. The reason for this extra
 identity is that the group representation is recoupled to act as ``⨁_{c} 𝟙 ⊗ u_c(g)`` for
-all ``g ∈ \mathsf{I}``, with ``u_c(g)`` the matrix representation of group element ``g``
+all ``g ∈ \mathsf{G}``, with ``u_c(g)`` the matrix representation of group element ``g``
 according to the irrep ``c``. In the abelian case, `dim(c) == 1`, i.e. all irreducible
 representations are one-dimensional and Schur's lemma only dictates that all off-diagonal
 blocks are zero. However, in the non-Abelian case the basis transform to the block diagonal
@@ -319,7 +319,21 @@ composed of the different fusion trees. Indeed, let us denote the fusion trees `
 fusiontrees((a1, …, aN₁), c)` as ``X^{a_1, …, a_{N₁}}_{c,α}`` where
 ``α = (e_1, …, e_{N_1-2}; μ₁, …, μ_{N_1-1})`` is a collective label for the internal sectors
 `e` and the vertex degeneracy labels `μ` of a generic fusion tree, as discussed in the
-[corresponding section](@ref ss_fusiontrees). The tensor is then represented as
+[corresponding section](@ref ss_fusiontrees).
+
+The full derivation of the above argument is
+
+```math
+\begin{aligned}
+t &= \sum_{a_1,...,a_{N_1}}\sum_{b_1,...,b_{N_2}}\sum_{i = 1}^{n_{a_1}*\cdots *n_{a_{N_1}}}
+\sum_{j = 1}^{n_{b_1}*\cdots *n_{b_{N_2}}} t^{ij}_{(a_1,...,a_{N_1}),(b_1,...,b_{N_2})}\\
+&= sss
+\end{aligned}
+```
+
+
+
+The tensor is then represented as
 
 ![tensor storage](img/tensor-decomposition.png)
 
