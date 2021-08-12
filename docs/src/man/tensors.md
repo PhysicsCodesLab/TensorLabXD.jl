@@ -239,6 +239,51 @@ below, can act directly on this matrix representation.
     properties and would thus not constitute the matrix representation of the tensor in a
     compatible basis.
 
+In the general case 
+
+```math
+\begin{aligned}
+t &= \sum_{a_1,...,a_{N_1}}\sum_{b_1,...,b_{N_2}}\sum_{i = 1}^{n_{a_1}*\cdots *n_{a_{N_1}}}
+\sum_{j = 1}^{n_{b_1}*\cdots *n_{b_{N_2}}} t^{ij}_{(a_1,...,a_{N_1}),(b_1,...,b_{N_2})}\\
+&=  \sum_{a_1,...,a_{N_1}}\sum_{b_1,...,b_{N_2}}\sum_{i = 1}^{n_{a_1}*\cdots *n_{a_{N_1}}}
+\sum_{j = 1}^{n_{b_1}*\cdots *n_{b_{N_2}}}\sum_{c_a,\alpha}\sum_{c_b,\beta}
+X^{a_1...a_{N_1}}_{c_a,\alpha}\circ t^{i,j,c_a,c_b}_{(a_1,...,a_{N_1})\alpha,(b_1,...,b_{N_2})\beta}
+\circ (X^{b_1...b_{N_2}}_{c_b,\beta})^{†}
+\end{aligned}
+```
+where ``t^{i,j,c_a,c_b}_{\alpha,\beta}`` is a tensor map
+from ``c_b`` to ``c_a``.
+
+A symmetric tensor map should satisfy ``U_1 t = t U_2``, thus for each term of ``t``, we
+have
+
+``U_a X^a_{c_a,\alpha} t^{i,j,c_a,c_b}_{\alpha,\beta} (X^{b}_{c_b,\beta})^{†} = X^a_{c_a,\alpha} t^{i,j,c_a,c_b}_{\alpha,\beta} (X^{b}_{c_b,\beta})^{†} U_b``.
+
+Write ``U_{c_a} = (X^a_{c_a,\alpha})^{†} U_a X^a_{c_a,\alpha}`` and
+``U_{c_b} = (X^{b}_{c_b,\beta})^{†} U_b X^{b}_{c_b,\beta}``, we get
+``U_{c_a} t^{i,j,c_a,c_b}_{\alpha,\beta} = t^{i,j,c_a,c_b}_{\alpha,\beta} U_{c_b}``.
+
+From Schur's lemma, we know ``t^{c_a,c_b} = t^{c_a}\mathbb{1}_{c_a}\delta_{c_a,c_b}``, where
+``t^{c_a}`` is a complex number.
+
+Then, we obtain
+
+```math
+\begin{aligned}
+t &= \sum_{a_1,...,a_{N_1}}\sum_{b_1,...,b_{N_2}}\sum_{i = 1}^{n_{a_1}*\cdots *n_{a_{N_1}}}
+\sum_{j = 1}^{n_{b_1}*\cdots *n_{b_{N_2}}}\sum_{c,\alpha,\beta}
+X^{a_1...a_{N_1}}_{c,\alpha}\circ t^{i,j,c}_{\alpha,\beta}
+\mathbb{1}_c\circ (X^{b_1...b_{N_2}}_{c,\beta})^{†}\\
+& = \sum_{a_1,...,a_{N_1}}\sum_{b_1,...,b_{N_2}} \sum_{c,\alpha,\beta}
+(\mathbb{1}_{n_{a_1}*\cdots * n_{a_{N_1}}} \otimes X^{a_1...a_{N_1}}_{c,\alpha})
+\circ(t^c_{\alpha,\beta}\otimes \mathbb{1}_c)
+\circ(\mathbb{1}_{n_{b_1}*\cdots * n_{b_{N_2}}}
+\otimes X^{b_1...b_{N_2}}_{c,\beta})^{†}
+\end{aligned}
+```
+where ``t^c_{\alpha,\beta}`` is a matrix with dimension
+``(n_{a_1}*...*n_{a_{N_1}}) \times (n_{b_1}*...*n_{b_{N_2}})``.
+
 Now consider the case where `sectortype(S) == I` for some `I` which has
 `FusionStyle(I) == UniqueFusion()`, i.e. the representations of an Abelian group, e.g.
 `I == Irrep[ℤ₂]` or `I == Irrep[U₁]`. In this case, the tensor data is associated with
@@ -321,49 +366,17 @@ fusiontrees((a1, …, aN₁), c)` as ``X^{a_1, …, a_{N₁}}_{c,α}`` where
 `e` and the vertex degeneracy labels `μ` of a generic fusion tree, as discussed in the
 [corresponding section](@ref ss_fusiontrees).
 
-The full derivation of the above argument is
-
-```math
-\begin{aligned}
-t &= \sum_{a_1,...,a_{N_1}}\sum_{b_1,...,b_{N_2}}\sum_{i = 1}^{n_{a_1}*\cdots *n_{a_{N_1}}}
-\sum_{j = 1}^{n_{b_1}*\cdots *n_{b_{N_2}}} t^{ij}_{(a_1,...,a_{N_1}),(b_1,...,b_{N_2})}\\
-&=  \sum_{a_1,...,a_{N_1}}\sum_{b_1,...,b_{N_2}}\sum_{i = 1}^{n_{a_1}*\cdots *n_{a_{N_1}}}
-\sum_{j = 1}^{n_{b_1}*\cdots *n_{b_{N_2}}}\sum_{c_a,\alpha}\sum_{c_b,\beta}
-X^{a_1...a_{N_1}}_{c_a,\alpha}\circ t^{i,j,c_a,c_b}_{(a_1,...,a_{N_1})\alpha,(b_1,...,b_{N_2})\beta}
-\circ (X^{b_1...b_{N_2}}_{c_b,\beta})^{\daggar}
-\end{aligned}
-```
-where ``t^{i,j,c_a,c_b}_{(a_1,...,a_{N_1})\alpha,(b_1,...,b_{N_2})\beta}`` is a tensor map
-from ``c_b`` to ``c_a``.
-
-A symmetric tensor map should satisfy ``U_1 t = t U_2``, thus for each term of ``t``, we
-have
-
-``U_a X^a_{c_a} t^{i,j,c_a,c_b} (X^{b}_{c_b})^{\daggar} = X^a_{c_a} t^{i,j,c_a,c_b} (X^{b}_{c_b})^{\daggar} U_b``.
-
-Therefore, write ``U_{c_a} = (X^a_{c_a})^{\daggar} U_a X^a_{c_a}`` and
-``U_{c_b} = (X^{b}_{c_b})^{\daggar} U_b X^{b}_{c_b}``, we get
-``U_{c_a} t^{i,j,c_a,c_b} = t^{i,j,c_a,c_b} U_{c_b}``.
-
-From Schur's lemma, we know ``t^{c_a,c_b} = t^{c_a}\mathbb{1}_{c_a}\delta_{c_a,c_b}``, where
-``t^{c_a}`` is a complex number.
-
-Then, we obtain
-
-```math
-\begin{aligned}
-t &= \sum_{a_1,...,a_{N_1}}\sum_{b_1,...,b_{N_2}}\sum_{i = 1}^{n_{a_1}*\cdots *n_{a_{N_1}}}
-\sum_{j = 1}^{n_{b_1}*\cdots *n_{b_{N_2}}}\sum_{c,\alpha,\beta}
-X^{a_1...a_{N_1}}_{c,\alpha}\circ t^{i,j,c}_{(a_1,...,a_{N_1})\alpha,(b_1,...,b_{N_2})\beta}
-\mathbb{1}_c\circ (X^{b_1...b_{N_2}}_{c,\beta})^{\daggar}\\
-& = \sum_{a_1,...,a_{N_1}}\sum_{b_1,...,b_{N_2}} (\mathbb{1}_{n_{a_1}*\cdots * n_{a_{N_1}}}
-\otimes X^{a_1...a_{N_1}}_{c,\alpha})(t^c_{(a_1,...,a_{N_1})\alpha,(b_1,...,b_{N_2})\beta}
-\otimes \mathbb{1}_c)(\mathbb{1}_{n_{b_1}*\cdots * n_{b_{N_2}}}
-\otimes X^{b_1...b_{N_2}}_{c,\beta})^{\daggar}
-\end{aligned}
-```
-
 The tensor is then represented as
+
+```math
+\begin{aligned}
+t  = \sum_{a_1,...,a_{N_1}}\sum_{b_1,...,b_{N_2}} \sum_{c,\alpha,\beta}
+(\mathbb{1}_{n_{a_1}*\cdots * n_{a_{N_1}}} \otimes X^{a_1...a_{N_1}}_{c,\alpha})
+\circ(t^c_{\alpha,\beta}\otimes \mathbb{1}_c)
+\circ(\mathbb{1}_{n_{b_1}*\cdots * n_{b_{N_2}}}
+\otimes X^{b_1...b_{N_2}}_{c,\beta})^{†}
+\end{aligned}
+```
 
 ![tensor storage](img/tensor-decomposition.png)
 
