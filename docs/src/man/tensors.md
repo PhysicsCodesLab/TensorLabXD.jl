@@ -393,23 +393,8 @@ t  = \sum_c\sum_{a_1,...,a_{N_1}}\sum_{b_1,...,b_{N_2}} \sum_{\alpha,\beta}
 
 In this diagram, we have indicated how the tensor map can be rewritten in terms of a block
 diagonal matrix with a unitary matrix on its left and another unitary matrix (if domain and
-codomain are different) on its right. So the left and right matrices should actually have
-been drawn as squares. They represent the unitary basis transform. In this picture, the
-white regions are zero.
-
-![tensor center_tensor](img/tensor-center_tensor.png)
-
-The center matrix is most easy to interpret. It is the block
-diagonal matrix ``⨁_{c} B_c ⊗ 𝟙_{c}`` with diagonal blocks labeled by the coupled charge
-`c`, in this case it takes two values. Every single small square in between the dotted or
-dashed lines has size ``d_c × d_c`` and corresponds to a single element of ``B_c``,
-tensored with the identity ``\mathbb{1}_c``. The ``B_c`` for a fixed `c` composed by smaller
-blocks ``t^c_{(a_1,...,a_{N_1})\alpha,(b_1,...,b_{N_2})\beta}`` which are labeled by
-different fusion trees with the coupled sector `c`. The dashed horizontal lines indicate
-regions corresponding to different splitting trees, either because of different sectors
-``(a_1 … a_{N₁})`` or different labels ``α`` within the same sector. Similarly, the dashed
-vertical lines define the border between regions of different fusion trees from the domain
-to `c`, either because of different sectors ``(b_1 … b_{N₂})`` or a different label ``β``.
+codomain are different) on its right. So the left and right matrices are squares and
+represent the unitary basis transform. In this picture, the white regions are zero.
 
 To understand this better, we need to understand the basis transform, e.g. on the left
 (codomain) side. In more detail, it is given by
@@ -421,35 +406,51 @@ representation space on which irrep ``a_i`` acts (with dimension ``\mathrm{dim}(
 find
 ``V_1 ⊗ … ⊗ V_{N_1} = ⨁_{a_1, …, a_{N₁}} ℂ^{n_{a_1} × … n_{a_{N_1}}} ⊗ (R_{a_1} ⊗ … ⊗ R_{a_{N_1}})``.
 In the diagram above, the red lines correspond to the direct sum over the different
-sectors ``(a_1, …, a_{N₁})``, there depicted taking three possible values ``(a…)``,
-``(a…)′`` and ``(a…)′′``. The tensor product
+sectors ``(a_1, …, a_{N₁})``, there depicted taking three possible values ``(a)``,
+``(a')`` and ``(a'')``, where ``(a)`` is a simplified notation for a certain
+``(a_1, …, a_{N₁})``. The tensor product
 ``ℂ^{n_{a_1} × … n_{a_{N_1}}} ⊗ (R_{a_1} ⊗ … ⊗ R_{a_{N_1}})`` is depicted as
 ``(R_{a_1} ⊗ … ⊗ R_{a_{N_1}})^{⊕ n_{a_1} × … n_{a_{N_1}}}``, i.e. as a direct sum of the
-spaces ``R_{(a…)} = (R_{a_1} ⊗ … ⊗ R_{a_{N_1}})`` according to the dotted horizontal lines,
-which repeat ``n_{(a…)} = n_{a_1} × … n_{a_{N_1}}`` times. In this particular example,
-``n_{(a…)}=2``, ``n_{(a…)'}=3`` and ``n_{(a…)''}=5``. The thick vertical line represents the
-separation between the two different coupled sectors, denoted as ``c`` and ``c'``. Dashed
+spaces ``R_{(a)} = (R_{a_1} ⊗ … ⊗ R_{a_{N_1}})`` according to the dotted horizontal lines,
+which repeat ``n_{(a)} = n_{a_1} × … n_{a_{N_1}}`` times. In this particular example,
+``n_{(a)}=2``, ``n_{(a')}=3`` and ``n_{(a'')}=5``. The thick vertical line represents the
+separation between the two different coupled sectors, denoted as ``c_1`` and ``c_2``. Dashed
 vertical lines represent different ways of reaching the coupled sector, corresponding to
-different `α`. In this example, the first sector ``(a…)`` has one fusion tree to ``c``,
-labeled by ``c,α``, and two fusion trees to ``c'``, labeled by ``c',α`` and ``c',α'``. The
-second sector has only a fusion tree to ``c``, labeled by ``c,α'``. The third sector only
-has a fusion tree to ``c'``, labeld by ``c', α''``. Finally then, because the fusion trees
-do not act on the spaces ``ℂ^{n_{a_1} × … n_{a_{N_1}}}``, the dotted lines which represent
-the different ``n_{(a…)} = n_{a_1} × … n_{a_{N_1}}`` dimensions are also drawn vertically.
-In particular, for a given sector ``(a…)`` and a specific fusion tree
-``X^{(a…)}_{c,α}: R_c→R_{(a…)}``, the action is ``𝟙_{n_{(a…)}} ⊗ X^{(a…)}_{c,α}``, which
+different ``(a)`` or ``\alpha``. In this example, the first sector ``(a)`` has one fusion
+tree to ``c_1``, labeled by ``c,(a)``, and two fusion trees to ``c_2``, labeled by
+``c_2,(a),α_1`` and ``c_2,(a),α_2``. The second sector ``(a')`` has only a fusion tree to
+``c_1``, labeled by ``c,(a')``. The third sector ``(a'')`` only has a fusion tree to
+``c_2``, labeld by ``c_2, (a'')``. Because the fusion trees do not act on the spaces
+``ℂ^{n_{a_1} × … n_{a_{N_1}}}``, the dotted lines which represent the different
+``n_{(a)} = n_{a_1} × … n_{a_{N_1}}`` dimensions are also drawn vertically.
+For a given sector ``(a)`` and a specific fusion tree ``X^{(a)}_{c,α}: R_c→R_{(a)}``,
+the action is ``𝟙_{n_{(a)}} ⊗ X^{(a…)}_{c,α}``, which
 corresponds to the diagonal green blocks in this drawing where the same matrix
-``X^{(a…)}_{c,α}`` (the fusion tree) is repeated along the diagonal. Note that the fusion
-tree is not a vector or single column, but a matrix with number of rows equal to
-``\mathrm{dim}(R_{(a\ldots)}) = d_{a_1} d_{a_2} … d_{a_{N_1}} `` and number of columns
+``X^{(a)}_{c,α}`` (the splitting tree) is repeated along the diagonal. Note that the
+splitting tree is not a vector or single column, but a matrix with number of rows equal to
+``\mathrm{dim}(R_{(a)}) = d_{a_1} d_{a_2} … d_{a_{N_1}}`` and number of columns
 equal to ``d_c``.
+
+![tensor center_tensor](img/tensor-center_tensor.png)
+
+The center matrix is most easy to interpret. It is the block diagonal matrix
+``⨁_{c} B_c ⊗ 𝟙_{c}`` with diagonal blocks labeled by the coupled charge `c`, in this case
+it takes two values ``c_1`` and ``c_2``. Every single small square in between the dotted or
+dashed lines has size ``d_c × d_c`` and corresponds to a single element of ``B_c``,
+tensored with the identity ``\mathbb{1}_c``. The ``B_c`` for a fixed `c` composed by smaller
+blocks ``t^c_{(a_1,...,a_{N_1})\alpha,(b_1,...,b_{N_2})\beta}`` which are labeled by
+different fusion trees with the coupled sector `c`. The dashed horizontal lines indicate
+regions corresponding to different splitting trees, either because of different sectors
+``(a_1 … a_{N₁})`` or different labels ``α`` within the same sector. Similarly, the dashed
+vertical lines define the border between regions of different fusion trees from the domain
+to `c`, either because of different sectors ``(b_1 … b_{N₂})`` or a different label ``β``.
 
 ![tensor unitary](img/tensor-fusion_unitary.png)
 
 A similar interpretation can be given to the basis transform on the
 right, by taking its adjoint. In this particular example, it has two different combinations
-of sectors ``(b…)`` and ``(b…)'``, where both have a single fusion tree to ``c`` as well as
-to ``c'``, and ``n_{(b…)}=2``, ``n_{(b…)'}=3``.
+of sectors ``(b)`` and ``(b')``, where both have a single fusion tree to ``c_1`` as well as
+to ``c_2``, and ``n_{(b)}=2``, ``n_{(b')}=3``.
 
 Note that we never explicitly store or act with the basis transforms on the left and the
 right. For composing tensor maps (i.e. multiplying them), these basis transforms just
