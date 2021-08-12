@@ -239,7 +239,7 @@ below, can act directly on this matrix representation.
     properties and would thus not constitute the matrix representation of the tensor in a
     compatible basis.
 
-In the general case 
+In the general case
 
 ```math
 \begin{aligned}
@@ -256,15 +256,26 @@ from ``c_b`` to ``c_a``.
 
 A symmetric tensor map should satisfy ``U_1 t = t U_2``, thus for each term of ``t``, we
 have
+```math
+\begin{aligned}
+U_{a_1...a_{N_1}} X^{a_1...a_{N_1}}_{c_a,\alpha} t^{i,j,c_a,c_b}_{(a_1,...,a_{N_1})\alpha,(b_1,...,b_{N_2})\beta} (X^{b_1...b_{N_2}}_{c_b,\beta})^{†} = X^{a_1...a_{N_1}}_{c_a,\alpha} t^{i,j,c_a,c_b}_{(a_1,...,a_{N_1})\alpha,(b_1,...,b_{N_2})\beta} (X^{b_1...b_{N_2}}_{c_b,\beta})^{†} U_{b_1...b_{N_2}}
+\end{aligned}
+```
 
-``U_a X^a_{c_a,\alpha} t^{i,j,c_a,c_b}_{\alpha,\beta} (X^{b}_{c_b,\beta})^{†} = X^a_{c_a,\alpha} t^{i,j,c_a,c_b}_{\alpha,\beta} (X^{b}_{c_b,\beta})^{†} U_b``.
+Write
 
-Write ``U_{c_a} = (X^a_{c_a,\alpha})^{†} U_a X^a_{c_a,\alpha}`` and
-``U_{c_b} = (X^{b}_{c_b,\beta})^{†} U_b X^{b}_{c_b,\beta}``, we get
-``U_{c_a} t^{i,j,c_a,c_b}_{\alpha,\beta} = t^{i,j,c_a,c_b}_{\alpha,\beta} U_{c_b}``.
+``U_{c_a} = (X^{a_1...a_{N_1}}_{c_a,\alpha})^{†} U_{a_1...a_{N_1}} X^{a_1...a_{N_1}}_{c_a,\alpha}``
 
-From Schur's lemma, we know ``t^{c_a,c_b} = t^{c_a}\mathbb{1}_{c_a}\delta_{c_a,c_b}``, where
-``t^{c_a}`` is a complex number.
+and
+
+``U_{c_b} = (X^{b_1...b_{N_2}}_{c_b,\beta})^{†} U_{b_1...b_{N_2}} X^{b_1...b_{N_2}}_{c_b,\beta}``,
+
+we get
+
+``U_{c_a} t^{i,j,c_a,c_b}_{(a_1,...,a_{N_1})\alpha,(b_1,...,b_{N_2})\beta} = t^{i,j,c_a,c_b}_{(a_1,...,a_{N_1})\alpha,(b_1,...,b_{N_2})\beta} U_{c_b}``.
+
+From Schur's lemma, we know ``t^{i,j,c_a,c_b}_{(a_1,...,a_{N_1})\alpha,(b_1,...,b_{N_2})\beta} = t^{i,j,c_a}_{(a_1,...,a_{N_1})\alpha,(b_1,...,b_{N_2})\beta}\mathbb{1}_{c_a}\delta_{c_a,c_b}``, where
+``t^{i,j,c_a}_{(a_1,...,a_{N_1})\alpha,(b_1,...,b_{N_2})\beta}`` is a complex number.
 
 Then, we obtain
 
@@ -272,16 +283,16 @@ Then, we obtain
 \begin{aligned}
 t &= \sum_{a_1,...,a_{N_1}}\sum_{b_1,...,b_{N_2}}\sum_{i = 1}^{n_{a_1}*\cdots *n_{a_{N_1}}}
 \sum_{j = 1}^{n_{b_1}*\cdots *n_{b_{N_2}}}\sum_{c,\alpha,\beta}
-X^{a_1...a_{N_1}}_{c,\alpha}\circ t^{i,j,c}_{\alpha,\beta}
+X^{a_1...a_{N_1}}_{c,\alpha}\circ t^{i,j,c}_{(a_1,...,a_{N_1})\alpha,(b_1,...,b_{N_2})\beta}
 \mathbb{1}_c\circ (X^{b_1...b_{N_2}}_{c,\beta})^{†}\\
 & = \sum_{a_1,...,a_{N_1}}\sum_{b_1,...,b_{N_2}} \sum_{c,\alpha,\beta}
 (\mathbb{1}_{n_{a_1}*\cdots * n_{a_{N_1}}} \otimes X^{a_1...a_{N_1}}_{c,\alpha})
-\circ(t^c_{\alpha,\beta}\otimes \mathbb{1}_c)
+\circ(t^c_{(a_1,...,a_{N_1})\alpha,(b_1,...,b_{N_2})\beta}\otimes \mathbb{1}_c)
 \circ(\mathbb{1}_{n_{b_1}*\cdots * n_{b_{N_2}}}
 \otimes X^{b_1...b_{N_2}}_{c,\beta})^{†}
 \end{aligned}
 ```
-where ``t^c_{\alpha,\beta}`` is a matrix with dimension
+where ``t^c_{(a_1,...,a_{N_1})\alpha,(b_1,...,b_{N_2})\beta}`` is a matrix with dimension
 ``(n_{a_1}*...*n_{a_{N_1}}) \times (n_{b_1}*...*n_{b_{N_2}})``.
 
 Now consider the case where `sectortype(S) == I` for some `I` which has
@@ -370,9 +381,9 @@ The tensor is then represented as
 
 ```math
 \begin{aligned}
-t  = \sum_{a_1,...,a_{N_1}}\sum_{b_1,...,b_{N_2}} \sum_{c,\alpha,\beta}
+t  = \sum_c\sum_{a_1,...,a_{N_1}}\sum_{b_1,...,b_{N_2}} \sum_{\alpha,\beta}
 (\mathbb{1}_{n_{a_1}*\cdots * n_{a_{N_1}}} \otimes X^{a_1...a_{N_1}}_{c,\alpha})
-\circ(t^c_{\alpha,\beta}\otimes \mathbb{1}_c)
+\circ(t^c_{(a_1,...,a_{N_1})\alpha,(b_1,...,b_{N_2})\beta}\otimes \mathbb{1}_c)
 \circ(\mathbb{1}_{n_{b_1}*\cdots * n_{b_{N_2}}}
 \otimes X^{b_1...b_{N_2}}_{c,\beta})^{†}
 \end{aligned}
@@ -392,10 +403,10 @@ The center matrix is most easy to interpret. It is the block
 diagonal matrix ``⨁_{c} B_c ⊗ 𝟙_{c}`` with diagonal blocks labeled by the coupled charge
 `c`, in this case it takes two values. Every single small square in between the dotted or
 dashed lines has size ``d_c × d_c`` and corresponds to a single element of ``B_c``,
-tensored with the identity ``\mathbb{1}_c``. The elements of  ``B_c`` are labeled
-by ``t^c_{(a_1 … a_{N₁})α, (b_1 … b_{N₂})β}`` where ``α`` labels different fusion trees from
-``(a_1 … a_{N₁})`` to ``c``. The dashed horizontal lines indicate regions corresponding to
-different fusion (actually splitting) trees, either because of different sectors
+tensored with the identity ``\mathbb{1}_c``. The ``B_c`` for a fixed `c` composed by smaller
+blocks ``t^c_{(a_1,...,a_{N_1})\alpha,(b_1,...,b_{N_2})\beta}`` which are labeled by
+different fusion trees with the coupled sector `c`. The dashed horizontal lines indicate
+regions corresponding to different splitting trees, either because of different sectors
 ``(a_1 … a_{N₁})`` or different labels ``α`` within the same sector. Similarly, the dashed
 vertical lines define the border between regions of different fusion trees from the domain
 to `c`, either because of different sectors ``(b_1 … b_{N₂})`` or a different label ``β``.
