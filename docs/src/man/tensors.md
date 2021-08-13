@@ -254,8 +254,9 @@ X^{a_1...a_{N_1}}_{c_a,\alpha}\circ t^{i,j,c_a,c_b}_{(a_1,...,a_{N_1})\alpha,(b_
 where ``t^{i,j,c_a,c_b}_{\alpha,\beta}`` is a tensor map
 from ``c_b`` to ``c_a``.
 
-A symmetric tensor map should satisfy ``U_1 t = t U_2``, thus for each term of ``t``, we
-have
+A symmetric tensor map should satisfy ``U_1 t = t U_2``, thus for each term of above
+equation of ``t``, we have
+
 ```math
 \begin{aligned}
 U_{a_1...a_{N_1}} X^{a_1...a_{N_1}}_{c_a,\alpha} t^{i,j,c_a,c_b}_{(a_1,...,a_{N_1})\alpha,(b_1,...,b_{N_2})\beta} (X^{b_1...b_{N_2}}_{c_b,\beta})^{†} = X^{a_1...a_{N_1}}_{c_a,\alpha} t^{i,j,c_a,c_b}_{(a_1,...,a_{N_1})\alpha,(b_1,...,b_{N_2})\beta} (X^{b_1...b_{N_2}}_{c_b,\beta})^{†} U_{b_1...b_{N_2}}
@@ -401,39 +402,46 @@ To understand this better, we need to understand the basis transform, e.g. on th
 
 ![tensor unitary](img/tensor-splitting_unitary.png)
 
-Indeed, remembering that ``V_i = ⨁_{a_i} ℂ^{n_{a_i}} ⊗ R_{a_i}`` with ``R_{a_i}`` the
+Remembering that ``V_i = ⨁_{a_i} ℂ^{n_{a_i}} ⊗ R_{a_i}`` with ``R_{a_i}`` the
 representation space on which irrep ``a_i`` acts (with dimension ``\mathrm{dim}(a_i)``), we
 find
-``V_1 ⊗ … ⊗ V_{N_1} = ⨁_{a_1, …, a_{N₁}} ℂ^{n_{a_1} × … n_{a_{N_1}}} ⊗ (R_{a_1} ⊗ … ⊗ R_{a_{N_1}})``.
+``V_1 ⊗ … ⊗ V_{N_1} = ⨁_{a_1, …, a_{N₁}} ℂ^{n_{a_1} * … *n_{a_{N_1}}} ⊗ (R_{a_1} ⊗ … ⊗ R_{a_{N_1}})``.
 In the diagram above, the red lines correspond to the direct sum over the different
 sectors ``(a_1, …, a_{N₁})``, there depicted taking three possible values ``(a)``,
 ``(a')`` and ``(a'')``, where ``(a)`` is a simplified notation for a certain
 ``(a_1, …, a_{N₁})``. The tensor product
-``ℂ^{n_{a_1} × … n_{a_{N_1}}} ⊗ (R_{a_1} ⊗ … ⊗ R_{a_{N_1}})`` is depicted as
-``(R_{a_1} ⊗ … ⊗ R_{a_{N_1}})^{⊕ n_{a_1} × … n_{a_{N_1}}}``, i.e. as a direct sum of the
+``ℂ^{n_{a_1} * … * n_{a_{N_1}}} ⊗ (R_{a_1} ⊗ … ⊗ R_{a_{N_1}})`` is depicted as
+``(R_{a_1} ⊗ … ⊗ R_{a_{N_1}})^{⊕(n_{a_1} *… *n_{a_{N_1}})}``, i.e. as a direct sum of the
 spaces ``R_{(a)} = (R_{a_1} ⊗ … ⊗ R_{a_{N_1}})`` according to the dotted horizontal lines,
-which repeat ``n_{(a)} = n_{a_1} × … n_{a_{N_1}}`` times. In this particular example,
+which repeat ``n_{(a)} = n_{a_1}* … *n_{a_{N_1}}`` times. In this particular example,
 ``n_{(a)}=2``, ``n_{(a')}=3`` and ``n_{(a'')}=5``. The thick vertical line represents the
 separation between the two different coupled sectors, denoted as ``c_1`` and ``c_2``. Dashed
 vertical lines represent different ways of reaching the coupled sector, corresponding to
 different ``(a)`` or ``\alpha``. In this example, the first sector ``(a)`` has one fusion
-tree to ``c_1``, labeled by ``c,(a)``, and two fusion trees to ``c_2``, labeled by
+tree to ``c_1``, labeled by ``c_1,(a)``, and two fusion trees to ``c_2``, labeled by
 ``c_2,(a),α_1`` and ``c_2,(a),α_2``. The second sector ``(a')`` has only a fusion tree to
 ``c_1``, labeled by ``c,(a')``. The third sector ``(a'')`` only has a fusion tree to
 ``c_2``, labeld by ``c_2, (a'')``. Because the fusion trees do not act on the spaces
-``ℂ^{n_{a_1} × … n_{a_{N_1}}}``, the dotted lines which represent the different
-``n_{(a)} = n_{a_1} × … n_{a_{N_1}}`` dimensions are also drawn vertically.
-For a given sector ``(a)`` and a specific fusion tree ``X^{(a)}_{c,α}: R_c→R_{(a)}``,
+``ℂ^{n_{a_1} * …* n_{a_{N_1}}}``, the dotted lines which represent the different
+``n_{(a)}`` dimensions are also drawn vertically.
+For a given sector ``(a)`` and a specific splitting tree ``X^{(a)}_{c,α}: R_c→R_{(a)}``,
 the action is ``𝟙_{n_{(a)}} ⊗ X^{(a…)}_{c,α}``, which
 corresponds to the diagonal green blocks in this drawing where the same matrix
-``X^{(a)}_{c,α}`` (the splitting tree) is repeated along the diagonal. Note that the
+``X^{(a)}_{c,α}`` is repeated along the diagonal. Note that the
 splitting tree is not a vector or single column, but a matrix with number of rows equal to
 ``\mathrm{dim}(R_{(a)}) = d_{a_1} d_{a_2} … d_{a_{N_1}}`` and number of columns
 equal to ``d_c``.
 
+![tensor unitary](img/tensor-fusion_unitary.png)
+
+A similar interpretation can be given to the basis transform on the
+right, by taking its adjoint. In this example, it has two different combinations
+of sectors ``(b)`` and ``(b')``, where both have a single fusion tree to ``c_1`` as well as
+to ``c_2``, and ``n_{(b)}=2``, ``n_{(b')}=3``.
+
 ![tensor center_tensor](img/tensor-center_tensor.png)
 
-The center matrix is most easy to interpret. It is the block diagonal matrix
+The center matrix is the block diagonal matrix
 ``⨁_{c} B_c ⊗ 𝟙_{c}`` with diagonal blocks labeled by the coupled charge `c`, in this case
 it takes two values ``c_1`` and ``c_2``. Every single small square in between the dotted or
 dashed lines has size ``d_c × d_c`` and corresponds to a single element of ``B_c``,
@@ -445,17 +453,10 @@ regions corresponding to different splitting trees, either because of different 
 vertical lines define the border between regions of different fusion trees from the domain
 to `c`, either because of different sectors ``(b_1 … b_{N₂})`` or a different label ``β``.
 
-![tensor unitary](img/tensor-fusion_unitary.png)
-
-A similar interpretation can be given to the basis transform on the
-right, by taking its adjoint. In this particular example, it has two different combinations
-of sectors ``(b)`` and ``(b')``, where both have a single fusion tree to ``c_1`` as well as
-to ``c_2``, and ``n_{(b)}=2``, ``n_{(b')}=3``.
-
 Note that we never explicitly store or act with the basis transforms on the left and the
 right. For composing tensor maps (i.e. multiplying them), these basis transforms just
 cancel, whereas for tensor factorizations they just go through trivially. They transform
-non-trivially when reshuffling the tensor indices, both within or in between the domain and
+non-trivially when reshuffling the tensor indices, both within or between the domain and
 codomain. For this, however, we can completely rely on the manipulations of fusion trees to
 implicitly compute the effect of the basis transform and construct the new blocks ``B_c``
 that result with respect to the new basis.
@@ -524,7 +525,7 @@ block(t1, Trivial()) |> disp
 reshape(t1[], dim(codomain(t1)), dim(domain(t1))) |> disp
 ```
 
-Finally, all constructors can also be replaced by `Tensor(..., codomain)`, in which case
+All constructors can also be replaced by `Tensor(..., codomain)`, in which case
 the domain is assumed to be the empty `ProductSpace{S,0}()`, which can easily be obtained
 as `one(codomain)`. Indeed, the empty product space is the unit object of the monoidal
 category, equivalent to the field of scalars `𝕜`, and thus the multiplicative identity
@@ -626,10 +627,14 @@ instance, with `undef` data, but whose data is stored in the same subtype of `De
 
 ### Special purpose constructors
 
-Finally, there are methods `zero`, `one`, `id`, `isomorphism`, `unitary` and `isometry` to
-create specific new tensors. Tensor maps behave as vectors and can be added (if they have
+Some specific new tensors can be created by methods `zero`, `one`, `id`, `isomorphism`,
+`unitary` and `isometry`.
+
+Tensor maps behave as vectors and can be added (if they have
 the same domain and codomain); `zero(t)` is the additive identity, i.e. a `TensorMap`
-instance where all entries are zero. For a `t::TensorMap` with `domain(t) == codomain(t)`,
+instance where all entries are zero.
+
+For a `t::TensorMap` with `domain(t) == codomain(t)`,
 i.e. an endomorphism, `one(t)` creates the identity tensor, i.e. the identity under
 composition. As discussed in the section on [linear algebra operations](@ref
 ss_tensor_linalg), we denote composition of tensor maps with the mutliplication operator
@@ -637,7 +642,8 @@ ss_tensor_linalg), we denote composition of tensor maps with the mutliplication 
 `id(V)` with `V` the relevant vector space, e.g. `one(t) == id(domain(t))`. The identity
 tensor is currently represented with dense data, and one can use `id(A::Type{<:DenseMatrix},
 V)` to specify the type of `DenseMatrix` (and its `eltype`), e.g. `A = Matrix{Float64}`.
-Finally, it often occurs that we want to construct a specific isomorphism between two spaces
+
+It often occurs that we want to construct a specific isomorphism between two spaces
 that are isomorphic but not equal, and for which there is no canonical choice. Hereto, one
 can use the method `u = isomorphism([A::Type{<:DenseMatrix}, ] codomain, domain)`, which
 will explicitly check that the domain and codomain are isomorphic, and return an error
@@ -647,9 +653,10 @@ otherwise. Again, an optional first argument can be given to specify the specifi
 unitary([A::Type{<:DenseMatrix}, ] codomain, domain)`. Note that reversing the domain and
 codomain yields the inverse morphism, which in the case of `EuclideanSpace` coincides with
 the adjoint morphism, i.e. `isomorphism(A, domain, codomain) == adjoint(u) == inv(u)`, where
-`inv` and `adjoint` will be further discussed [below](@ref ss_tensor_linalg). Finally, if
-two spaces `V1` and `V2` are such that `V2` can be embedded in `V1`, i.e. there exists an
-inclusion with a left inverse, and furthermore they represent tensor products of some
+`inv` and `adjoint` will be further discussed [below](@ref ss_tensor_linalg).
+
+If two spaces `V1` and `V2` are such that `V2` can be embedded in `V1`, i.e. there exists an
+inclusion with a left inverse, and they represent tensor products of some
 `EuclideanSpace`, the function `w = isometry([A::Type{<:DenseMatrix}, ], V1, V2)` creates
 one specific isometric embedding, such that `adjoint(w)*w == id(V2)` and `w*adjoint(w)` is
 some hermitian idempotent (a.k.a. orthogonal projector) acting on `V1`. An error will be
@@ -722,7 +729,7 @@ block(t, SU2Irrep(1)) |> disp
 block(t, SU2Irrep(2)) |> disp
 ```
 Note that the basis transforms `u` and `v` are no longer permutation matrices, but are
-still unitary. Furthermore, note that they render the tensor block diagonal, but that now
+still unitary. Note that they render the tensor block diagonal, but that now
 every element of the diagonal blocks labeled by `c` comes itself in a tensor product with
 an identity matrix of size `dim(c)`, i.e. `dim(SU2Irrep(1)) = 3` and
 `dim(SU2Irrep(2)) = 5`.
@@ -730,11 +737,11 @@ an identity matrix of size `dim(c)`, i.e. `dim(SU2Irrep(1)) = 3` and
 ## [Tensor properties](@id ss_tensor_properties)
 
 Given a `t::AbstractTensorMap{S,N₁,N₂}`, there are various methods to query its properties.
-The most important are clearly `codomain(t)` and `domain(t)`. The `space(t)` gives the
+The most important are `codomain(t)` and `domain(t)`. The `space(t)` gives the
 corresponding `HomSpace`. We can also query
 `space(t, i)`, the space associated with the `i`th index. For `i ∈ 1:N₁`, this corresponds
-to `codomain(t, i) = codomain(t)[i]`. For `j = i-N₁ ∈ (1:N₂)`, this corresponds to
-`dual(domain(t, j)) = dual(domain(t)[j])`.
+to `codomain(t, i) = codomain(t)[i]`. For `i ∈ (N₁+1:N₁+N₂)`, this corresponds to
+`dual(domain(t, i-N₁)) = dual(domain(t)[i-N₁])`.
 
 The total number of indices, i.e. `N₁+N₂`, is given by `numind(t)`, with `N₁ == numout(t)`
 and `N₂ == numin(t)`, the number of outgoing and incoming indices. There are also the
@@ -751,14 +758,14 @@ is obtained as `storagetype(t)`. Each of the methods `numind`, `numout`, `numin`
 `TensorXD.codomainind`, `TensorXD.domainind`, `spacetype`, `sectortype`, `field`, `eltype`
 and `storagetype` work in the type domain as well, i.e. they are encoded in `typeof(t)`.
 
-Finally, there are methods to probe the data, which we already encountered.
+There are methods to probe the data.
 `blocksectors(t)` returns an iterator over the different coupled sectors that can be
 obtained from fusing the uncoupled sectors available in the domain, but they must also be
 obtained from fusing the uncoupled sectors available in the codomain (i.e. it is the
 intersection of both `blocksectors(codomain(t))` and `blocksectors(domain(t))`). For a
 specific sector `c ∈ blocksectors(t)`, `block(t, c)` returns the corresponding data. Both
 are obtained together with `blocks(t)`, which returns an iterator over the pairs
-`c=>block(t, c)`. Furthermore, there is `fusiontrees(t)` which returns an iterator over
+`c=>block(t, c)`. There is `fusiontrees(t)` which returns an iterator over
 splitting-fusion tree pairs `(f₁,f₂)`, for which the corresponding data is given by
 `t[f₁,f₂]` (i.e. using Base.getindex).
 
