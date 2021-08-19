@@ -430,15 +430,49 @@ end
 
 # Add support for cache and API (`@tensor` macro & friends) from TensorOperations.jl:
 # compatibility layer
-function TensorOperations.memsize(t::TensorMap)
+"""
+    TO.memsize(t::TensorMap)
+
+Return the number of elements of the data for the tensor map `t`, i.e., the memory
+size that needed to save the tensor map.
+"""
+function TO.memsize(t::TensorMap)
     s = 0
     for (c, b) in blocks(t)
         s += sizeof(b)
     end
     return s
 end
-TensorOperations.memsize(t::AdjointTensorMap) = TensorOperations.memsize(t')
+TO.memsize(t::AdjointTensorMap) = TensorOperations.memsize(t')
 
+"""
+    _similarstructure_from_indices(::Type{T}, p1::IndexTuple{N₁}, p2::IndexTuple{N₂},
+            t::AbstractTensorMap{S}) where {T, S<:IndexSpace, N₁, N₂}
+
+Return the structure of an object similar to the tensor map `t`, i.e., the HomSpace from
+the domain to the codomain, where the codomain is the tensor product of spaces selected by
+`p1` from the tensor map `t`, and the domain is that by `p2`.
+"""
+function _similarstructure_from_indices(::Type{T}, p1::IndexTuple{N₁}, p2::IndexTuple{N₂},
+        t::AbstractTensorMap{S}) where {T, S<:IndexSpace, N₁, N₂}
+
+    cod = ProductSpace{S, N₁}(space.(Ref(t), p1))
+    dom = ProductSpace{S, N₂}(dual.(space.(Ref(t), p2)))
+    return dom→cod
+end
+
+"""
+    TO.similarstructure_from_indices(T::Type, p1::IndexTuple, p2::IndexTuple,
+            A::AbstractTensorMap, CA::Symbol = :N)
+
+Returns the structure of an object similar to the tensor map `A`, i.e. the HomSpace from
+the domain to the codomain, where the codomain is the tensor product of spaces selected by
+`p1` from the tensor map `op(A)`, and the domain is that by `p2`. Th `op` is `conj` if
+`CA == :C` or does nothing if `CA == :N` (default).
+
+The `eltype` of the returned structure is supposed given by `T`, but this is not actually
+implemented.
+"""
 function TO.similarstructure_from_indices(T::Type, p1::IndexTuple, p2::IndexTuple,
         A::AbstractTensorMap, CA::Symbol = :N)
     if CA == :N
@@ -450,9 +484,42 @@ function TO.similarstructure_from_indices(T::Type, p1::IndexTuple, p2::IndexTupl
     end
 end
 
+"""
+    _similarstructure_from_indices(::Type{T}, oindA::IndexTuple, oindB::IndexTuple,
+            p1::IndexTuple{N₁}, p2::IndexTuple{N₂}, tA::AbstractTensorMap{S},
+            tB::AbstractTensorMap{S}) where {T, S<:IndexSpace, N₁, N₂}
+
+Return the structure of an object similar to the tensor map `tA`, i.e., the HomSpace from
+the domain to the codomain, where the codomain is the tensor product of spaces selected by
+`p1` from the list of spaces that are selected by `oindA` from `tA` and `oindB` from `tB` in
+sequence, and the domain is that by `p2`.
+"""
+function _similarstructure_from_indices(::Type{T}, oindA::IndexTuple, oindB::IndexTuple,
+        p1::IndexTuple{N₁}, p2::IndexTuple{N₂}, tA::AbstractTensorMap{S},
+        tB::AbstractTensorMap{S}) where {T, S<:IndexSpace, N₁, N₂}
+
+    spaces = (space.(Ref(tA), oindA)..., space.(Ref(tB), oindB)...)
+    cod = ProductSpace{S, N₁}(getindex.(Ref(spaces), p1))
+    dom = ProductSpace{S, N₂}(dual.(getindex.(Ref(spaces), p2)))
+    return dom→cod
+end
+
+"""
+    TO.similarstructure_from_indices(T::Type, poA::IndexTuple, poB::IndexTuple,
+            p1::IndexTuple, p2::IndexTuple, A::AbstractTensorMap, B::AbstractTensorMap,
+            CA::Symbol = :N, CB::Symbol = :N)
+
+Return the structure of an object similar to the tensor map `A`, i.e., the HomSpace from
+the domain to the codomain, where the codomain is the tensor product of spaces selected by
+`p1` from the list of spaces that are selected by `poA` from `op(A)` and `poB` from `op(B)`
+in sequence, and the domain is that by `p2`. Th `opA` is `conj` if `CA == :C` or does
+nothing if `CA == :N` (default), and similarly for `opB`.
+
+The `eltype` of the returned structure is supposed given by `T`, but this is not actually
+implemented.
+"""
 function TO.similarstructure_from_indices(T::Type, poA::IndexTuple, poB::IndexTuple,
-        p1::IndexTuple, p2::IndexTuple,
-        A::AbstractTensorMap, B::AbstractTensorMap,
+        p1::IndexTuple, p2::IndexTuple, A::AbstractTensorMap, B::AbstractTensorMap,
         CA::Symbol = :N, CB::Symbol = :N)
 
     if CA == :N && CB == :N
@@ -468,23 +535,6 @@ function TO.similarstructure_from_indices(T::Type, poA::IndexTuple, poB::IndexTu
         poB = adjointtensorindices(B, poB)
         _similarstructure_from_indices(T, poA, poB, p1, p2, adjoint(A), adjoint(B))
     end
-end
-
-function _similarstructure_from_indices(::Type{T}, p1::IndexTuple{N₁}, p2::IndexTuple{N₂},
-        t::AbstractTensorMap{S}) where {T, S<:IndexSpace, N₁, N₂}
-
-    cod = ProductSpace{S, N₁}(space.(Ref(t), p1))
-    dom = ProductSpace{S, N₂}(dual.(space.(Ref(t), p2)))
-    return dom→cod
-end
-function _similarstructure_from_indices(::Type{T}, oindA::IndexTuple, oindB::IndexTuple,
-        p1::IndexTuple{N₁}, p2::IndexTuple{N₂},
-        tA::AbstractTensorMap{S}, tB::AbstractTensorMap{S}) where {T, S<:IndexSpace, N₁, N₂}
-
-    spaces = (space.(Ref(tA), oindA)..., space.(Ref(tB), oindB)...)
-    cod = ProductSpace{S, N₁}(getindex.(Ref(spaces), p1))
-    dom = ProductSpace{S, N₂}(dual.(getindex.(Ref(spaces), p2)))
-    return dom→cod
 end
 
 TO.scalar(t::AbstractTensorMap) = scalar(t)

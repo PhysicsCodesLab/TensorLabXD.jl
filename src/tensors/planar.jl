@@ -7,18 +7,54 @@ macro planar(ex::Expr)
     return esc(planar_parser(ex))
 end
 
+"""
+    planar_parser(ex::Expr)
 
+A modified version of `TO.TensorParser()`.
+
+The process is listed in the following:
+preprocessors = [
+- normalizeindices: Make all indices of the input expression `ex` to be symbol or Int type.
+- expandconj: Change the conjugate of a whole expression to conj of each terms or factors.
+- nconindexcompletion: Complete the indices of left hand side of the assignment or
+                        definition if they are not specified in the NCON style.
+- _conj_to_adjoint: Change e.g. `conj(A[a b;c d])` to `A'[(c,d);(a,b)]` by exchanging
+                    the domain and codomain for each tensor in the expression.
+- ex->TO.processcontractions(ex, treebuilder, treesorter): Sort the contractions from left
+                    to right in the multiplication expression based on the `treebuilder`
+                    and `treesorter` if the number of tensors in the contration expression
+                    is larger than two. The returned expression has the default form e.g.
+                    `(((A[a,b]*B[c,d])*C[a,c]))*D[b,f])`.
+- _check_planarity(ex): Check if all the assigments and definitions are planar.
+- _extract_tensormap_objects: For all tensors in `ex`, use `gensym()` to generate uniquely
+                                symbols for existing the tensor objects.
+- ex->_decompose_planar_contractions(ex, temporaries): Decompose contraction trees into
+                    elementary binary contractions of tensors without inner trace. All the
+                    temporary names are saved in `temporaries`.
+]
+
+postprocessors = [
+- _flatten: Remove the `:block` in the inner expression and put it at the most out level.
+- removelinenumbernode: Remove all the `LineNumberNode` in the `:block` structure.
+- ex->_update_temporaries(ex, temporaries):
+- ex->_annotate_temporaries(ex, temporaries):
+- _add_modules: Provide the path to the true implementation functions of the tensor
+                    operations that are instantiated in the expression.
+]
+"""
 function planar_parser(ex::Expr)
     parser = TO.TensorParser()
 
-    pop!(parser.preprocessors) # remove TO.extracttensorobjects
-    push!(parser.preprocessors, _conj_to_adjoint)
     treebuilder = parser.contractiontreebuilder
     treesorter = parser.contractiontreesorter
+
+    temporaries = Vector{Symbol}()
+
+    pop!(parser.preprocessors) # remove TO.extracttensorobjects
+    push!(parser.preprocessors, _conj_to_adjoint)
     push!(parser.preprocessors, ex->TO.processcontractions(ex, treebuilder, treesorter))
     push!(parser.preprocessors, ex->_check_planarity(ex))
     push!(parser.preprocessors, _extract_tensormap_objects)
-    temporaries = Vector{Symbol}()
     push!(parser.preprocessors, ex->_decompose_planar_contractions(ex, temporaries))
 
     pop!(parser.postprocessors) # remove TO.addtensoroperations
@@ -32,20 +68,47 @@ macro planar2(ex::Expr)
     return esc(planar2_parser(ex))
 end
 
+"""
+    planar2_parser(ex::Expr)
+
+A modified version of `TO.TensorParser()`.
+
+The process is listed in the following:
+preprocessors = [
+- normalizeindices:
+- expandconj:
+- nonindexcompletition:
+- _conj_to_adjoint:
+- _extract_tensormap_objects2:
+- _construct_braidingtensors:
+- ex->TO.processcontractions(ex, treebuilder, treesorter):
+- _check_planarity(ex):
+- ex->_decompose_planar_contractions(ex, temporaries)
+]
+
+postprocessors = [
+- _flatten:
+- removelinenumbernode:
+- ex->_update_temporaries(ex, temporaries):
+- ex->_annotate_temporaries(ex, temporaries):
+- _add_modules:
+]
+"""
 function planar2_parser(ex::Expr)
     parser = TO.TensorParser()
 
+    treebuilder = parser.contractiontreebuilder
+    treesorter = parser.contractiontreesorter
+
     braidingtensors = Vector{Any}()
+    temporaries = Vector{Symbol}()
 
     pop!(parser.preprocessors) # remove TO.extracttensorobjects
     push!(parser.preprocessors, _conj_to_adjoint)
     push!(parser.preprocessors, _extract_tensormap_objects2)
     push!(parser.preprocessors, _construct_braidingtensors)
-    treebuilder = parser.contractiontreebuilder
-    treesorter = parser.contractiontreesorter
     push!(parser.preprocessors, ex->TO.processcontractions(ex, treebuilder, treesorter))
     push!(parser.preprocessors, ex->_check_planarity(ex))
-    temporaries = Vector{Symbol}()
     push!(parser.preprocessors, ex->_decompose_planar_contractions(ex, temporaries))
 
     pop!(parser.postprocessors) # remove TO.addtensoroperations
@@ -55,6 +118,12 @@ function planar2_parser(ex::Expr)
     return parser(ex)
 end
 
+"""
+    _conj_to_adjoint(ex::Expr)
+
+Change the `conj(tensor)` to the adjoint of the tensor by exchanging the domain and
+codomain for each tensor in the expression.
+"""
 function _conj_to_adjoint(ex::Expr)
     if ex.head == :call && ex.args[1] == :conj && TO.istensor(ex.args[2])
         obj, leftind, rightind = TO.decomposetensor(ex.args[2])
@@ -66,44 +135,14 @@ function _conj_to_adjoint(ex::Expr)
 end
 _conj_to_adjoint(ex) = ex
 
-function get_possible_planar_indices(ex::Expr)
-    @assert TO.istensorexpr(ex)
-    if TO.isgeneraltensor(ex)
-        _,leftind,rightind = TO.decomposegeneraltensor(ex)
-        ind = planar_unique2(vcat(leftind, reverse(rightind)))
-        return length(ind) == length(unique(ind)) ? Any[ind] : Any[]
-    elseif ex.head == :call && (ex.args[1] == :+ || ex.args[1] == :-)
-        inds = get_possible_planar_indices(ex.args[2])
-        keep = fill(true, length(inds))
-        for i = 3:length(ex.args)
-            inds′ = get_possible_planar_indices(ex.args[i])
-            keepᵢ = fill(false, length(inds))
-            for (j, ind) in enumerate(inds), ind′ in inds′
-                if iscyclicpermutation(ind′, ind)
-                    keepᵢ[j] = true
-                end
-            end
-            keep .&= keepᵢ
-            any(keep) || break # give up early if keep is all false
-        end
-        return inds[keep]
-    elseif ex.head == :call && ex.args[1] == :*
-        @assert length(ex.args) == 3
-        inds1 = get_possible_planar_indices(ex.args[2])
-        inds2 = get_possible_planar_indices(ex.args[3])
-        inds = Any[]
-        for ind1 in inds1, ind2 in inds2
-            for (oind1, oind2, cind1, cind2) in possible_planar_complements(ind1, ind2)
-                push!(inds, vcat(oind1, oind2))
-            end
-        end
-        return inds
-    else
-        return Any[]
-    end
-end
+"""
+    planar_unique2(allind)
 
-# remove double indices (trace indices) from cyclic set
+Remove planar trace indices from a list of indices of a single tensor. Note that the tensor
+is obtained from the corresponding tensor map by planar transformations. The planar trace
+can only be taken in a specific way that there are no crossings between lines. For example,
+the indices can be like `[a,b,c,d,e,e,d,f,g,g,b,a]`, and the return list is `[c,f]`.
+"""
 function planar_unique2(allind)
     oind = collect(allind)
     removing = true
@@ -124,7 +163,23 @@ function planar_unique2(allind)
     return oind
 end
 
-# remove intersection (contraction indices) from two cyclic sets
+"""
+    possible_planar_complements(ind1, ind2)
+
+The input `ind1` and `ind2` are indices of two tensors to be partially contracted. Note that
+the tensors are obtained by mapping the corresponding tensor maps using planar
+transformations composed of duality maps. It is assumed that there is no contraction within
+each tensor.
+
+If there are some contractions between two tensors, the returned object is
+`Any[(indo1, indo2, cind1, cind2)]`, where `indo1` and `indo2` are the indices that are left
+open and `vcat(indo1,indo2)` is the indices of the result tensor after contraction in the
+correct order, while `cind1` and `cind2` are the indices such that `cind1[i]` can be
+contracted with `cind2[i]`.
+
+If there is no contractions between two tensors, i.e., two tensors are disconnected, all
+possible planar arrangement of the indices are returned as elements of a matrix `Any[...]`.
+"""
 function possible_planar_complements(ind1, ind2)
     # quick return path
     (isempty(ind1) || isempty(ind2)) && return Any[(ind1, ind2, Any[], Any[])]
@@ -133,7 +188,7 @@ function possible_planar_complements(ind1, ind2)
     if j1 === nothing # disconnected diagrams, can be made planar in various ways
         return Any[(circshift(ind1, i-1), circshift(ind2, j-1), Any[], Any[])
                     for i ∈ eachindex(ind1), j ∈ eachindex(ind2)]
-    else # genuine contraction
+    else # there are contractions between two tensors
         N1, N2 = length(ind1), length(ind2)
         j2 = findfirst(==(ind1[j1]), ind2)
         jmax1 = j1
@@ -164,6 +219,56 @@ function possible_planar_complements(ind1, ind2)
     end
 end
 
+"""
+    get_possible_planar_indices(ex::Expr)
+
+Return all possible planar arrangement of the open indices in the tensor expression as
+elements of a matrix `Any[...]`.
+"""
+function get_possible_planar_indices(ex::Expr)
+    @assert TO.istensorexpr(ex)
+    if TO.isgeneraltensor(ex)
+        _,leftind,rightind = TO.decomposegeneraltensor(ex)
+        ind = planar_unique2(vcat(leftind, reverse(rightind)))
+        return length(ind) == length(unique(ind)) ? Any[ind] : Any[]
+    elseif ex.head == :call && (ex.args[1] == :+ || ex.args[1] == :-)
+        inds = get_possible_planar_indices(ex.args[2])
+        keep = fill(true, length(inds))
+        for i = 3:length(ex.args)
+            indsi = get_possible_planar_indices(ex.args[i])
+            keepi = fill(false, length(inds))
+            for (j, ind) in enumerate(inds), indi in indsi
+                if iscyclicpermutation(indi, ind)
+                    keepi[j] = true
+                end
+            end
+            keep .&= keepi
+            any(keep) || break # give up early if keep is all false
+        end
+        return inds[keep]
+    elseif ex.head == :call && ex.args[1] == :*
+        @assert length(ex.args) == 3
+        inds1 = get_possible_planar_indices(ex.args[2])
+        inds2 = get_possible_planar_indices(ex.args[3])
+        inds = Any[]
+        for ind1 in inds1, ind2 in inds2
+            for (oind1, oind2, cind1, cind2) in possible_planar_complements(ind1, ind2)
+                push!(inds, vcat(oind1, oind2))
+            end
+        end
+        return inds
+    else
+        return Any[]
+    end
+end
+
+"""
+    _check_planarity(ex::Expr)
+
+Check if all the assigments and definitions are planar. For each assigment or definition,
+the indices of the left hand side should be a cyclic permutation of one of the possible
+planar arrangement of the open indices of the right hand side.
+"""
 function _check_planarity(ex::Expr)
     if ex.head == :macrocall && ex.args[1] == Symbol("@notensor")
     elseif TO.isassignment(ex) || TO.isdefinition(ex)
@@ -189,42 +294,99 @@ function _check_planarity(ex::Expr)
 end
 _check_planarity(ex) = ex
 
-# decompose contraction trees in order to fix index order of temporaries
-# to ensure that planarity is guaranteed
-_decompose_planar_contractions(ex, temporaries) = ex
-function _decompose_planar_contractions(ex::Expr, temporaries)
-    if ex.head == :macrocall && ex.args[1] == Symbol("@notensor")
-        return ex
-    end
-    if TO.isassignment(ex) || TO.isdefinition(ex)
-        lhs, rhs = TO.getlhs(ex), TO.getrhs(ex)
-        if TO.istensorexpr(rhs)
-            pre = Vector{Any}()
-            rhs = _extract_contraction_pairs(rhs, lhs, pre, temporaries)
-            return Expr(:block, pre..., Expr(ex.head, lhs, rhs))
-        else
-            return ex
+"""
+    _is_adjoint(ex)
+
+Check if `ex` has head `TO.prime`.
+"""
+_is_adjoint(ex) = isa(ex, Expr) && ex.head == TO.prime
+
+"""
+    _remove_adjoint(ex)
+
+Remove the adjoint head of the whole expression.
+"""
+_remove_adjoint(ex) = _is_adjoint(ex) ? ex.args[1] : ex
+
+"""
+    _restore_adjoint(ex)
+
+Restore the adjoint head for the whole expression.
+"""
+_restore_adjoint(ex) = Expr(TO.prime, ex)
+
+"""
+    _extract_tensormap_objects(ex)
+
+Replace the `TensorOperations.extracttensorobjects` function.
+
+For all tensors in `ex`, use `gensym()` to generate uniquely symbols for the tensor objects.
+Return the expression that contains:
+1. Assign all existing tensor objects to their corresponding generated objects.
+2. Check for matching number of domain and codomain indices between the generated and
+    original objects.
+3. Replace all objects in the `ex` with the generated ones.
+4. Change the objects of the newly created tensors back to their original names.
+
+Note that `t` and its adjoint `t'` are considered as the same object.
+"""
+function _extract_tensormap_objects(ex)
+    inputtensors = _remove_adjoint.(TO.getinputtensorobjects(ex))
+    outputtensors = _remove_adjoint.(TO.getoutputtensorobjects(ex))
+    newtensors = TO.getnewtensorobjects(ex)
+    @assert !any(_is_adjoint, newtensors)
+    existingtensors = unique!(vcat(inputtensors, outputtensors))
+    alltensors = unique!(vcat(existingtensors, newtensors))
+    tensordict = Dict{Any,Any}(a => gensym() for a in alltensors)
+    pre = Expr(:block, [Expr(:(=), tensordict[a], a) for a in existingtensors]...)
+    pre2 = Expr(:block)
+    ex = TO.replacetensorobjects(ex) do obj, leftind, rightind
+        _is_adj = _is_adjoint(obj)
+        if _is_adj
+            leftind, rightind = rightind, leftind
+            obj = _remove_adjoint(obj)
         end
+        newobj = get(tensordict, obj, obj)
+        if (obj in existingtensors)
+            nl = length(leftind)
+            nr = length(rightind)
+            nlsym = gensym()
+            nrsym = gensym()
+            objstr = string(obj)
+            errorstr1 = "incorrect number of input-output indices: ($nl, $nr) instead of "
+            errorstr2 = " for $objstr."
+            checksize = quote
+                $nlsym = numout($newobj)
+                $nrsym = numin($newobj)
+                ($nlsym == $nl && $nrsym == $nr) ||
+                    throw(IndexError($errorstr1 * string(($nlsym, $nrsym)) * $errorstr2))
+            end
+            push!(pre2.args, checksize)
+        end
+        return _is_adj ? _restore_adjoint(newobj) : newobj
     end
-    if TO.istensorexpr(ex)
-        pre = Vector{Any}()
-        rhs = _extract_contraction_pairs(ex, (Any[], Any[]), pre, temporaries)
-        return Expr(:block, pre..., rhs)
-    end
-    if ex.head == :block
-        return Expr(ex.head,
-                    [_decompose_planar_contractions(a, temporaries) for a in ex.args]...)
-    end
-    if ex.head == :for || ex.head == :function
-        return Expr(ex.head, ex.args[1],
-                        _decompose_planar_contractions(ex.args[2], temporaries))
-    end
-    return ex
+    post = Expr(:block, [Expr(:(=), a, tensordict[a]) for a in newtensors]...)
+    pre = Expr(:macrocall, Symbol("@notensor"), LineNumberNode(@__LINE__, Symbol(@__FILE__)), pre)
+    pre2 = Expr(:macrocall, Symbol("@notensor"), LineNumberNode(@__LINE__, Symbol(@__FILE__)), pre2)
+    post = Expr(:macrocall, Symbol("@notensor"), LineNumberNode(@__LINE__, Symbol(@__FILE__)), post)
+    return Expr(:block, pre, pre2, ex, post)
 end
 
-# decompose a contraction into elementary binary contractions of tensors without inner traces
-# if lhs is an expression, it contains the existing lhs and thus the index order
-# if lhs is a tuple, the result is a temporary object and the tuple (lind, rind) gives a suggestion for the preferred index order
+"""
+    _extract_contraction_pairs(rhs, lhs, pre, temporaries)
+
+Decompose a contraction into elementary binary contractions of tensors without inner traces.
+
+The original tensors with inner traces are replaced with names generated by `gensym()`. The
+assignments of the new names are recorded in `pre`, and the new names are saved in
+`temporaries`.
+
+If the `lhs` is an expression, it contains the existing lhs and thus the index order.
+
+If the `lhs` is a tuple `(leftind,rightind)` and this gives a suggestion for the preferred
+index order, and the final order of the temporary object (which is the result of the binaray
+contraction) is a cyclic permutation of it.
+"""
 function _extract_contraction_pairs(rhs, lhs, pre, temporaries)
     if TO.isgeneraltensor(rhs)
         if TO.hastraceindices(rhs) && lhs isa Tuple
@@ -312,53 +474,46 @@ function _extract_contraction_pairs(rhs, lhs, pre, temporaries)
     end
 end
 
-# replacement of TensorOperations functionality:
-# adds checks for matching number of domain and codomain indices
-# special cases adjoints so that t and t' are considered the same object
-function _extract_tensormap_objects(ex)
-    inputtensors = _remove_adjoint.(TO.getinputtensorobjects(ex))
-    outputtensors = _remove_adjoint.(TO.getoutputtensorobjects(ex))
-    newtensors = TO.getnewtensorobjects(ex)
-    @assert !any(_is_adjoint, newtensors)
-    existingtensors = unique!(vcat(inputtensors, outputtensors))
-    alltensors = unique!(vcat(existingtensors, newtensors))
-    tensordict = Dict{Any,Any}(a => gensym() for a in alltensors)
-    pre = Expr(:block, [Expr(:(=), tensordict[a], a) for a in existingtensors]...)
-    pre2 = Expr(:block)
-    ex = TO.replacetensorobjects(ex) do obj, leftind, rightind
-        _is_adj = _is_adjoint(obj)
-        if _is_adj
-            leftind, rightind = rightind, leftind
-            obj = _remove_adjoint(obj)
-        end
-        newobj = get(tensordict, obj, obj)
-        if (obj in existingtensors)
-            nl = length(leftind)
-            nr = length(rightind)
-            nlsym = gensym()
-            nrsym = gensym()
-            objstr = string(obj)
-            errorstr1 = "incorrect number of input-output indices: ($nl, $nr) instead of "
-            errorstr2 = " for $objstr."
-            checksize = quote
-                $nlsym = numout($newobj)
-                $nrsym = numin($newobj)
-                ($nlsym == $nl && $nrsym == $nr) ||
-                    throw(IndexError($errorstr1 * string(($nlsym, $nrsym)) * $errorstr2))
-            end
-            push!(pre2.args, checksize)
-        end
-        return _is_adj ? _restore_adjoint(newobj) : newobj
+"""
+    _decompose_planar_contractions(ex::Expr, temporaries)
+
+Decompose contraction trees into elementary binary contractions of tensors without inner
+traces in order to fix index order of temporaries to ensure that planarity is guaranteed.
+
+All the temporary names generated by `gensym()` are saved in `temporaries`, and the
+assignments of the temporary names are recoded in `pre` which is included in the final
+expression.
+"""
+function _decompose_planar_contractions(ex::Expr, temporaries)
+    if ex.head == :macrocall && ex.args[1] == Symbol("@notensor")
+        return ex
     end
-    post = Expr(:block, [Expr(:(=), a, tensordict[a]) for a in newtensors]...)
-    pre = Expr(:macrocall, Symbol("@notensor"), LineNumberNode(@__LINE__, Symbol(@__FILE__)), pre)
-    pre2 = Expr(:macrocall, Symbol("@notensor"), LineNumberNode(@__LINE__, Symbol(@__FILE__)), pre2)
-    post = Expr(:macrocall, Symbol("@notensor"), LineNumberNode(@__LINE__, Symbol(@__FILE__)), post)
-    return Expr(:block, pre, pre2, ex, post)
+    if TO.isassignment(ex) || TO.isdefinition(ex)
+        lhs, rhs = TO.getlhs(ex), TO.getrhs(ex)
+        if TO.istensorexpr(rhs)
+            pre = Vector{Any}()
+            rhs = _extract_contraction_pairs(rhs, lhs, pre, temporaries)
+            return Expr(:block, pre..., Expr(ex.head, lhs, rhs))
+        else
+            return ex
+        end
+    end
+    if TO.istensorexpr(ex)
+        pre = Vector{Any}()
+        rhs = _extract_contraction_pairs(ex, (Any[], Any[]), pre, temporaries)
+        return Expr(:block, pre..., rhs)
+    end
+    if ex.head == :block
+        return Expr(ex.head,
+                    [_decompose_planar_contractions(a, temporaries) for a in ex.args]...)
+    end
+    if ex.head == :for || ex.head == :function
+        return Expr(ex.head, ex.args[1],
+                        _decompose_planar_contractions(ex.args[2], temporaries))
+    end
+    return ex
 end
-_is_adjoint(ex) = isa(ex, Expr) && ex.head == TO.prime
-_remove_adjoint(ex) = _is_adjoint(ex) ? ex.args[1] : ex
-_restore_adjoint(ex) = Expr(TO.prime, ex)
+_decompose_planar_contractions(ex, temporaries) = ex
 
 function _extract_tensormap_objects2(ex)
     inputtensors = collect(filter(!=(:τ), _remove_adjoint.(TO.getinputtensorobjects(ex))))
@@ -438,7 +593,8 @@ function _construct_braidingtensors(ex::Expr)
     for (t, construct_expr) in translatebraidings
         obj, leftind, rightind = TO.decomposetensor(t)
         length(leftind) == length(rightind) == 2 ||
-            throw(ArgumentError("The name τ is reserved for the braiding, and should have two input and two output indices."))
+            throw(ArgumentError("The name τ is reserved for the braiding, and should have
+                                    two input and two output indices."))
         if _is_adjoint(obj)
             i1b, i2b, = leftind
             i2a, i1a, = rightind
