@@ -1,36 +1,11 @@
-function cached_permute(sym::Symbol, t::TensorMap{S},
-                            p1::IndexTuple{N₁},  p2::IndexTuple{N₂}=();
-                            copy::Bool = false) where {S, N₁, N₂}
-    cod = ProductSpace{S, N₁}(map(n->space(t, n), p1))
-    dom = ProductSpace{S, N₂}(map(n->dual(space(t, n)), p2))
-    # share data if possible
-    if !copy
-        if p1 === codomainind(t) && p2 === domainind(t)
-            return t
-        elseif has_shared_permute(t, p1, p2)
-            return TensorMap(reshape(t.data, dim(cod), dim(dom)), cod, dom)
-        end
-    end
-    # general case
-    @inbounds begin
-        tp = TO.cached_similar_from_indices(sym, eltype(t), p1, p2, t, :N)
-        return add!(true, t, false, tp, p1, p2)
-    end
-end
+"""
+    scalar(t::AbstractTensorMap{S}) where {S<:IndexSpace}
 
-function cached_permute(sym::Symbol, t::AdjointTensorMap{S},
-                            p1::IndexTuple,  p2::IndexTuple=();
-                            copy::Bool = false) where {S, N₁, N₂}
-    p1′ = adjointtensorindices(t, p2)
-    p2′ = adjointtensorindices(t, p1)
-    adjoint(cached_permute(sym, adjoint(t), p1′, p2′; copy = copy))
-end
-
+Change the tensor map which is from 1D space to 1D space to its scalar value.
+"""
 scalar(t::AbstractTensorMap{S}) where {S<:IndexSpace} =
     dim(codomain(t)) == dim(domain(t)) == 1 ?
         first(blocks(t))[2][1, 1] : throw(SpaceMismatch())
-
-
 
 """
     _add_trivial_kernel!(α, tsrc::AbstractTensorMap, β, tdst::AbstractTensorMap,
@@ -39,15 +14,15 @@ scalar(t::AbstractTensorMap{S}) where {S<:IndexSpace} =
 `tsrc` and `tdst` are TrivialTensorMap, thus `tsrc[]` and `tdst[]` gives the data of
 the tensor map in a form of multidimensional array. `pdata = (p1..., p2...)` gives the
 permutation of the indices of the tensor map `tsrc`. After permutation `tsrc` changes
-`to `tsrc2` and has the same space with `tdst`.
+to `tsrc2` and has the same spaces with `tdst`.
 
 After running, `tdst` will be replaced in-place by the tensor map `tsrc2*α + tdst*β`.
+
+Note that the parameter `fusiontreemap` is useless here.
 """
 function _add_trivial_kernel!(α, tsrc::AbstractTensorMap, β, tdst::AbstractTensorMap,
                                 p1::IndexTuple, p2::IndexTuple, fusiontreemap)
-    #cod = codomain(tsrc)
-    #dom = domain(tsrc)
-    #n = length(cod)
+
     pdata = (p1..., p2...)
     axpby!(α, permutedims(tsrc[], pdata), β, tdst[])
     return nothing
@@ -59,21 +34,23 @@ end
 
 Only works for tensor maps with UniqueFusion.
 
-Here `fusiontreemap` is a function that manipulate the fusiontree and gives the resulting
-fusiontrees as keys and coefficients as values. In the Abelian case, it only gives one pair.
+The fusion trees of the `tdst` may not be the same with `tsrc`, and the fusion trees of
+`tsrc` can be transformed to that of `tdst` by `fusiontreemap`.
 
-Consider the fusion tree `(f1,f2)` in `tsrc`. After the operation of `fusiontreemap`
-(which result in `(f1′, f2′) => coeff`) and the permitation based on
-`pdata = (p1..., p2...)` (result in `tsrc2`), the corresponding block of data has the same
-shape as `tdst[f1′, f2′]`.
+Consider the fusion tree `(f1,f2)` in `tsrc` with data `tsrc[f1, f2]`.
+
+Applying the `fusiontreemap` on `(f1,f2)`, we obtain `(f1′, f2′) => coeff`, where
+`(f1′, f2′)` is also a fusion tree of `tdst`.
+
+At the same time the data `tsrc[f1, f2]` should be permuted by `pdata = (p1..., p2...)` to
+be consistent with the structure of the new fusion tree `(f1′, f2′)`.
 
 After running, the block `tdst[f1′, f2′]` is replaced in-place by
-`tsrc2*α*coeff+tdst[f1′, f2′]*β`.
+`α*coeff*permutedims(tsrc[f1, f2], pdata)+β*tdst[f1′, f2′]`.
 """
 function _addabelianblock!(α, tsrc::AbstractTensorMap, β, tdst::AbstractTensorMap,
         p1::IndexTuple, p2::IndexTuple, f1::FusionTree, f2::FusionTree, fusiontreemap)
-    #cod = codomain(tsrc)
-    #dom = domain(tsrc)
+
     (f1′, f2′), coeff = first(fusiontreemap(f1, f2))
     pdata = (p1..., p2...)
     @inbounds axpby!(α*coeff, permutedims(tsrc[f1, f2], pdata), β, tdst[f1′, f2′])
@@ -115,9 +92,7 @@ Same operations on each fusion trees.
 """
 function _add_general_kernel!(α, tsrc::AbstractTensorMap, β, tdst::AbstractTensorMap,
                                 p1::IndexTuple, p2::IndexTuple, fusiontreemap)
-    #cod = codomain(tsrc)
-    #dom = domain(tsrc)
-    #n = length(cod)
+
     pdata = (p1..., p2...)
     if iszero(β)
         fill!(tdst, β)
@@ -138,14 +113,20 @@ const _add_kernels = (_add_trivial_kernel!, _add_abelian_kernel!, _add_general_k
     _add!(α, tsrc::AbstractTensorMap{S}, β, tdst::AbstractTensorMap{S, N₁, N₂},
             p1::IndexTuple{N₁}, p2::IndexTuple{N₂}, fusiontreemap) where {S, N₁, N₂}
 
-Make the general add operation between two tensor maps. For each fusion tree of `tsrc`,
-apply the manipulation `fusiontreemap` which give new fusion trees and the corresponding
-coefficients. Apply the permutation on the data of the new fusion trees based on
-`(p1..., p2...)`, where the permutation should be consistent with requirement of the
-`fusiontreemap` manipulation.
+Make the general add operation between two tensor maps.
+
+The fusion trees of the `tdst` may not be the same with `tsrc`, and the fusion trees of
+`tsrc` can be transformed to that of `tdst` by `fusiontreemap`.
+
+For each fusion tree `(f1,f2)` of `tsrc`, apply the manipulation `fusiontreemap`, which
+give new fusion trees `(f1′, f2′)`, which are also fusion trees of `tdst`, and the
+corresponding coefficients `coeff`.
+
+At the same time apply the permutation on the data of the old fusion trees based on
+`(p1..., p2...)` to make the data structure consistent with the new fusion trees.
 
 Return `tdst`, whose data for each fusion tree is replaced in-place by
-`(data of new fusion tree of tsrc)*α*coefficient + (data of fusion tree of tdst)*β`.
+`α*coeff*permutedims(tsrc[f1, f2], pdata)+β*tdst[f1′, f2′]`.
 """
 function _add!(α, tsrc::AbstractTensorMap{S}, β, tdst::AbstractTensorMap{S, N₁, N₂},
                 p1::IndexTuple{N₁}, p2::IndexTuple{N₂}, fusiontreemap) where {S, N₁, N₂}
@@ -175,7 +156,9 @@ end
     add_permute!(α, tsrc::AbstractTensorMap{S}, β, tdst::AbstractTensorMap{S, N₁, N₂},
                     p1::IndexTuple{N₁}, p2::IndexTuple{N₂}) where {S, N₁, N₂}
 
-Replace `tdst` with `permutaion(tsrc)*α + tdst*β`.
+Work for the case that `tsrc` are related to `tdst` by permutation `(p1...,p2...)`.
+
+Replace `tdst` with `permute(tsrc)*α + tdst*β`.
 """
 @propagate_inbounds function add_permute!(α, tsrc::AbstractTensorMap{S},
                                             β, tdst::AbstractTensorMap{S, N₁, N₂},
@@ -188,6 +171,9 @@ end
 """
     add_braid!(α, tsrc::AbstractTensorMap{S}, β, tdst::AbstractTensorMap{S, N₁, N₂},
             p1::IndexTuple{N₁}, p2::IndexTuple{N₂}, levels::IndexTuple) where {S, N₁, N₂}
+
+Work for the case that `tsrc` are related to `tdst` by braiding according to `(p1...,p2...)`
+and `levels`.
 
 Replace `tdst` with `braid(tsrc)*α + tdst*β`.
 """
@@ -210,9 +196,10 @@ end
     add_transpose!(α, tsrc::AbstractTensorMap{S}, β, tdst::AbstractTensorMap{S, N₁, N₂},
                     p1::IndexTuple{N₁}, p2::IndexTuple{N₂}) where {S, N₁, N₂}
 
-Replace `tdst` with `transpose(tsrc)*α + tdst*β`.
+Work for the case that `tsrc` are related to `tdst` by transpose, which can be realized
+by repartition and cyclic permutation.
 
-?????? It seems that transpose is the same with permutation...
+Replace `tdst` with `transpose(tsrc)*α + tdst*β`.
 """
 @propagate_inbounds function add_transpose!(α, tsrc::AbstractTensorMap{S},
                                             β, tdst::AbstractTensorMap{S, N₁, N₂},
@@ -226,7 +213,9 @@ end
     add!(α, tsrc::AbstractTensorMap{S}, β, tdst::AbstractTensorMap{S},
             p1::IndexTuple, p2::IndexTuple) where {S}
 
-Replace `tdst` with `permutaion(tsrc)*α + tdst*β`.
+Work only for the case with `SymmetricBraiding`, and equivalent to `add_permute!`.
+
+Replace `tdst` with `permute(tsrc)*α + tdst*β`.
 """
 @propagate_inbounds function add!(α, tsrc::AbstractTensorMap{S},
                                     β, tdst::AbstractTensorMap{S},
@@ -244,6 +233,8 @@ end
     add!(α, tsrc::AbstractTensorMap{S}, β, tdst::AbstractTensorMap{S},
             p1::IndexTuple, p2::IndexTuple, levels::IndexTuple) where {S}
 
+Equivalent to `add_braid!`.
+
 Replace `tdst` with `braid(tsrc)*α + tdst*β`.
 """
 @propagate_inbounds function add!(α, tsrc::AbstractTensorMap{S},
@@ -258,7 +249,11 @@ end
             p1::IndexTuple{N₁}, p2::IndexTuple{N₂},
             q1::IndexTuple{N₃}, q2::IndexTuple{N₃}) where {S, N₁, N₂, N₃}
 
+Work only for tensors with symmetric braiding.
 
+Implements `tdst = β*tdst+α*partialtrace(tsrc)` where `tsrc` is permuted and partially
+traced, such that the codomain (domain) of `tdst` correspond to the spaces `p1` (`p2`) of
+`tsrc`, and indices `q1[i]` are contracted with indices `q2[i]`.
 """
 function trace!(α, tsrc::AbstractTensorMap{S}, β, tdst::AbstractTensorMap{S, N₁, N₂},
                 p1::IndexTuple{N₁}, p2::IndexTuple{N₂},
@@ -320,6 +315,30 @@ end
 # TODO: contraction with either A or B a rank (1, 1) tensor does not require to
 # permute the fusion tree and should therefore be special cased. This will speed
 # up MPS algorithms
+
+"""
+    contract!(α, A::AbstractTensorMap{S}, B::AbstractTensorMap{S},
+                β, C::AbstractTensorMap{S},
+                oindA::IndexTuple{N₁}, cindA::IndexTuple,
+                oindB::IndexTuple{N₂}, cindB::IndexTuple,
+                p1::IndexTuple, p2::IndexTuple,
+                syms::Union{Nothing, NTuple{3, Symbol}} = nothing) where {S, N₁, N₂}
+
+Implements `C = β*C+α*contract(A,B)` where `A` and `B` are contracted, such that
+the indices `cindA` of `A` are contracted with indices `cindB` of `B`. The open indices
+`oindA` of `A` and `oindB` of `B` are permuted such that `C` has codomain (domain)
+corresponding to indices `p1` (`p2`) out of `(oindA..., oindB...)`.
+
+Together, `(oindA..., cindA...)` is a permutation of 1 to the number of indices of `A` and
+`(oindB..., cindB...)` is a permutation of 1 to the number of indices of `B`.
+
+`length(cindA) == length(cindB)`, and `length(oindA)+length(oindB)` equals the number of
+indices of `C` and `(p1..., p2...)` is a permutation of `1` ot the number of indices of `C`.
+
+The final argument `syms` is optional and can be either `nothing`, or a tuple of three
+symbols, which are used to identify temporary objects in the cache to be used for permuting
+`A`, `B` and `C` so as to perform the contraction as a matrix multiplication.
+"""
 function contract!(α, A::AbstractTensorMap{S}, B::AbstractTensorMap{S},
                     β, C::AbstractTensorMap{S},
                     oindA::IndexTuple{N₁}, cindA::IndexTuple,
@@ -608,4 +627,32 @@ function TO.contract!(α,
         error("unknown conjugation flags: $CA and $CB")
     end
     return tC
+end
+
+function cached_permute(sym::Symbol, t::TensorMap{S},
+                            p1::IndexTuple{N₁},  p2::IndexTuple{N₂}=();
+                            copy::Bool = false) where {S, N₁, N₂}
+    cod = ProductSpace{S, N₁}(map(n->space(t, n), p1))
+    dom = ProductSpace{S, N₂}(map(n->dual(space(t, n)), p2))
+    # share data if possible
+    if !copy
+        if p1 === codomainind(t) && p2 === domainind(t)
+            return t
+        elseif has_shared_permute(t, p1, p2)
+            return TensorMap(reshape(t.data, dim(cod), dim(dom)), cod, dom)
+        end
+    end
+    # general case
+    @inbounds begin
+        tp = TO.cached_similar_from_indices(sym, eltype(t), p1, p2, t, :N)
+        return add!(true, t, false, tp, p1, p2)
+    end
+end
+
+function cached_permute(sym::Symbol, t::AdjointTensorMap{S},
+                            p1::IndexTuple,  p2::IndexTuple=();
+                            copy::Bool = false) where {S, N₁, N₂}
+    p1′ = adjointtensorindices(t, p2)
+    p2′ = adjointtensorindices(t, p1)
+    adjoint(cached_permute(sym, adjoint(t), p1′, p2′; copy = copy))
 end

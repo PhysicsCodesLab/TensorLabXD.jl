@@ -13,7 +13,20 @@ struct HomSpace{S<:ElementarySpace, P1<:CompositeSpace{S}, P2<:CompositeSpace{S}
     domain::P2
 end
 
+"""
+    TensorSpace{S<:ElementarySpace}
+
+A constant which is the union type of both elementary and product vector space and defined
+as `HomSpace{S, ProductSpace{S, N₁}, ProductSpace{S, N₂}}`.
+"""
 const TensorSpace{S<:ElementarySpace} = Union{S, ProductSpace{S}}
+
+"""
+    TensorMapSpace{S<:ElementarySpace, N₁, N₂}
+
+A constant which is an alias name of the HomSpace and defined as
+`HomSpace{S, ProductSpace{S, N₁}, ProductSpace{S, N₂}}`.
+"""
 const TensorMapSpace{S<:ElementarySpace, N₁, N₂} =
     HomSpace{S, ProductSpace{S, N₁}, ProductSpace{S, N₂}}
 

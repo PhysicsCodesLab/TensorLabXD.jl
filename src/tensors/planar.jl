@@ -650,6 +650,10 @@ end
 # step of TensorOperations, and we have to manually fix this
 # Step 1: we have to find the new name that TO.tensorify assigned to these temporaries
 # since it parses `tmp[] := a[] * b[]` as `newtmp = similar...; tmp = contract!(.... , newtmp, ...)`
+
+"""
+    _update_temporaries(ex, temporaries)
+"""
 function _update_temporaries(ex, temporaries)
     if ex isa Expr && ex.head == :(=)
         lhs = ex.args[1]
@@ -670,6 +674,9 @@ function _update_temporaries(ex, temporaries)
     return ex
 end
 # Step 2: we find `newtmp = similar_from_...` and replace with `newtmp = cached_similar_from...`
+"""
+    _annotate_temporaries(ex, temporaries)
+"""
 function _annotate_temporaries(ex, temporaries)
     if ex isa Expr && ex.head == :(=)
         lhs = ex.args[1]
@@ -692,6 +699,9 @@ end
 const _TOFUNCTIONS = (:similar_from_indices, :cached_similar_from_indices,
                         :scalar, :IndexError)
 
+"""
+    _add_modules(ex::Expr)
+"""
 function _add_modules(ex::Expr)
     if ex.head == :call && ex.args[1] in _TOFUNCTIONS
         return Expr(ex.head, GlobalRef(TensorOperations, ex.args[1]),
@@ -718,12 +728,28 @@ end
 _add_modules(ex) = ex
 
 @specialize
+"""
+    planar_add!(α, tsrc::AbstractTensorMap{S},
+                β, tdst::AbstractTensorMap{S, N₁, N₂},
+                p1::IndexTuple{N₁}, p2::IndexTuple{N₂}) where {S, N₁, N₂}
 
+Equivalent to `add_transpose!` which is a planar munipulation.
+"""
 planar_add!(α, tsrc::AbstractTensorMap{S},
             β, tdst::AbstractTensorMap{S, N₁, N₂},
             p1::IndexTuple{N₁}, p2::IndexTuple{N₂}) where {S, N₁, N₂} =
     add_transpose!(α, tsrc, β, tdst, p1, p2)
 
+"""
+    planar_trace!(α, tsrc::AbstractTensorMap{S},
+                    β, tdst::AbstractTensorMap{S, N₁, N₂},
+                    p1::IndexTuple{N₁}, p2::IndexTuple{N₂},
+                    q1::IndexTuple{N₃}, q2::IndexTuple{N₃}) where {S, N₁, N₂, N₃}
+
+Implements `tdst = β*tdst+α*partialtrace(tsrc)` where `tsrc` is permuted and partially
+traced, such that the codomain (domain) of `tdst` correspond to the spaces `p1` (`p2`) of
+`tsrc`, and indices `q1[i]` are contracted with indices `q2[i]`.
+"""
 function planar_trace!(α, tsrc::AbstractTensorMap{S},
                        β, tdst::AbstractTensorMap{S, N₁, N₂},
                        p1::IndexTuple{N₁}, p2::IndexTuple{N₂},
@@ -758,8 +784,19 @@ function planar_trace!(α, tsrc::AbstractTensorMap{S},
     return tdst
 end
 
+"""
+    _cyclicpermute(t::Tuple)
+
+Return the tuple that move the fisrt element of `t` to the end of the tuple.
+"""
 _cyclicpermute(t::Tuple) = (Base.tail(t)..., t[1])
 _cyclicpermute(t::Tuple{}) = ()
+
+"""
+    reorder_indices(codA, domA, codB, domB, oindA, oindB, p1, p2)
+
+
+"""
 function reorder_indices(codA, domA, codB, domB, oindA, oindB, p1, p2)
     N₁ = length(oindA)
     N₂ = length(oindB)
@@ -790,10 +827,11 @@ function reorder_indices(codA, domA, codB, domB, oindA, oindB, p1, p2)
     cindB2 = TupleTools.getindices(indB, pc)
     return oindA2, cindA2, oindB2, cindB2
 end
-function reorder_indices(codA, domA, codB, domB, oindA, cindA, oindB, cindB, p1, p2)
-    oindA2, cindA2, oindB2, cindB2 =
-        reorder_indices(codA, domA, codB, domB, oindA, oindB, p1, p2)
 
+function reorder_indices(codA, domA, codB, domB, oindA, cindA, oindB, cindB, p1, p2)
+
+    oindA2, cindA2, oindB2, cindB2 = reorder_indices(codA, domA, codB, domB, oindA,
+                                                        oindB, p1, p2)
     #if oindA or oindB are empty, then reorder indices can only order it correctly up to a cyclic permutation!
     if isempty(oindA2) && !isempty(cindA)
          # isempty(cindA) is a cornercase which I'm not sure if we can encounter

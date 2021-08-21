@@ -1,9 +1,37 @@
+
+"""
+    EuclideanTensorSpace
+
+A constant which is defined as `TensorSpace{<:EuclideanSpace}`, where
+`TensorSpace{S<:ElementarySpace} = Union{S, ProductSpace{S}}`.
+"""
 const EuclideanTensorSpace = TensorSpace{<:EuclideanSpace}
+
+"""
+    EuclideanTensorMapSpace
+
+A constant which is defined as `TensorMapSpace{<:EuclideanSpace}`, where
+`TensorMapSpace{S<:ElementarySpace, N₁, N₂} =
+    HomSpace{S, ProductSpace{S, N₁}, ProductSpace{S, N₂}}`.
+"""
 const EuclideanTensorMapSpace = TensorMapSpace{<:EuclideanSpace}
+
+"""
+    AbstractEuclideanTensorMap
+
+A constant which is defined as `AbstractTensorMap{<:EuclideanTensorSpace}`.
+"""
 const AbstractEuclideanTensorMap = AbstractTensorMap{<:EuclideanTensorSpace}
+
+"""
+    EuclideanTensorMap
+
+A constant which is defined as `TensorMap{<:EuclideanTensorSpace}`.
+"""
 const EuclideanTensorMap = TensorMap{<:EuclideanTensorSpace}
 
-# Wrapping the blocks in a StridedView enables multithreading if JULIA_NUM_THREADS > 1
+# Wrapping the blocks in a StridedView enables multithreading if JULIA_NUM_THREADS > 1.
+
 """
     copy!(tdst::AbstractTensorMap, tsrc::AbstractTensorMap) -> tdst
 
@@ -83,7 +111,7 @@ end
     mul!(tC::AbstractTensorMap, tA::AbstractTensorMap,
             tB::AbstractTensorMap, α = true, β = false)
 
-Extend `LinearAlgebra.mul!`. Overwrite `tC` by `tA tB α + tC β`. Return `tC`.
+Extend `LinearAlgebra.mul!`. Overwrite `tC` by `tA*tB*α + tC*β`. Return `tC`.
 """
 function LinearAlgebra.mul!(tC::AbstractTensorMap,
                             tA::AbstractTensorMap,
@@ -92,7 +120,8 @@ function LinearAlgebra.mul!(tC::AbstractTensorMap,
         throw(SpaceMismatch())
     end
     for c in blocksectors(tC)
-        if hasblock(tA, c) # then also tB should have such a block
+        if hasblock(tA, c)
+            @assert hasblock(tB,c) # tB should have such a block
             A = block(tA, c)
             B = block(tB, c)
             C = block(tC, c)
@@ -119,7 +148,7 @@ Base.:-(t::AbstractTensorMap) = mul!(similar(t), t, -one(eltype(t)))
 """
     *(t::AbstractTensorMap, α::Number)
 
-Extend `Base.:*`. Creat a new tensor map that equals to `t α`.
+Extend `Base.:*`. Creat a new tensor map that equals to `t*α`.
 """
 Base.:*(t::AbstractTensorMap, α::Number) =
     mul!(similar(t, promote_type(eltype(t), typeof(α))), t, α)
@@ -127,7 +156,7 @@ Base.:*(t::AbstractTensorMap, α::Number) =
 """
     *(α::Number, t::AbstractTensorMap)
 
-Extend `Base.:*`. Creat a new tensor map that equals to `α t`.
+Extend `Base.:*`. Creat a new tensor map that equals to `α*t`.
 """
 Base.:*(α::Number, t::AbstractTensorMap) =
     mul!(similar(t, promote_type(eltype(t), typeof(α))), α, t)
@@ -135,13 +164,13 @@ Base.:*(α::Number, t::AbstractTensorMap) =
 """
     *(t1::AbstractTensorMap, t2::AbstractTensorMap)
 
-Extend `Base.:*`. Creat a new tensor map that equals to `t1 t2`.
+Extend `Base.:*`. Creat a new tensor map that equals to `t1*t2`.
 """
 Base.:*(t1::AbstractTensorMap, t2::AbstractTensorMap) =
     mul!(similar(t1, promote_type(eltype(t1), eltype(t2)), codomain(t1)←domain(t2)), t1, t2)
 
 """
-    rmul!(t::AbstractTensorMap, α::Number) = mul!(t, t, α)
+    rmul!(t::AbstractTensorMap, α::Number)
 
 Extend `LinearAlgebra.rmul!`. Multiply number `α` from right to `t` and overwrite `t`
 in-place.
@@ -149,7 +178,7 @@ in-place.
 LinearAlgebra.rmul!(t::AbstractTensorMap, α::Number) = mul!(t, t, α)
 
 """
-    lmul!(α::Number, t::AbstractTensorMap) = mul!(t, α, t)
+    lmul!(α::Number, t::AbstractTensorMap)
 
 Extend `LinearAlgebra.lmul!`. Multiply number `α` from left to `t` and overwrite `t`
 in-place.
@@ -159,7 +188,7 @@ LinearAlgebra.lmul!(α::Number, t::AbstractTensorMap) = mul!(t, α, t)
 """
     axpy!(α::Number, t1::AbstractTensorMap, t2::AbstractTensorMap)
 
-Extend `LinearAlgebra.axpy!`. Overwrite `t2` with `t1*α + t2`. Return `t2`.
+Extend `LinearAlgebra.axpy!`. Overwrite `t2` with `t1*α + t2`.
 """
 function LinearAlgebra.axpy!(α::Number, t1::AbstractTensorMap, t2::AbstractTensorMap)
     space(t1) == space(t2) || throw(SpaceMismatch())
@@ -201,6 +230,28 @@ function LinearAlgebra.axpby!(α::Number, t1::AbstractTensorMap,
         axpby!(α, StridedView(block(t1, c)), β, StridedView(block(t2, c)))
     end
     return t2
+end
+
+"""
+    ^(t::AbstractTensorMap, p::Integer)
+
+Extend `Base.^`. Creat a new tensor map that equals to `t*t*t ...` (`p` multiplications).
+
+Note: `Base.power_by_squaring(x,p)` is calculating `^` for any `x` supporting `*`.
+"""
+Base.:^(t::AbstractTensorMap, p::Integer) =
+    p < 0 ? Base.power_by_squaring(inv(t), -p) : Base.power_by_squaring(t, p)
+
+"""
+    tr(t::AbstractTensorMap)
+
+Extend `LinearAlgebra.tr`. Return the trace of the true block diagonal matrix that
+represent the tensor map.
+"""
+function LinearAlgebra.tr(t::AbstractTensorMap)
+    domain(t) == codomain(t) ||
+        throw(SpaceMismatch("Trace of a tensor only exist when domain == codomain"))
+    return sum(dim(c)*tr(b) for (c, b) in blocks(t))
 end
 
 """
@@ -250,16 +301,6 @@ function Base.inv(t::AbstractTensorMap)
 end
 
 """
-    ^(t::AbstractTensorMap, p::Integer)
-
-Extend `Base.^`. Creat a new tensor map that equals to `t t t ...` (`p` multiplications).
-
-Note: `Base.power_by_squaring(x,p)` is calculating `^` for any `x` supporting `*`.
-"""
-Base.:^(t::AbstractTensorMap, p::Integer) =
-    p < 0 ? Base.power_by_squaring(inv(t), -p) : Base.power_by_squaring(t, p)
-
-"""
     pinv(t::AbstractTensorMap; kwargs...)
 
 Extend `LinearAlgebra.pinv`. Return a new tensor map with data which is the Moore-Penrose
@@ -279,6 +320,8 @@ end
 
 """
     \\(t1::AbstractTensorMap, t2::AbstractTensorMap)
+
+Extend `Base.:(\\)`.
 
 It means matrix division using a polyalgorithm. For input matrices `A` and `B`, the
 result `X` is such that `A*X == B` when `A` is square.
@@ -410,9 +453,9 @@ block diagonal matrix which representing the tensor map.
 For any iterable container `A` (including arrays of any dimension) of numbers, the `p`-norm
 is defined as
 ```math
-\\|A\\|_p = \\left( \\sum_{i=1}^n | a_i | ^p \\right)^{1/p}
+\\|A\\|_p = \\left(\\sum_{i=1}^n |a_i|^p \\right)^{1/p}
 ```
-with ``a_i`` the entries of ``A``, ``| a_i |`` the `norm` of ``a_i``, and
+with ``a_i`` the entries of ``A``, ``|a_i|`` the `norm` of ``a_i``, and
 ``n`` the length of ``A``.
 
 The `norm(A, Inf)` returns the largest value in `abs.(A)`. If `A` is a matrix and `p=2`,
@@ -420,6 +463,7 @@ then this is equivalent to the Frobenius norm.
 """
 LinearAlgebra.norm(t::AbstractEuclideanTensorMap, p::Real = 2) =
     _norm(blocks(t), p, float(zero(real(eltype(t)))))
+
 function _norm(blockiter, p::Real, init::Real)
     if p == Inf
         return mapreduce(max, blockiter; init = init) do (c, b)
@@ -462,18 +506,6 @@ LinearAlgebra.normalize(t::AbstractTensorMap, p::Real = 2) =
     mul!(similar(t), t, inv(norm(t, p)))
 
 """
-    tr(t::AbstractTensorMap)
-
-Extend `LinearAlgebra.tr`. Return the trace of the true block diagonal matrix that
-represent the tensor map.
-"""
-function LinearAlgebra.tr(t::AbstractTensorMap)
-    domain(t) == codomain(t) ||
-        throw(SpaceMismatch("Trace of a tensor only exist when domain == codomain"))
-    return sum(dim(c)*tr(b) for (c, b) in blocks(t))
-end
-
-"""
     sylvester(A::AbstractTensorMap, B::AbstractTensorMap, C::AbstractTensorMap)
 
 Extend `LinearAlgebra.sylvester`.
@@ -507,12 +539,14 @@ and the codomain is still the same with `t1` (or `t2`).
 """
 function catdomain(t1::AbstractTensorMap{S, N₁, 1},
                     t2::AbstractTensorMap{S, N₁, 1}) where {S, N₁}
+
     codomain(t1) == codomain(t2) || throw(SpaceMismatch())
 
     V1, = domain(t1)
     V2, = domain(t2)
     isdual(V1) == isdual(V2) ||
-        throw(SpaceMismatch("cannot horizontally concatenate tensors whose domain has non-matching duality"))
+        throw(SpaceMismatch("cannot horizontally concatenate tensors whose domain has
+                                non-matching duality"))
 
     V = V1 ⊕ V2
     t = TensorMap(undef, promote_type(eltype(t1), eltype(t2)), codomain(t1), V)
@@ -539,7 +573,8 @@ function catcodomain(t1::AbstractTensorMap{S, 1, N₂},
     V1, = codomain(t1)
     V2, = codomain(t2)
     isdual(V1) == isdual(V2) ||
-        throw(SpaceMismatch("cannot vertically concatenate tensors whose codomain has non-matching duality"))
+        throw(SpaceMismatch("cannot vertically concatenate tensors whose codomain has
+                                non-matching duality"))
 
     V = V1 ⊕ V2
     t = TensorMap(undef, promote_type(eltype(t1), eltype(t2)), V, domain(t1))
@@ -666,8 +701,7 @@ end
 Construct the identity endomorphism on space `space`, i.e. return a `t::TensorMap` with
 `domain(t) == codomain(t) == V`, where `storagetype(t) = A` can be specified.
 """
-id(::Type{A}, P::ProductSpace) where {A<:DenseMatrix} =
-    one!(TensorMap(s->A(undef, s), P, P))
+id(::Type{A}, P::ProductSpace) where {A<:DenseMatrix} =one!(TensorMap(s->A(undef, s), P, P))
 id(V::VectorSpace) = id(Matrix{Float64}, V)
 id(A, V::ElementarySpace) = id(A, ProductSpace(V))
 
@@ -728,10 +762,10 @@ inverse of `t`, i.e. `t'*t = id(dom)`, while `t*t'` is some idempotent endomorph
 `cod`, i.e. it squares to itself. When `dom` and `cod` do not allow for such an isometric
 inclusion, an error will be thrown.
 """
-function isometry(::Type{A},
-                    cod::ProductSpace{S},
+function isometry(::Type{A}, cod::ProductSpace{S},
                     dom::ProductSpace{S}) where {A<:DenseMatrix, S<:EuclideanSpace}
-    dom ≾ cod || throw(SpaceMismatch("codomain $cod and domain $dom do not allow for an isometric mapping"))
+    dom ≾ cod || throw(SpaceMismatch("codomain $cod and domain $dom do not allow for an
+                                        isometric mapping"))
     t = TensorMap(s->A(undef, s), cod, dom)
     for (c, b) in blocks(t)
         _one!(b)
