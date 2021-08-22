@@ -825,33 +825,33 @@ and never needs to perform any basis transforms.
 
 1. Copy and fill:
 
-    ```julia
-    Base.copy!(tdst::AbstractTensorMap, tsrc::AbstractTensorMap) # overwrite `tdst` as `tsrc`
-    Base.copy(t::AbstractTensorMap) # return new tensormap = t
-    Base.fill!(t::AbstractTensorMap, value::Number) # overwrite `t` with all data = value
-    ```
+```julia
+Base.copy!(tdst::AbstractTensorMap, tsrc::AbstractTensorMap) # overwrite `tdst` as `tsrc`
+Base.copy(t::AbstractTensorMap) # return new tensormap = t
+Base.fill!(t::AbstractTensorMap, value::Number) # overwrite `t` with all data = value
+```
 
 2. Adjoint:
 
-    For instances `t::AbstractEuclideanTensorMap` there is associated an adjoint operation,
-    given by `adjoint(t)` or simply `t'`, such that `domain(t') == codomain(t)` and
-    `codomain(t') == domain(t)`. Note that for an instance `t::TensorMap{S,N₁,N₂}`, `t'` is
-    stored in a wrapper called `AdjointTensorMap{S,N₂,N₁}`, which is another subtype
-    of `AbstractTensorMap`. Index `i` of `t` appears in `t'` at index position
-    `j = TensorXD.adjointtensorindex(t, i)`. There is also a plural
-    `TensorXD.adjointtensorindices` to convert multiple indices at once. Since the adjoint
-    interchanges domain and codomain, we have `space(t', j) == space(t, i)'`.
+For instances `t::AbstractEuclideanTensorMap` there is associated an adjoint operation,
+given by `adjoint(t)` or simply `t'`, such that `domain(t') == codomain(t)` and
+`codomain(t') == domain(t)`. Note that for an instance `t::TensorMap{S,N₁,N₂}`, `t'` is
+stored in a wrapper called `AdjointTensorMap{S,N₂,N₁}`, which is another subtype
+of `AbstractTensorMap`. Index `i` of `t` appears in `t'` at index position
+`j = TensorXD.adjointtensorindex(t, i)`. There is also a plural
+`TensorXD.adjointtensorindices` to convert multiple indices at once. Since the adjoint
+interchanges domain and codomain, we have `space(t', j) == space(t, i)'`.
 
-    ```julia
-    LinearAlgebra.adjoint!(tdst::AbstractEuclideanTensorMap,
-                            tsrc::AbstractEuclideanTensorMap) # overwrite tdst as adjoint(tsrc)
-    ```
+```julia
+LinearAlgebra.adjoint!(tdst::AbstractEuclideanTensorMap,
+                        tsrc::AbstractEuclideanTensorMap) # overwrite tdst as adjoint(tsrc)
+```
 
 3. Multiplications and linear combinations of Tensor maps:
 
-    The `AbstractTensorMap` instances behave themselves as vectors, i.e., `𝕜`-linear
-    and so they can be multiplied by scalars and, if they live in the same space, i.e.
-    have the same domain and codomain, they can be added to each other.
+The `AbstractTensorMap` instances behave themselves as vectors, i.e., `𝕜`-linear
+and so they can be multiplied by scalars and, if they live in the same space, i.e.
+have the same domain and codomain, they can be added to each other.
 
     The `AbstractTensorMap` instances can be composed, provided the domain of the
     first object coincides with the codomain of the second. Composing tensor maps uses the
