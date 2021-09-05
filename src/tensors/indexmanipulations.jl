@@ -1,20 +1,16 @@
 # Index manipulations
-#---------------------
 """
-    permute(tsrc::AbstractTensorMap{S}, p1::NTuple{N₁, Int}, p2::NTuple{N₂, Int} = ())
-        -> tdst::TensorMap{S, N₁, N₂}
+    permute(t::AbstractTensorMap{S}, p1::NTuple{N₁}, p2::NTuple{N₂} = ();
+                copy::Bool = false)
 
-Permute the indices of `tsrc::AbstractTensorMap{S}` such that a new tensor
-`tdst::TensorMap{S, N₁, N₂}` is obtained, with indices in `p1` playing the role of the
-codomain or range of the map, and indices in `p2` indicating the domain.
-
-To permute into an existing `tdst`, see [`add!`](@ref)
+Permute the indices of tensor map `t` to a new tensor with indices in `p1` playing the role
+of the codomain of the map, and indices in `p2` indicating the domain.
+If `copy == false`, keep the original tensor if possible.
 """
-function permute(t::TensorMap{S},
-                    p1::IndexTuple{N₁},  p2::IndexTuple{N₂}=();
-                    copy::Bool = false) where {S, N₁, N₂}
-    cod = ProductSpace{S, N₁}(map(n->space(t, n), p1))
-    dom = ProductSpace{S, N₂}(map(n->dual(space(t, n)), p2))
+function permute(t::TensorMap{S}, p1::IndexTuple,  p2::IndexTuple=();
+                    copy::Bool = false) where {S}
+    cod = ProductSpace{S}(map(n->space(t, n), p1))
+    dom = ProductSpace{S}(map(n->dual(space(t, n)), p2))
     # share data if possible
     if !copy
         if p1 === codomainind(t) && p2 === domainind(t)
@@ -29,6 +25,14 @@ function permute(t::TensorMap{S},
     end
 end
 
+"""
+    permute(t::AdjointTensorMap{S}, p1::IndexTuple, p2::IndexTuple=();
+                        copy::Bool = false) where {S}
+
+Permute the indices of tensor map `t` to a new tensor with indices in `p1` playing the role
+of the codomain of the map, and indices in `p2` indicating the domain.
+If `copy == false`, keep the original tensor if possible.
+"""
 function permute(t::AdjointTensorMap{S}, p1::IndexTuple, p2::IndexTuple=();
                     copy::Bool = false) where {S}
     p1′ = map(n->adjointtensorindex(t, n), p2)
@@ -57,9 +61,8 @@ function has_shared_permute(t::AdjointTensorMap, p1, p2)
 end
 
 """
-    permute!(tdst::AbstractTensorMap{S, N₁, N₂}, tsrc::AbstractTensorMap{S},
-        p1::IndexTuple{N₁}, p2::IndexTuple{N₂}=()
-    ) -> tdst
+    Base.permute!(tdst::AbstractTensorMap{S, N₁, N₂}, tsrc::AbstractTensorMap{S},
+                    p1::IndexTuple{N₁}, p2::IndexTuple{N₂}=()) where {S, N₁, N₂}
 
 Permute the indices of `tsrc` and write the result into `tdst`, with indices in `p1` playing
 the role of the codomain or range of the map `tdst`, and indices in `p2` indicating the
@@ -73,10 +76,16 @@ For more details see [`add!`](@ref), of which this is a special case.
                                     p2::IndexTuple{N₂}=()) where {S, N₁, N₂} =
     add_permute!(true, tsrc, false, tdst, p1, p2)
 
-# Braid
-function braid(t::TensorMap{S}, levels::IndexTuple,
-                    p1::IndexTuple, p2::IndexTuple=();
-                    copy::Bool = false) where {S}
+"""
+    braid(t::TensorMap{S}, levels::IndexTuple, p1::IndexTuple, p2::IndexTuple=();
+            copy::Bool = false) where {S}
+
+Braid the indices of tensor map `t` to a new tensor with indices in `p1` playing the role
+of the codomain of the map, and indices in `p2` indicating the domain, according to the
+`levels`. If `copy == false`, keep the original tensor if possible.
+"""
+function braid(t::TensorMap{S}, levels::IndexTuple, p1::IndexTuple, p2::IndexTuple=();
+                copy::Bool = false) where {S}
     @assert length(levels) == numind(t)
     if BraidingStyle(sectortype(S)) isa SymmetricBraiding
         return permute(t, p1, p2; copy = copy)
@@ -91,20 +100,30 @@ function braid(t::TensorMap{S}, levels::IndexTuple,
         return add_braid!(true, t, false, similar(t, cod←dom), p1, p2, levels)
     end
 end
-@propagate_inbounds braid!(tdst::AbstractTensorMap{S, N₁, N₂},
-                                tsrc::AbstractTensorMap{S},
-                                levels::IndexTuple,
-                                p1::IndexTuple{N₁},
-                                p2::IndexTuple{N₂}=()) where {S, N₁, N₂} =
+
+"""
+    braid!(tdst::AbstractTensorMap{S, N₁, N₂}, tsrc::AbstractTensorMap{S},
+            levels::IndexTuple, p1::IndexTuple{N₁}, p2::IndexTuple{N₂}=()) where {S, N₁, N₂}
+
+Braid the indices of tensor map `tsrc` and write into `tdst` with indices in `p1` playing
+the role of the codomain of the map, and indices in `p2` indicating the domain, according to
+the `levels`.
+"""
+@propagate_inbounds braid!(tdst::AbstractTensorMap{S, N₁, N₂}, tsrc::AbstractTensorMap{S},
+                            levels::IndexTuple, p1::IndexTuple{N₁},
+                            p2::IndexTuple{N₂}=()) where {S, N₁, N₂} =
     add!(true, tsrc, false, tdst, p1, p2, levels)
 
-# Transpose
-LinearAlgebra.transpose!(tdst::AbstractTensorMap, tsrc::AbstractTensorMap,
-                                    p1::IndexTuple, p2::IndexTuple) =
-    add_transpose!(true, tsrc, false, tdst, p1, p2)
+"""
+    LinearAlgebra.transpose(t::TensorMap{S}, p1::IndexTuple = reverse(domainind(t)),
+                            p2::IndexTuple = reverse(codomainind(t));
+                            copy::Bool = false) where {S}
 
-function LinearAlgebra.transpose(t::TensorMap{S},
-                                    p1::IndexTuple = reverse(domainind(t)),
+Transpose the indices of tensor map `t` to a new tensor with indices in `p1` playing the
+role of the codomain of the map, and indices in `p2` indicating the domain.
+If `copy == false`, keep the original tensor if possible.
+"""
+function LinearAlgebra.transpose(t::TensorMap{S}, p1::IndexTuple = reverse(domainind(t)),
                                     p2::IndexTuple = reverse(codomainind(t));
                                     copy::Bool = false) where {S}
     if sectortype(S) === Trivial
@@ -121,6 +140,16 @@ function LinearAlgebra.transpose(t::TensorMap{S},
     end
 end
 
+"""
+    LinearAlgebra.transpose(t::AdjointTensorMap{S},
+                            p1::IndexTuple = reverse(domainind(t)),
+                            p2::IndexTuple = reverse(codomainind(t));
+                            copy::Bool = false) where {S}
+
+Transpose the indices of tensor map `t` to a new tensor with indices in `p1` playing the
+role of the codomain of the map, and indices in `p2` indicating the domain.
+If `copy == false`, keep the original tensor if possible.
+"""
 function LinearAlgebra.transpose(t::AdjointTensorMap{S},
                                     p1::IndexTuple = reverse(domainind(t)),
                                     p2::IndexTuple = reverse(codomainind(t));
@@ -130,9 +159,31 @@ function LinearAlgebra.transpose(t::AdjointTensorMap{S},
     adjoint(transpose(adjoint(t), p1′, p2′; copy = copy))
 end
 
-# Twist
+"""
+    LinearAlgebra.transpose!(tdst::AbstractTensorMap, tsrc::AbstractTensorMap,
+                                p1::IndexTuple, p2::IndexTuple)
+
+Transpose the indices of tensor map `tsrc` and write into `tdst` with indices in `p1`
+playing the role of the codomain of the map, and indices in `p2` indicating the domain.
+"""
+LinearAlgebra.transpose!(tdst::AbstractTensorMap, tsrc::AbstractTensorMap,
+                            p1::IndexTuple, p2::IndexTuple) =
+    add_transpose!(true, tsrc, false, tdst, p1, p2)
+
+"""
+    twist(t::AbstractTensorMap, i::Int; inv::Bool = false)
+
+Twist the `i`th index of the tensor map `t` and returned as a new tensor.
+Inverse the twist if `inv == true`.
+"""
 twist(t::AbstractTensorMap, i::Int; inv::Bool = false) = twist!(copy(t), i; inv = inv)
 
+"""
+    twist!(t::AbstractTensorMap, i::Int; inv::Bool = false)
+
+Twist the `i`th index of the tensor map `t` and replace it.
+Inverse the twist if `inv == true`.
+"""
 function twist!(t::AbstractTensorMap, i::Int; inv::Bool = false)
     if i > numind(t)
         msg = "Can't twist index $i of a tensor with only $(numind(t)) indices."
@@ -147,5 +198,3 @@ function twist!(t::AbstractTensorMap, i::Int; inv::Bool = false)
     end
     return t
 end
-
-# Fusing and splitting

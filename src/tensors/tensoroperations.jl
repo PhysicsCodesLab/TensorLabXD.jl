@@ -178,10 +178,10 @@ and `levels`.
 Replace `tdst` with `braid(tsrc)*α + tdst*β`.
 """
 @propagate_inbounds function add_braid!(α, tsrc::AbstractTensorMap{S},
-                                            β, tdst::AbstractTensorMap{S, N₁, N₂},
-                                            p1::IndexTuple{N₁},
-                                            p2::IndexTuple{N₂},
-                                            levels::IndexTuple) where {S, N₁, N₂}
+                                        β, tdst::AbstractTensorMap{S, N₁, N₂},
+                                        p1::IndexTuple{N₁},
+                                        p2::IndexTuple{N₂},
+                                        levels::IndexTuple) where {S, N₁, N₂}
 
     length(levels) == numind(tsrc) ||
         throw(ArgumentError("incorrect levels $levels for tensor map
@@ -447,13 +447,12 @@ function _contract!(α, A::AbstractTensorMap{S}, B::AbstractTensorMap{S},
     return C
 end
 
-# Add support for cache and API (`@tensor` macro & friends) from TensorOperations.jl:
-# compatibility layer
+# Add support for cache and API (`@tensor` and other macros) from TensorOperations.jl:
 """
     TO.memsize(t::TensorMap)
 
-Return the number of elements of the data for the tensor map `t`, i.e., the memory
-size that needed to save the tensor map.
+Return total size of the data for the tensor map `t` in bytes, i.e., the memory size that
+needed to save the tensor map.
 """
 function TO.memsize(t::TensorMap)
     s = 0
@@ -466,14 +465,14 @@ TO.memsize(t::AdjointTensorMap) = TensorOperations.memsize(t')
 
 """
     _similarstructure_from_indices(::Type{T}, p1::IndexTuple{N₁}, p2::IndexTuple{N₂},
-            t::AbstractTensorMap{S}) where {T, S<:IndexSpace, N₁, N₂}
+                                t::AbstractTensorMap{S}) where {T, S<:IndexSpace, N₁, N₂}
 
 Return the structure of an object similar to the tensor map `t`, i.e., the HomSpace from
 the domain to the codomain, where the codomain is the tensor product of spaces selected by
 `p1` from the tensor map `t`, and the domain is that by `p2`.
 """
 function _similarstructure_from_indices(::Type{T}, p1::IndexTuple{N₁}, p2::IndexTuple{N₂},
-        t::AbstractTensorMap{S}) where {T, S<:IndexSpace, N₁, N₂}
+                                t::AbstractTensorMap{S}) where {T, S<:IndexSpace, N₁, N₂}
 
     cod = ProductSpace{S, N₁}(space.(Ref(t), p1))
     dom = ProductSpace{S, N₂}(dual.(space.(Ref(t), p2)))
@@ -482,7 +481,7 @@ end
 
 """
     TO.similarstructure_from_indices(T::Type, p1::IndexTuple, p2::IndexTuple,
-            A::AbstractTensorMap, CA::Symbol = :N)
+                                        A::AbstractTensorMap, CA::Symbol = :N)
 
 Returns the structure of an object similar to the tensor map `A`, i.e. the HomSpace from
 the domain to the codomain, where the codomain is the tensor product of spaces selected by

@@ -39,7 +39,7 @@ A contraction between two tensor maps is just a composition of linear maps (i.e.
 matrix multiplication), where the contracted indices correspond to the domain of the first
 tensor and the codomain of the second tensor.
 
-We can also decompose tensor maps using linear algebra factorisations (e.g. eigenvalue or
+We can decompose tensor maps using linear algebra factorisations (e.g. eigenvalue or
 singular value decomposition).
 
 In order to allow for arbitrary tensor contractions or decompositions, we need to be able to

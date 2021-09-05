@@ -800,8 +800,8 @@ end
 
 """
     planar_trace(f1::FusionTree{I}, f2::FusionTree{I},
-                p1::IndexTuple{N₁}, p2::IndexTuple{N₂},
-                q1::IndexTuple{N₃}, q2::IndexTuple{N₃}) where {I<:Sector, N₁, N₂, N₃}
+                    p1::IndexTuple{N₁}, p2::IndexTuple{N₂},
+                    q1::IndexTuple{N₃}, q2::IndexTuple{N₃}) where {I<:Sector, N₁, N₂, N₃}
 
 Take the traces between `q1[k]`th and `q2[k]`th sector of the fusion-splitting tree
 and the result is transposed according to `p1` and `p2`. We need to make sure that the

@@ -1,17 +1,13 @@
 using TensorXD
 using Documenter
 
-DocMeta.setdocmeta!(TensorXD, :DocTestSetup, :(using TensorXD); recursive=true)
-
 makedocs(;
     modules=[TensorXD],
     authors="PhysicsCodesLab",
-    repo="https://github.com/PhysicsCodesLab/TensorXD.jl/blob/{commit}{path}#{line}",
     sitename="TensorXD.jl",
     format=Documenter.HTML(;
-        prettyurls=get(ENV, "CI", "false") == "true",
-        canonical="https://PhysicsCodesLab.github.io/TensorXD.jl",
-        assets=String[], mathengine = MathJax()
+        prettyurls=get(ENV, "CI", nothing) == "true",
+        mathengine = MathJax()
     ),
     pages=[
         "Home" => "index.md",
@@ -23,6 +19,6 @@ makedocs(;
 )
 
 deploydocs(;
-    repo="github.com/PhysicsCodesLab/TensorXD.jl",
+    repo="github.com/PhysicsCodesLab/TensorXD.jl.git",
     devbranch="master",
 )
