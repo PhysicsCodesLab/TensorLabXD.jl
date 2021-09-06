@@ -261,10 +261,8 @@ tensor in ``V_1 ⊗ V_2 ⊗ … ⊗ V_{N_1} ⊗ {}^{∨}W_{N_2} ⊗ … ⊗ {}^{
 shown that for any category which has duals for objects ``V`` and ``W``, an exact pairing
 between ``V ⊗ W`` and ``{}^{∨}W ⊗ {}^{∨}V`` can be constructed out of the evaluation and
 coevaluation of ``V`` and ``W``, such that ``{}^{∨}W ⊗ {}^{∨}V`` is at least isomorphic to
-``{}^{∨}(V ⊗ W)``.
-
-For example, the following illustrate a map from ``t ∈ \mathrm{Hom}(W_1 ⊗ W_2 ⊗ W_3, V_1 ⊗ V_2)``
-to a morphism in ``\mathrm{Hom}(I, V_1 ⊗ V_2 ⊗ {}^{∨}W_3 ⊗ {}^{∨}W_2 ⊗ {}^{∨}W_1)``:
+``{}^{∨}(V ⊗ W)``. For example, a map from ``t ∈ \mathrm{Hom}(W_1 ⊗ W_2 ⊗ W_3, V_1 ⊗ V_2)``
+to a morphism in ``\mathrm{Hom}(I, V_1 ⊗ V_2 ⊗ {}^{∨}W_3 ⊗ {}^{∨}W_2 ⊗ {}^{∨}W_1)`` is:
 
 ![transpose](img/diagram-dualmap.svg)
 
@@ -279,7 +277,7 @@ Note that the graphical notation, at least the lines with opposite arrows, do no
 distinguish between the right dual ``V^{∨}`` and the left dual ``{}^{∨}V``. We come back to
 this point below.
 
-In particular, one could choose ``\tilde{ϵ}_{{}^{∨}V} = ϵ_V`` and thus define ``V`` as the
+One could choose ``\tilde{ϵ}_{{}^{∨}V} = ϵ_V`` and thus define ``V`` as the
 right dual of ``{}^{∨}V``. While there might be other choices, this choice must at least be
 isomorphic, such that ``({}^{∨}V)^{∨} ≂ V``.
 
@@ -299,7 +297,7 @@ right autonomous category). Given that left (or right) morphism transposition sa
 in a functorial way. A (left or right) rigid category ``\mathcal{C}`` is a category which
 admits a (left or right) duality functor, i.e. a functor from ``\mathcal{C}`` to
 ``\mathcal{C}^{\mathrm{rev}}`` that maps objects to its (left or right) dual, and morphisms
-to its (left or right) transpose. In particular, the snake rules can now be read as the
+to its (left or right) transpose. The snake rules can now be read as the
 functioral requirement that ``{}^{∨}(\mathrm{id}_V) = \mathrm{id}_{{}^{∨}V}``.
 
 In all of this, left and right duality can be completely distinct. Equivalently, the left
@@ -314,7 +312,7 @@ thus also the left and right transpose of morphisms, i.e.
 ``\tilde{ϵ}_{X}`` and ``\tilde{η}_{X}`` can be interpreted as an exact pairing ``ϵ_{X^*}``
 and ``η_{X^*}``, this can be used to recognize ``X`` as a left dual of ``X^*``, which is
 then not necessarily equal but at least isomorphic to ``X^{**}`` with the isomorphism given
-by the mixed snake composition alluded to in the beginning of this section, i.e. ``δ_X: X →
+by the mixed snake composition, i.e. ``δ_X: X →
 X^{**}`` given by ``δ_X = (\tilde{ϵ}_X ⊗ \mathrm{id}_{X^*}) ∘ (\mathrm{id}_X ⊗ η_{X^*})``. A
 more formal statement is that ``δ`` is a natural isomorphism between the double dual functor
 and the identity functor of a category ``C``. In a similar manner, such a ``δ`` can be used
@@ -328,7 +326,7 @@ graphical representation and suppress the natural isomorphism ``δ``. Note, as a
 suggested by the graphical notation above, that we can interpret transposing a morphism as
 rotating its graphical notation by 180 degrees (either way).
 
-Furthermore, in a pivotal category, we can define a map
+In a pivotal category, we can define a map
 ``\mathrm{End}(V)\rightarrow \mathrm{End}(I)``, known as the trace of ``f``.
 In fact, we can define a left trace as
 
@@ -353,11 +351,12 @@ refer to the trace ``\mathrm{tr}(f)`` of an endomorphism. The particular value
 ``\mathrm{dim}(V) = \mathrm{tr}(\mathrm{id}_V)`` is known as the (quantum) dimension of the
 object ``V``, referred to as `dim(V)` in TensorXD.jl.
 
-For further information and a more detailed treatment of rigid and pivotal categories, we
-refer to [^turaev] and [^selinger]. We conclude this section by studying the example of
+We conclude this section by studying the example of
 ``\mathbf{SVect}``. Let us, in every super vector space ``V``, define a basis ``|n⟩``
-that is compatible with the grading, such ``|n|=0,1`` indicates that ``|n⟩ ∈ V_{|n|}``.
-We again define a dual basis ``{⟨m|}`` for ``V^*`` (such that ``⟨m|n⟩ = δ_{m,n}``), and
+that is compatible with the grading, such that ``|n|=0,1`` indicates that ``|n⟩ ∈ V_{|n|}``
+(note that ``|n|`` is not the absolute value of ``n``, but just a notation to denote which
+subspace the basis vector ``|n\rangle`` belongs to).
+We define a dual basis ``{⟨m|}`` for ``V^*`` (such that ``⟨m|n⟩ = δ_{m,n}``), and
 then define the left evaluation by
 ``⁠ϵ_V:V^* ⊗ V → ℂ: ⟨m| ⊗_\mathrm{g} |n⟩ → ⟨m|n⟩ = δ_{m,n}`` and the left coevaluation by
 ``η_V:ℂ→ V ⊗ V^*:α → α ∑_n |n⟩ ⊗_\mathrm{g} ⟨n|``. Note that this does not require an inner
@@ -368,8 +367,8 @@ two natural choices, namely
 of an endomorphism ``f ∈ \mathrm{End}(V)`` is given by
 ``\mathrm{tr}^{\mathrm{l}}(f) = \mathrm{tr}^{\mathrm{r}}(f) = \mathrm{tr}(f) = ∑_n (± 1)^{|n|} ⟨n|f|n⟩``
 and is known as either the regular trace (in the case of ``+1``) or the *supertrace* (in the
-case of ``-1``). In particular, ``\mathrm{dim}(V) = \mathrm{dim}(V_0) ± \mathrm{dim}(V_1)``,
-and can be negative in the case of the supertrace. Both are valid choices to make
+case of ``-1``). Correspondingly ``\mathrm{dim}(V) = \mathrm{dim}(V_0) ± \mathrm{dim}(V_1)``,
+which can be negative in the case of the supertrace. Both are valid choices to make
 ``\mathbf{SVect}`` into a spherical category.
 
 ## [Braidings, twists and ribbons](@id ss_braiding)
