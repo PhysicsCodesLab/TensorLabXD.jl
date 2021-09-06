@@ -1,7 +1,7 @@
 
 # [Optional introduction to category theory](@id s_categories)
 
-The purpose of this page (which can safely be skipped), is to explain how certain
+The purpose of this page is to explain how certain
 concepts and terminology from the theory of monoidal categories apply in the context of
 tensors. In particular, we are interested in the category ``\mathbf{Vect}``, but our
 concept of tensors can be extended to morphisms of any category that shares similar
@@ -9,7 +9,7 @@ properties. These properties are reviewed below.
 
 In particular, we will as example also study the more general case of ``\mathbf{SVect}``,
 i.e. the category of super vector spaces, which contains ``\mathbf{Vect}`` as a subcategory
-and which are useful to describe fermions.
+and which is useful to describe fermions.
 
 In the end, the goal of identifying tensor manipulations in TensorXD.jl with concepts from
 category theory is to put the diagrammatic formulation of tensor networks in the most
@@ -113,7 +113,7 @@ to be a **tensor category** (a.k.a. a *monoidal category*), if it has
     ``((V_1 ⊗ I) ⊗ V_2)`` to ``(V_1 ⊗ (I ⊗ V_2))``).
 
 In terms of functors and natural transformations, ``⊗`` is a functor from the product
-category ``C × C`` to ``C``. Furthermore, the left (or right) unitor ``λ`` (or ``ρ``) is a
+category ``C × C`` to ``C``. The left (or right) unitor ``λ`` (or ``ρ``) is a
 natural isomorphism between a nameless functor ``C→C`` that maps objects ``I ⊗ V → V  `` (or
 ``V ⊗ I→V``) and the identity functor ``1_C``. Similarly, the associator ``α`` is a natural
 isomorphism between the two functors ``⊗(⊗ × 1_C)`` and ``⊗(1_C × ⊗)`` from ``C × C × C``
@@ -123,8 +123,8 @@ operation. A monoidal category is said to be *strict* if ``I ⊗ V = V = V ⊗ I
 identity morphisms for these objects.
 
 For the category ``\mathbf{Vect}``, the identity object ``I`` is just the scalar field
-``𝕜`` over which the vector spaces are defined, and which can be identified with a one-
-dimensional vector space. This is not automatically a strict category, especially if one
+``𝕜`` over which the vector spaces are defined, and which can be identified with a
+one-dimensional vector space. This is not automatically a strict category, especially if one
 considers how to represent tensor maps on a computer. The distinction between ``V``,
 ``I ⊗ V`` and ``V ⊗ I`` amounts to adding or removing an extra factor ``I`` to the tensor
 product structure of the domain or codomain, and so the left and right unitor are analogous
@@ -174,15 +174,14 @@ Another relevant example is the category ``\mathbf{SVect}_𝕜``, which has as o
 vector spaces* over ``𝕜``, which are vector spaces with a ``ℤ₂`` grading, i.e.
 they are decomposed as a direct sum ``V = V_0 ⊕ V_1``. Furthermore, the morphisms between
 two super vector spaces are restricted to be grading preserving, i.e.
-``f∈ \mathrm{Hom}_{\mathbf{SVect}}(W,V)`` has ``f(W_0) ⊂ V_0`` and ``f(W_1) ⊂ V_1``. The graded
-tensor product between two super vector spaces is defined as
-``(V⊗_\mathrm{g}W) = (V ⊗_\mathrm{g} W)_0 ⊕ (V ⊗_\mathrm{g} W)_1`` with
+``f∈ \mathrm{Hom}_{\mathbf{SVect}}(W,V)`` has ``f(W_0) ⊂ V_0`` and ``f(W_1) ⊂ V_1``.
+The graded tensor product between two super vector spaces is defined as
+``V⊗_\mathrm{g}W = (V ⊗_\mathrm{g} W)_0 ⊕ (V ⊗_\mathrm{g} W)_1`` with
 ``(V ⊗_\mathrm{g} W)_0 = (V_0 ⊗ W_0) ⊕ (V_1 ⊗ W_1)`` and
 ``(V ⊗_\mathrm{g} W)_1 = (V_0 ⊗ W_1) ⊕ (V_1 ⊗ W_0)``. The unit object ``I`` is again
 isomorphic to ``𝕜``, i.e. ``I_0 = 𝕜`` and ``I_1 = 0``, a zero-dimensional vector space. In
 particular, the category ``\mathbf{SVect}_𝕜`` contains ``\mathbf{Vect}_𝕜`` as a
-(monoidal) subcategory, by only selecting those objects ``V`` for which ``V_1 = 0``. We
-will return to the example of ``\mathbf{SVect}`` throughout the remainder of this page.
+(monoidal) subcategory, by only selecting those objects ``V`` for which ``V_1 = 0``.
 
 We generalize the notion of a functor between monoidal categories. A *monoidal
 functor* between two tensor categories ``(C, ⊗_C, I_C, α_C, λ_C, ρ_C)`` and
@@ -202,18 +201,18 @@ the category ``\mathcal{C} = (C, ⊗, I, α, λ, ρ)``
 *   ``\mathcal{C}^{\mathrm{op}} = (C^{\mathrm{op}}, ⊗, I, α^{\mathrm{op}}, λ^{\mathrm{op}}, ρ^{\mathrm{op}})``
     where the opposite category ``C^{\mathrm{op}}`` has the same objects as ``C`` but has
     ``\mathrm{Hom}_{C^{\mathrm{op}}}(X,Y) = \mathrm{Hom}_C(Y,X)`` and a composition law
-    ``g ∘^{\mathrm{op}} f = f ∘ g``, with ``∘`` the composition law of ``C``. Furthermore,
-    we have ``α^{\mathrm{op}}_{X,Y,Z} = (α_{X,Y,Z})^{-1}``,
+    ``g ∘^{\mathrm{op}} f = f ∘ g``, with ``∘`` the composition law of ``C``. And
+    ``α^{\mathrm{op}}_{X,Y,Z} = (α_{X,Y,Z})^{-1}``,
     ``λ^{\mathrm{op}}_X = (λ_X)^{-1}`` and ``ρ^{\mathrm{op}}_X = (ρ_X)^{-1}``;
 *   ``\mathcal{C}^{⊗\mathrm{op}} = (C, ⊗^{\mathrm{op}}, I, α^{⊗\mathrm{op}}, λ^{⊗\mathrm{op}}, ρ^{⊗\mathrm{op}})``
     where the functor ``⊗^{\mathrm{op}}:C×C → C`` is the opposite monoidal product, which
     acts as ``X ⊗^{\mathrm{op}} Y = Y ⊗ X`` on objects and similar on morphisms.
-    Furthermore, ``α^{⊗\mathrm{op}}_{X,Y,Z} = (α_{Z,Y,X})^{-1}``,
+    And ``α^{⊗\mathrm{op}}_{X,Y,Z} = (α_{Z,Y,X})^{-1}``,
     ``λ^{⊗\mathrm{op}}_X = ρ_X`` and ``ρ^{⊗\mathrm{op}}_X = λ_X``;
-*   The two previous transformations (which commute) composed:
-    ``\mathcal{C}^{\mathrm{rev}} = (C^{\mathrm{op}}, ⊗^{\mathrm{op}}, I, α^{\mathrm{rev}}, λ^{\mathrm{rev}}, ρ^{\mathrm{rev}})``
+*  ``\mathcal{C}^{\mathrm{rev}} = (C^{\mathrm{op}}, ⊗^{\mathrm{op}}, I, α^{\mathrm{rev}}, λ^{\mathrm{rev}}, ρ^{\mathrm{rev}})``
     with ``α^{\mathrm{rev}}_{X,Y,Z} = α_{Z,Y,X}``, ``λ^{\mathrm{rev}}_X = (ρ_X)^{-1}``,
-    ``ρ^{\mathrm{rev}}_X = (λ_X)^{-1}``.
+    ``ρ^{\mathrm{rev}}_X = (λ_X)^{-1}``. ``\mathcal{C}^{\mathrm{rev}}`` is obtained by
+    composing the previous two transformations.
 
 ## [Duality: rigid, pivotal and spherical categories](@id ss_dual)
 Another property of the category ``\mathbf{Vect}`` that we want to generalize is the notion
@@ -241,22 +240,6 @@ to an object ``V``, a mixed snake composition using the evaluation of one and co
 of the other duality can be used to construct an isomorphism between the two associated
 dual objects. Hence, duality is unique up to isomorphisms.
 
-For (real or complex) vector spaces, we denote the dual as ``V^*``, a notation that we
-preserve for pivotal categories (see below). Using a bra-ket notation and a generic basis
-``{|n⟩}`` for ``V`` and dual basis ``{⟨m|}`` for ``V^*`` (such that ``⟨m|n⟩ = δ_{m,n}``),
-the evaluation is given by ``⁠ϵ_V:{}^{∨}V ⊗ V → ℂ: ⟨m| ⊗ |n⟩ ↦ δ_{m,n}`` and the
-coevaluation or unit is ``η_V:ℂ→ V ⊗ {}^{∨}V:α ↦ α ∑_n |n⟩ ⊗ ⟨n|``. Note that this does not
-require an inner product, i.e. no relation or mapping from ``|n⟩`` to ``⟨n|`` was defined.
-For a general tensor map ``t:W_1 ⊗ W_2 ⊗ … ⊗ W_{N_2} → V_1 ⊗ V_2 ⊗ … ⊗ V_{N_1}``, by
-successively applying ``η_{W_{N_2}}``, ``η_{W_{N_2-1}}``, …, ``η_{W_{1}}`` (in combination
-with the left or right unitor), we obtain a tensor in
-``V_1 ⊗ V_2 ⊗ … ⊗ V_{N_1} ⊗ W_{N_2}^* ⊗ … ⊗ W_{1}^*``. Hence, we can define or identify
-``(W_1 ⊗ W_2 ⊗ … ⊗ W_{N_2})^* = W_{N_2}^* ⊗ … ⊗ W_{1}^*``. Indeed, it can be shown that for
-any category which has duals for objects ``V`` and ``W``, an exact pairing between
-``V ⊗ W`` and ``{}^{∨}W ⊗ {}^{∨}V`` can be constructed out of the evaluation and
-coevaluation of ``V`` and ``W``, such that ``{}^{∨}W ⊗ {}^{∨}V`` is at least isomorphic to
-``{}^{∨}(V ⊗ W)``.
-
 Graphically, we represent the exact pairing and snake rules as
 
 ![left dual](img/diagram-leftdual.svg)
@@ -265,6 +248,26 @@ Note that we denote the dual objects ``{}^{∨}V`` as a line ``V`` with arrows p
 opposite (i.e. upward) direction. This notation is related to quantum field theory, where
 anti-particles are (to some extent) interpreted as particles running backwards in time.
 
+Using a bra-ket notation and a generic basis
+``{|n⟩}`` for ``V`` and dual basis ``{⟨m|}`` for ``{}^{∨}V`` (such that ``⟨m|n⟩ = δ_{m,n}``),
+the evaluation is given by ``⁠ϵ_V:{}^{∨}V ⊗ V → ℂ: ⟨m| ⊗ |n⟩ ↦ δ_{m,n}`` and the
+coevaluation or unit is ``η_V:ℂ→ V ⊗ {}^{∨}V:α ↦ α ∑_n |n⟩ ⊗ ⟨n|``. Note that this does not
+require an inner product, i.e. no relation or mapping from ``|n⟩`` to ``⟨n|`` was defined.
+
+For a general tensor map ``t:W_1 ⊗ W_2 ⊗ … ⊗ W_{N_2} → V_1 ⊗ V_2 ⊗ … ⊗ V_{N_1}``, by
+successively applying ``η_{W_{N_2}}``, ``η_{W_{N_2-1}}``, …, ``η_{W_{1}}``, we obtain a
+tensor in ``V_1 ⊗ V_2 ⊗ … ⊗ V_{N_1} ⊗ {}^{∨}W_{N_2} ⊗ … ⊗ {}^{∨}W_{1}``. Hence, we can define
+``{}^{∨}(W_1 ⊗ W_2 ⊗ … ⊗ W_{N_2}) = {}^{∨}W_{N_2} ⊗ … ⊗ {}^{∨}W_{1}``. Indeed, it can be
+shown that for any category which has duals for objects ``V`` and ``W``, an exact pairing
+between ``V ⊗ W`` and ``{}^{∨}W ⊗ {}^{∨}V`` can be constructed out of the evaluation and
+coevaluation of ``V`` and ``W``, such that ``{}^{∨}W ⊗ {}^{∨}V`` is at least isomorphic to
+``{}^{∨}(V ⊗ W)``.
+
+For example, the following illustrate a map from ``t ∈ \mathrm{Hom}(W_1 ⊗ W_2 ⊗ W_3, V_1 ⊗ V_2)``
+to a morphism in ``\mathrm{Hom}(I, V_1 ⊗ V_2 ⊗ {}^{∨}W_3 ⊗ {}^{∨}W_2 ⊗ {}^{∨}W_1)``:
+
+![transpose](img/diagram-dualmap.svg)
+
 These exact pairings are known as the left evaluation and coevaluation, and ``{}^{∨}V`` is
 the left dual of ``V``. Likewise, we can also define a right dual ``V^{∨}`` of ``V`` and
 associated pairings, the right evaluation ``\tilde{ϵ}_V: V ⊗ V^{∨} → I`` and coevaluation
@@ -272,24 +275,20 @@ associated pairings, the right evaluation ``\tilde{ϵ}_V: V ⊗ V^{∨} → I`` 
 
 ![right dual](img/diagram-rightdual.svg)
 
+Note that the graphical notation, at least the lines with opposite arrows, do not allow to
+distinguish between the right dual ``V^{∨}`` and the left dual ``{}^{∨}V``. We come back to
+this point below.
+
 In particular, one could choose ``\tilde{ϵ}_{{}^{∨}V} = ϵ_V`` and thus define ``V`` as the
 right dual of ``{}^{∨}V``. While there might be other choices, this choice must at least be
 isomorphic, such that ``({}^{∨}V)^{∨} ≂ V``.
 
 If objects ``V`` and ``W`` have left (respectively right) duals, than for a morphism
-``f ∈ \mathrm{Hom}(W,V)``, we furthermore define the left (respectively right)
+``f ∈ \mathrm{Hom}(W,V)``, we can define the left (respectively right)
 *transpose* ``{}^{∨}f ∈ \mathrm{Hom}({}^{∨}V, {}^{∨}W)`` (respectively  
 ``f^{∨} ∈ \mathrm{Hom}(V^{∨}, W^{∨})``) as
 
 ![transpose](img/diagram-transpose.svg)
-
-where on the right we also illustrate the mapping from
-``t ∈ \mathrm{Hom}(W_1 ⊗ W_2 ⊗ W_3, V_1 ⊗ V_2)`` to a morphism in
-``\mathrm{Hom}(I, V_1 ⊗ V_2 ⊗ {}^{∨} W_3 ⊗ {}^{∨} W_2 ⊗ {}^{∨} W_1)``.
-
-Note that the graphical notation, at least the lines with opposite arrows, do not allow to
-distinguish between the right dual ``V^{∨}`` and the left dual ``{}^{∨}V``. We come back to
-this point below.
 
 A left (or right) duality in a (monoidal) category is now defined as an association of a
 left (or right) dual with every object of the category, with corresponding exact pairings,

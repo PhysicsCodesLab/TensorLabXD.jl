@@ -233,8 +233,8 @@ which are each others dual. Knowing this, all the other functionality of tensors
 `CartesianSpace` indices remains the same for tensors with `ComplexSpace` indices.
 
 ## Symmetries
-So far, the functionality that we have illustrated seems to be just a convenience (or
-inconvenience?) wrapper around dense multidimensional arrays, e.g. Julia's Base `Array`.
+So far, the functionality that we have illustrated seems to be just a wrapper around dense
+multidimensional arrays, e.g. Julia's Base `Array`.
 More power becomes visible when involving symmetries. With symmetries, we imply that there
 is some symmetry action defined on every vector space associated with each of the indices
 of a `TensorMap`, and the `TensorMap` is then required to be equivariant, i.e. it acts as
@@ -282,7 +282,7 @@ A = TensorMap(randn, V*V, V)
 dim(A)
 convert(Array, A)
 
-V = GradedSpace[Irrep[U₁×ℤ₂]]((0,0)=>2,(1,1)=>1,(-1,0)=>1)
+V = Rep[U₁ × ℤ₂]((0, 0)=>2, (-1, 0)=>1, (1, 1)=>1)
 dim(V)
 A = TensorMap(randn, V*V, V)
 dim(A)
@@ -290,12 +290,14 @@ convert(Array, A)
 ```
 Here, the `dim` of a `TensorMap` returns the number of linearly independent components,
 i.e. the number of non-zero entries in the case of an abelian symmetry. Note that we
-can use `×` (obtained as `\times+TAB`) to combine different symmetries. The general space
-associated with symmetries is a `GradedSpace`, which is the access point for users to
-construct spaces with arbitrary symmetries, and `ℤ₂Space` (or `Z2Space`) and `U₁Space` (or
-`U1Space`) are just convenient synonyms, e.g.
+can use `×` (obtained as `\times+TAB`) to combine different symmetries.
+
+The general space associated with symmetries is a `GradedSpace`. The concrete type of
+`GradedSpace` can be obtained as `Vect[I]`, or if `I == Irrep[G]` for some `G<:Group`,
+as `Rep[G]`. The `ℤ₂Space` (or `Z2Space`) and `U₁Space` (or `U1Space`) are just
+convenient synonyms, e.g.
 ```@repl tutorial
-GradedSpace[Irrep[U₁]](0=>3,1=>2,-1=>1) == U1Space(-1=>1,1=>2,0=>3)
+Rep[U₁](0=>3,1=>2,-1=>1) == U1Space(-1=>1,1=>2,0=>3)
 V = U₁Space(1=>2,0=>3,-1=>1)
 for s in sectors(V)
   @show s, dim(V, s)
@@ -303,14 +305,10 @@ end
 U₁Space(-1=>1,0=>3,1=>2) == GradedSpace(Irrep[U₁](1)=>2, Irrep[U₁](0)=>3, Irrep[U₁](-1)=>1)
 supertype(GradedSpace)
 ```
-The `GradedSpace` is not immediately parameterized by some group `G`, but actually by the
-set of irreducible representations of `G`, denoted as `Irrep[G]`. Generally, `GradedSpace`
-supports a grading that is derived from the fusion ring of a (unitary) pre-fusion category.
-The order in which the charges and their corresponding subspace dimensionality are specified
-is irrelevant. The `GradedSpace[I]` constructor automatically converts the keys in the list
-of `Pair`s it receives to the correct sector type. Alternatively, we can directly create
-the sectors of the correct type and use the generic `GradedSpace` constructor. We can probe
-the subspace dimension of a certain sector `s` in a space `V` with `dim(V, s)`.
+Generally, `GradedSpace` supports a grading that is derived from the fusion ring of a
+(unitary) pre-fusion category. The order in which the charges and their corresponding
+subspace dimensionality are specified is irrelevant. We can probe the subspace dimension of
+a certain sector `s` in a space `V` with `dim(V, s)`.
 
 The `GradedSpace` is a subtype of `EuclideanSpace{ℂ}`, i.e., it has the standard Euclidean
 inner product and we assume all representations to be unitary.
@@ -318,11 +316,11 @@ inner product and we assume all representations to be unitary.
 TensorXD.jl also allows for non-abelian symmetries such as `SU₂`. In this case, the vector
 space is characterized via the spin quantum number (i.e. the irrep label of `SU₂`) for each
 of its subspaces, and is created using `SU₂Space` (or `SU2Space` or
-`GradedSpace[Irrep[SU₂]]`)
+`Rep[SU₂]`)
 ```@repl tutorial
 V = SU₂Space(0=>2,1/2=>1,1=>1)
 dim(V)
-V == GradedSpace[Irrep[SU₂]](0=>2, 1=>1, 1//2=>1)
+V == Rep[SU₂](0=>2, 1=>1, 1//2=>1)
 ```
 `V` has a two-dimensional subspace with spin zero, and two one-dimensional subspaces with
 spin 1/2 and spin 1. A subspace with spin `j` has an additional `2j+1` dimensional
