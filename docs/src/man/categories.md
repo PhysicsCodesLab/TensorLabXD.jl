@@ -215,15 +215,6 @@ the category ``\mathcal{C} = (C, ⊗, I, α, λ, ρ)``
     composing the previous two transformations.
 
 ## [Duality: rigid, pivotal and spherical categories](@id ss_dual)
-Another property of the category ``\mathbf{Vect}`` that we want to generalize is the notion
-of duals. For a vector space ``V``, i.e. an object of  ``\mathbf{Vect}``, the dual ``V^*``
-is itself a vector space. Evaluating the action of dual vector on a vector can, because of
-linearity, be interpreted as a morphism from ``V^* ⊗ V`` to ``I`` (called the evalution map).
-Note that elements of a vector space ``V`` have no categorical counterpart in themselves,
-but can be interpreted as morphism from ``I`` to ``V``. To map morphisms from
-``\mathrm{Hom}(W,V)`` to elements of ``V ⊗ W^*``, i.e. morphisms in
-``\mathrm{Hom}(I, V ⊗ W^*)``, we use another morphism ``\mathrm{Hom}(I, W ⊗ W^*)`` which
-can be considered as the inverse of the evaluation map.
 
 The duality in a monoidal category is defined via an *exact paring*, i.e. two families
 of non-degenerate morphisms, the evaluation (or co-unit) ``ϵ_V: {}^{∨}V ⊗ V → I`` and the
@@ -288,6 +279,9 @@ If objects ``V`` and ``W`` have left (respectively right) duals, than for a morp
 
 ![transpose](img/diagram-transpose.svg)
 
+Note that ``{}^{∨}f`` is defined using the left evaluation and coevaluation, while ``f^{∨}``
+is defined using the right evaluation and coevaluation.
+
 A left (or right) duality in a (monoidal) category is now defined as an association of a
 left (or right) dual with every object of the category, with corresponding exact pairings,
 and a category admitting such a duality is a left (or right) **rigid category** (or left or
@@ -313,7 +307,7 @@ thus also the left and right transpose of morphisms, i.e.
 and ``η_{X^*}``, this can be used to recognize ``X`` as a left dual of ``X^*``, which is
 then not necessarily equal but at least isomorphic to ``X^{**}`` with the isomorphism given
 by the mixed snake composition, i.e. ``δ_X: X →
-X^{**}`` given by ``δ_X = (\tilde{ϵ}_X ⊗ \mathrm{id}_{X^*}) ∘ (\mathrm{id}_X ⊗ η_{X^*})``. A
+X^{**}`` given by ``δ_X = (\tilde{ϵ}_X ⊗ \mathrm{id}_{X^{**}}) ∘ (\mathrm{id}_X ⊗ η_{X^*})``. A
 more formal statement is that ``δ`` is a natural isomorphism between the double dual functor
 and the identity functor of a category ``C``. In a similar manner, such a ``δ`` can be used
 to define a natural isomorphism between left and right dual functor (which is a slight
@@ -376,7 +370,7 @@ which can be negative in the case of the supertrace. Both are valid choices to m
 While duality and the pivotal structure allow to move vector spaces back and forth between
 the domain (source) and codomain (target) of a tensor map, reordering vector spaces within
 the domain or codomain of a tensor map , i.e. within a tensor product
-``V_1 ⊗ V_2 ⁠⊗ … V_N`` requires additional structure.
+``V_1 ⊗ V_2 ⁠⊗ … ⁠⊗ V_N`` requires additional structure.
 
 We need a **braided tensor category** ``C``, which is endowed with a *braiding* ``τ``, i.e.,
 a natural isomorphism ``τ_{V,W}:V⊗W → W⊗V`` with ``V,W ∈ \mathrm{Ob}(C)`` between the
@@ -412,7 +406,7 @@ such that we have
 
 where the expression on the right hand side, ``τ_{W,V}∘τ_{V,W}`` can generically not be
 simplified. Hence, for general braidings, there is no unique choice to identify a tensor in
-``V⊗W`` and ``W⊗V``, as the isomorphisms ``τ_{V,W}``, ``τ_{W,V}^{-1}``,
+``V⊗W`` with another tensor in ``W⊗V``, as the isomorphisms ``τ_{V,W}``, ``τ_{W,V}^{-1}``,
 ``τ_{V,W} ∘ τ_{W,V} ∘ τ_{V,W}``, … mapping from ``V⊗W`` to ``W⊗V`` can all be different. In
 order for there to be a unique map from ``V_1 ⊗ V_2 ⁠⊗ … ⊗ V_N`` to any permutation of the
 objects in this tensor product, the braiding needs to be *symmetric*, i.e.
@@ -432,17 +426,17 @@ then we could abtain
 
 This relation can also be obtained from the hexagon equation.
 
-The braiding also satisfy the Yang-Baxter equation, i.e., a line can be moved over or under a crossing between two other lines:
+The braiding also satisfy the Yang-Baxter equation, i.e., a line can be moved over or under
+a crossing between two other lines:
 
 ![YangBaxter](img/diagram-YangBaxter.svg)
 
 In the case of the category ``\mathbf{Vect}`` a valid braiding consists of just flipping
 the the objects/morphisms involved, e.g. for a simple cartesian tensor, permuting the
 tensor indices is equivalent to applying Julia's function `permutedims` on the underlying
-data. Less trivial braiding implementations arise in the context of tensors with symmetries
-(where the fusion tree needs to be reordered, as discussed in
-[Sectors, representation spaces and fusion trees](@ref s_sectorsrepfusion)) or in the case
-of ``\mathbf{SVect}``, which will again be studied in detail at the end of this section.
+data. Less trivial braiding implementations arise in the context of tensors with symmetries,
+where the fusion tree needs to be reordered, or in the case
+of ``\mathbf{SVect}``.
 
 The braiding of a space and a dual space also follows naturally, it is given by
 ``τ_{V^*,W} = λ_{W ⊗ V^*} ∘ (ϵ_V ⊗ \mathrm{id}_{W ⊗ V^*}) ∘ (\mathrm{id}_{V^*} ⊗ τ_{V,W}^{-1} ⊗ \mathrm{id}_{V^*}) ∘ (\mathrm{id}_{V^*⊗ W} ⊗ η_V) ∘ ρ_{V^* ⊗ W}^{-1}``, i.e.
@@ -538,8 +532,8 @@ on objects, whereas on morphisms ``f:W→V`` it defines a morphism ``f^†:V→W
 Sometimes also the symbol ``*`` is used instead of ``†``, however we have already used
 ``*`` to denote dual objects and transposed morphisms in the case of a pivotal category.
 
-If the category is ``ℂ``-linear, the dagger functor is often assumed to be antilinear, i.e.
-``(λ f)^† = \bar{λ} f^†`` for ``λ ∈ ℂ`` and ``f ∈ \mathrm{Hom}(V,W)``.
+If the category is ``ℂ``-linear, the dagger functor is often assumed to be **antilinear**,
+i.e., ``(λ f)^† = \bar{λ} f^†`` for ``λ ∈ ℂ`` and ``f ∈ \mathrm{Hom}(V,W)``.
 
 In a dagger
 category, a morphism ``f:W→V`` is said to be *unitary* if it is an isomorphism and
@@ -613,10 +607,10 @@ These last two section on fusion categories is also applicable, in a straightfor
 manner, to ``\mathbf{Vect}`` and ``\mathbf{SVect}``, but is rather meant to provide the
 background of working with symmetries. We first need two new concepts:
 
-*   An object ``W ∈ \mathrm{Ob}(C)`` is a **direct sum** of objects
+*   An object ``V ∈ \mathrm{Ob}(C)`` is a **direct sum** of objects
     ``V_1, V_2, …, V_k ∈ \mathrm{Ob}(C)`` if there exists a family morphisms
-    ``x_α ∈ \mathrm{Hom}(V_α,W)`` and ``y^α ∈ \mathrm{Hom}(W,V_α)`` such that
-    ``\mathrm{id}_W = ∑_{α=1}^{k} x_α ∘ y^α`` and ``y^α ∘ x_β = δ^α_β \mathrm{id}_{V_α}``.
+    ``x_α ∈ \mathrm{Hom}(V_α,V)`` and ``y^α ∈ \mathrm{Hom}(V,V_α)`` such that
+    ``\mathrm{id}_V = ∑_{α=1}^{k} x_α ∘ y^α`` and ``y^α ∘ x_β = δ^α_β \mathrm{id}_{V_α}``.
     The morphisms ``x_α`` and ``y^α`` are known as *inclusions* and *projections*
     respectively, and in the context of dagger categories it is natural to assume
     ``y^α = x_α^†`` in order to obtain an orthogonal direct sum decomposition.
@@ -646,7 +640,7 @@ pairing ``\mathrm{Hom}(I,V) ⊗ \mathrm{Hom}(I,W) → \mathrm{End}(I)``. This
 property is always satisfied for a **pre-fusion category** ``C``, i.e. a monoidal ``𝕜``-
 linear category having a set ``\mathcal{S} ⊂ \mathrm{Ob}(C)`` of simple objects
 ``\mathcal{S}=\{I, V_1, V_2, \ldots\}`` such that
-*   the monoidal unit ``I_C ∈ \mathcal{S}``;
+*   the monoidal unit ``I ∈ \mathcal{S}``;
 *   ``\mathrm{Hom}_C(V_i,V_j) = 0`` (the singleton set containing only the zero
     homomorphism) for any distinct ``V_i, V_j ∈ \mathcal{S}``;
 *   every object ``V ∈ \mathrm{Ob}(C)`` can be written as a direct sum of a finite family of
@@ -682,8 +676,8 @@ fusion categories. As mentioned, the categories ``\mathbf{Vect}_𝕜`` and
 ``\mathbf{SVect}_𝕜`` have ``I ≂ 𝕜`` as simple object. For ``\mathbf{Vect}``, this is the
 only simple object, i.e. any other vector space ``V`` over ``𝕜``, can be thought of as a
 direct sum over ``N^V_I = \mathrm{dim}(V)`` multiple copies of ``𝕜``. In
-``\mathbf{SVect}``, the object ``J = 0 ⊕ 𝕜`` with ``J_0=0`` the zero dimensional space and
-``J_1 ≂ 𝕜`` is another simple object. Clearly, there are no non-zero grading preserving
+``\mathbf{SVect}``, the object ``J = 0 ⊕ 𝕜`` is another simple object with ``J_0=0`` (the
+zero dimensional space) and ``J_1 ≂ 𝕜``. Clearly, there are no non-zero grading preserving
 morphisms between ``I`` and ``J``, i.e. ``\mathrm{Hom}(I,J) = 0``, whereas
 ``\mathrm{Hom}(J,J) ≂ 𝕜``. Any other super vector space ``V=V_0 ⊕ V_1`` can be written as
 a direct sum over ``N^V_I = \mathrm{dim}(V_0)`` copies of ``I`` and
@@ -699,7 +693,7 @@ between the representations on the source and target:
 ``\mathrm{Hom}_C(W,V) = \{f ∈ \mathrm{Hom}_{\mathbf{Vect}}(W,V)| u_V(g) ∘ f = f ∘ u_W(g), ∀ g ∈ G\}.``
 
 Note that the ``u_V(g)`` is itself generally not an element from ``\mathrm{End}_C(V)``. Simple
-objects ``V_a`` are those corresponding irreducible representations (irreps) ``a`` of the
+objects ``V_a`` are those corresponding to the irreducible representations (irreps) ``a`` of the
 group ``\mathsf{G}``, for which Schur's lemma implies ``\mathrm{End}_C(V_a) ≂ 𝕜`` and
 ``\mathrm{Hom}_C(V_a, V_b) = 0`` if ``a`` and ``b`` are not equivalent irreps. On the dual
 space ``V^*``, the group acts with the contragradient representation, i.e.
@@ -707,20 +701,20 @@ space ``V^*``, the group acts with the contragradient representation, i.e.
 denotes the transpose of the representation matrix. (The form of the representation on the
 dual space can be determined by the requirement that applying the symmetry operation on the
 all legs of the evaluation map leave it invariant:
-``\langle m|\otimes |n\rangle =\sum_k \langle m| (u_V(g))^{-1}_{mk}u_V(g)_{kn}|n\rangle = \sum_k u_V(g^-1)^*_{km}\langle m|u_V(g)_{kn}|n\rangle``.)
+``\langle m|\otimes |n\rangle =\sum_k \langle m| (u_V(g))^{-1}_{mk}u_V(g)_{kn}|n\rangle = \sum_k u_V(g^{-1})^*_{km}\langle m|u_V(g)_{kn}|n\rangle``.)
 For a finite group or compact Lie group, we can introduce a dagger
 and restrict to unitary representations, such that ``u_V(g)^{-1} = u_V(g)^†`` and the
 contragradient representation becomes the complex conjugated representation, denoted as
-``u_{V^*}(g) = \bar{u}_V(g)``. The resulting category can then be given the structure of a
+``u_{V^*}(g) = \bar{u}_V(g)``, where the overline means complex conjugate. The resulting
+category can then be given the structure of a
 unitary ribbon (pre-)fusion category. (Note that the number of isomorphism classes of simple
 objects, i.e. the number of non-equivalent irreps, is finite only in the case of a finite
-group). This example is very relevant to working with symmetries in TensorXD.jl, and will
-be expanded upon in more detail below.
+group). This example is very relevant to working with symmetries in TensorXD.jl.
 
 Fusion categories have a number of simplifying properties. A pivotal fusion category is
 spherical as soon as ``\mathrm{dim}_{\mathrm{l}}(V_i) = \mathrm{dim}_{\mathrm{r}}(V_i)``
-(i.e. the trace of the identity morphism) for all (isomorphism classes of) simple objects
-(note that all isomorphic simple objects have the same dimension). A braided pivotal fusion
+for all isomorphism classes of simple objects.
+Note that all isomorphic simple objects have the same dimension. A braided pivotal fusion
 category is spherical if and only if it is a ribbon category.
 
 ## [Topological data of a unitary pivotal fusion category](@id ss_topologicalfusion)
@@ -729,11 +723,11 @@ More explicitly, the different structures (monoidal structure, duals and pivotal
 braiding and twists) in a fusion category can be characterized in terms of the simple
 objects, which we will henceforth denoted with just ``a`` instead of ``V_a``. This gives
 rise to what is known as the *topological data* of a unitary pivotal fusion category, most
-importantly the ``N``, ``F`` and ``R`` symbols, which are introduced in this final section.
+importantly the ``N``, ``F`` and ``R`` symbols, which will be introduced in this final section.
 
 ### Monoidal structure
 
-Starting with the monoidal or tensor product, we start by characterizing how the object
+Starting with the tensor product, we start by characterizing how the object
 ``a ⊗ b`` can be decomposed as a direct sum over simple objects ``c``, which gives rise to
 the multiplicity indices ``N_c^{ab}``, as well as the inclusion maps, which we henceforth
 denote as ``X_{c,μ}^{ab}:c→a⊗b`` for ``μ=1,…,N^{c}_{ab}``. In the context of a unitary
@@ -763,13 +757,15 @@ and
 
 ``\tilde{X}_{d,(fκλ)}^{abc} = (\mathrm{id}_a ⊗ X_{f,κ}^{bc}) ∘ X_{d,λ}^{af} : d→a⊗(b⊗c)``
 
-and satisfy
+that satisfy
 
 ``(X_{d,(eμν)}^{abc})^† ∘ X_{d′,(e′μ′ν′)}^{abc} = δ_{e,e′} δ_{μ,μ′} δ_{ν,ν′} δ_{d,d′} \mathrm{id}_d,``
 
 ``∑_{d,eμν} X_{d,(eμν)}^{abc} ∘ (X_{d,(eμν)}^{abc})^† = \mathrm{id}_{(a⊗b)⊗c},``
 
-and similar for ``\tilde{X}_{d,(fκλ)}^{a,b,c}``. Applying the associator leads to a relation
+and similar for ``\tilde{X}_{d,(fκλ)}^{a,b,c}``.
+
+Applying the associator leads to a relation
 
 ``α_{a,b,c} ∘ X_{d,(eμν)}^{abc} = ∑_{f,κ,λ} [F^{abc}_{d}]_{(eμν)}^{(fκλ)} \tilde{X}_{d,(fκλ)}^{abc}.``
 
@@ -820,7 +816,7 @@ all possible duals of ``a`` must be isomorphic, and thus there is a single repre
 ``\bar{a}``, meaning that ``N^{ab}_1 = δ^{b,\bar{a}}``, i.e. for all other ``b ≠ \bar{a}``,
 ``\mathrm{Hom}(1,a⊗b) ≂ \mathrm{Hom}(b^*,a) = 0``. Note that also ``\bar{\bar{a}}=a``.
 
-Let us now be somewhat careful with respect to the isomorphism between ``a^*`` and
+Let us now be careful about the isomorphism between ``a^*`` and
 ``\bar{a}``. If ``\bar{a} ≠ a``, we can basically choose the representative of that
 isomorphism class as ``\bar{a} = a^*``. However, this choice might not be valid if
 ``\bar{a}=a``, as in that case the choice is already fixed, and ``a^*`` might be different from
@@ -861,9 +857,9 @@ thus ``(X^{a\bar{a}}_{1})^† ∘ X^{a\bar{a}}_{1} = \mathrm{id}_1``. Here, we h
 simple objects ``a``. With this information, we can then compute ``[F^{a\bar{a}a}_a]``,
 which has a single element (it's a ``1 × 1`` matrix), and find
 ``[F^{a\bar{a}a}_a] = \frac{χ_a}{d_a}``, where we've used ``\tilde{η}_a = ϵ_a^†`` and the
-snake rules. Hence, both the quantum dimensions and the Frobenius-Schur indicator are
-encoded in the F-symbol. Hence, they do not represent new independent data. Again, the
-graphical representation is more enlightning:
+snake rules. Hence, from the F-symbol we can get the quantum dimensions as
+``d_a = |[F^{a\bar{a}a}_a]|^{-1}`` and the Frobenius-Schur indicator as
+``χ_a = [F^{a\bar{a}a}_a]/|[F^{a\bar{a}a}_a]|``. Graphically:
 
 ![ZtoF](img/diagram-ZtoF.svg)
 
@@ -956,9 +952,10 @@ the 8-type braiding and called as **topological spin**
 ![topologicalspin](img/diagram-topologicalspin.svg)
 
 
-Note that ``θ_a = θ_{\bar{a}}``
-as our category is spherical and thus a ribbon category, and that the defining relation of
-a twist implies
+Note that ``θ_a = θ_{\bar{a}}`` as our category is spherical and thus a ribbon category.
+
+
+The defining relation of a twist implies
 
 ``[R^{ba}_c]^κ_μ [R^{ab}_c]^μ_ν = \frac{\theta_c}{θ_a θ_b} δ^κ_ν``
 
@@ -971,14 +968,14 @@ Schur indicator via ``θ_a χ_a R^{aa}_1 =1``, because of
 
 ![twistfrobeniusschur](img/diagram-twistfrobeniusschur.svg)
 
-For the recurring example of ``\mathbf{Rep}_{\mathsf{G}}``, the braiding acts simply as the
+For the example of ``\mathbf{Rep}_{\mathsf{G}}``, the braiding acts simply as the
 swap of the two vector spaces on which the representations are acting and is thus symmetric,
 i.e. ``τ_{b,a} ∘ τ_{a,b} = \mathrm{id}_{a⊗b}``. All the twists are simply ``θ_a = 1``. For
 an irrep that is self-dual, i.e. ``\bar{a}=a``, the final expression simplifies to
 ``R^{aa}_1 = χ_a`` and thus states that the fusion from ``a ⊗ a`` to the trivial sector is
 either symmetric under swaps if ``χ_a=1`` or antisymmetric if ``χ_a=-1``. For the case of
-``\mathsf{SU}_2``, the coupling of two spin ``j`` states to a singlet it symmetric for
-integer ``j`` and odd for half-integer ``j``.
+``\mathsf{SU}_2``, the coupling of two spin ``j`` states to a singlet is symmetric for
+integer ``j`` and antisymmetric for half-integer ``j``.
 
 With this, we conclude our exposition of unitary fusion categories. There are many fusion
 categories that do not originate from the representation theory of groups, but are related
