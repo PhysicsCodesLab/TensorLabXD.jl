@@ -44,23 +44,26 @@ Base.show(io::IO, ::ComplexNumbers) = print(io, "ℂ")
 """
     abstract type VectorSpace end
 
-Abstract type at the top of the type hierarchy for denoting vector spaces, or, more
-accurately, the objects of 𝕜-linear monoidal categories.
+Abstract type at the top of the type hierarchy for denoting the 𝕜-linear monoidal categories.
+The instances of it represent objects of the corresponding category. The category Vect and
+SVect are just specific examples of it. More general category can also be represented. We
+call the category as vector spaces in the future, but it should be kept in mind that it is
+more general than Vect.
 """
 abstract type VectorSpace end
 
 """
     abstract type ElementarySpace{𝕜} <: VectorSpace end
 
-ElementarySpace over a field `𝕜` is a super type for all vector spaces (objects) that can
+ElementarySpace over a field `𝕜` is a super type for all categories whose objects can
 be associated with the individual indices of a tensor, as hinted to by its alias IndexSpace.
+
+`𝕜` here can be the field of objects of Vect, or the field of 𝕜-linear monoidal categories,
+where `𝕜` is the field of the morphism space.
 
 Every elementary vector space should has the methods [`conj`](@ref) and [`dual`](@ref),
 returning the complex conjugate space and the dual space respectively. The complex conjugate
 of the dual space is obtained as `dual(conj(V)) === conj(dual(V))`.
-
-These different spaces should be of the same type, so that a tensor can be defined as an
-element of a homogeneous tensor product of these spaces.
 """
 abstract type ElementarySpace{𝕜} <: VectorSpace end
 
