@@ -175,8 +175,6 @@ catcodomain(t1::AbstractTensorMap{S, 1, N₂}, t2::AbstractTensorMap{S, 1, N₂}
 
 ```
 
-
-
 ## General arguments
 This last page explains how to create and manipulate tensors in TensorXD.jl. As this is
 probably the most important part of the manual, we will also focus more strongly on the
@@ -185,38 +183,35 @@ implementation that we will address is the storage of the tensor data, as this i
 to know how to create and initialize a tensor, but will in fact also shed light on how some
 of the methods work.
 
-As mentioned, all tensors in TensorXD.jl are interpreted as linear maps (morphisms) from a
-domain (a `ProductSpace{S,N₂}`) to a codomain (another `ProductSpace{S,N₁}`), with the same
+All tensors in TensorXD.jl are interpreted as linear maps from a domain
+(`ProductSpace{S,N₂}`) to a codomain (`ProductSpace{S,N₁}`), with the same
 `S<:ElementarySpace` that labels the type of spaces associated with the individual tensor
-indices. The overall type for all such tensor maps is `AbstractTensorMap{S, N₁, N₂}`. Note
-that we place information about the codomain before that of the domain. Indeed, we have
-already encountered the constructor for the concrete parametric type `TensorMap` in the
-form `TensorMap(..., codomain, domain)`. This convention is opposite to the mathematical
-notation, e.g. ``\mathrm{Hom}(W,V)`` or ``f:W→V``, but originates from the fact that a
-normal matrix is also denoted as having size `m × n` or is constructed in Julia as
-`Array(..., (m, n))`, where the first integer `m` refers to the codomain being `m`-
-dimensional, and the seond integer `n` to the domain being `n`-dimensional. This also
-explains why we have consistently used the symbol ``W`` for spaces in the domain and ``V``
-for spaces in the codomain. A tensor map ``t:(W₁ ⊗ … ⊗ W_{N₂}) → (V₁ ⊗ … ⊗ V_{N₁})`` will
-be created in Julia as `TensorMap(..., V1 ⊗ ... ⊗ VN₁, W1 ⊗ ... ⊗ WN₂)`.
+indices. The overall type for all such tensor maps is `AbstractTensorMap{S, N₁, N₂}`. The
+constructor for a concrete `TensorMap` is `TensorMap(..., codomain, domain)`. Note that we
+place information about the codomain before that of the domain.  This convention is opposite
+to the mathematical notation, e.g., ``\mathrm{Hom}(W,V)`` or ``f:W→V``, but originates from
+the fact that a normal matrix is denoted as having size `m × n` or is constructed in Julia
+as `Array(..., (m, n))`, where the first integer `m` refers to the codomain being
+`m`-dimensional, and the second integer `n` to the domain being `n`-dimensional.
 
-Furthermore, the abstract type `AbstractTensor{S,N}` is just a synonym for
-`AbstractTensorMap{S,N,0}`, i.e. for tensor maps with an empty domain, which is equivalent
-to the unit of the monoidal category, or thus, the field of scalars ``𝕜``.
+The abstract type `AbstractTensor{S,N}` is just a synonym for `AbstractTensorMap{S,N,0}`,
+i.e., for tensor maps with an empty domain, which is equivalent to the unit of the tensor
+category.
 
 Currently, `AbstractTensorMap` has two subtypes. `TensorMap` provides the actual
-implementation, where the data of the tensor is stored in a `DenseArray` (more specifically
-a `DenseMatrix` as will be explained below). `AdjointTensorMap` is a simple wrapper type to
-denote the adjoint of an existing `TensorMap` object. In the future, additional types could
-be defined, to deal with sparse data, static data, diagonal data, etc...
+implementation, where the data of the tensor is stored in a `DenseMatrix`.
+`AdjointTensorMap` is a simple wrapper type to denote the adjoint of an existing `TensorMap`
+object. In the future, additional types could be defined, to deal with sparse data, static
+data, diagonal data, etc...
 
 ## [Storage of tensor data](@id ss_tensor_storage)
 
-Before discussion how to construct and initalize a `TensorMap{S}`, let us discuss what is
-meant by 'tensor data' and how it can efficiently and compactly be stored. Let us first
-discuss the case `sectortype(S) == Trivial` sector, i.e. the case of no symmetries. In that
-case the data of a tensor `t = TensorMap(..., V1 ⊗ ... ⊗ VN₁, W1 ⊗ ... ⊗ WN₂)` can just be
-represented as a multidimensional array of size
+Let us discuss what is meant by 'tensor data' and how it can efficiently and compactly be
+stored.
+
+In the case with no symmetries, i.e., `sectortype(S) == Trivial`, the data of a tensor
+`t = TensorMap(..., V1 ⊗ ... ⊗ VN₁, W1 ⊗ ... ⊗ WN₂)` can be represented as a
+multidimensional array of size
 
 `(dim(V1), dim(V2), …, dim(VN₁), dim(W1), …, dim(WN₂))`
 
@@ -224,18 +219,17 @@ which can also be reshaped into matrix of size
 
 `(dim(V1)*dim(V2)*…*dim(VN₁), dim(W1)*dim(W2)*…*dim(WN₂))`
 
-and is really the matrix representation of the linear map that the tensor represents. In
-particular, given a second tensor `t2` whose domain matches with the codomain of `t`,
-function composition amounts to multiplication of their corresponding data matrices.
-Similarly, tensor factorizations such as the singular value decomposition, which we discuss
-below, can act directly on this matrix representation.
+and is really the matrix representation of the linear map that the tensor represents. Given
+another tensor `t′` whose domain matches with the codomain of `t`, function composition
+amounts to multiplication of their corresponding data matrices. Tensor factorizations, such
+as the singular value decomposition, can act directly on this matrix representation.
 
 !!! note
     One might wonder if it would not have been more natural to represent the tensor data as
     `(dim(V1), dim(V2), …, dim(VN₁), dim(WN₂), …, dim(W1))` given how employing the duality
     naturally reverses the tensor product, as encountered with the interface of
     [`repartition`](@ref) for [fusion trees](@ref ss_fusiontrees). However, such a
-    representation, when plainly `reshape`d to a matrix, would not have the above
+    representation, when plainly `reshape` to a matrix, would not have the above
     properties and would thus not constitute the matrix representation of the tensor in a
     compatible basis.
 
