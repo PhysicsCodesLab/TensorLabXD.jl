@@ -40,6 +40,14 @@ function permute(t::AdjointTensorMap{S}, p1::IndexTuple, p2::IndexTuple=();
     adjoint(permute(adjoint(t), p1′, p2′; copy = copy))
 end
 
+"""
+    has_shared_permute(t::TensorMap, p1, p2)
+
+Return true if `p1 == (1,...,length(codomain))` and
+`p2 == length(codomain)+(1,...,length(domain))`;
+Or in the trivial case, the matrix with `p1` and `p2` can be fused into a vector with
+continuous memory with stride = 1.
+"""
 function has_shared_permute(t::TensorMap, p1, p2)
     if p1 === codomainind(t) && p2 === domainind(t)
         return true

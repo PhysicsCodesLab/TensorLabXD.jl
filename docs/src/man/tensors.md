@@ -176,13 +176,6 @@ catcodomain(t1::AbstractTensorMap{S, 1, N₂}, t2::AbstractTensorMap{S, 1, N₂}
 ```
 
 ## General arguments
-This last page explains how to create and manipulate tensors in TensorXD.jl. As this is
-probably the most important part of the manual, we will also focus more strongly on the
-usage and interface, and less so on the underlying implementation. The only aspect of the
-implementation that we will address is the storage of the tensor data, as this is important
-to know how to create and initialize a tensor, but will in fact also shed light on how some
-of the methods work.
-
 All tensors in TensorXD.jl are interpreted as linear maps from a domain
 (`ProductSpace{S,N₂}`) to a codomain (`ProductSpace{S,N₁}`), with the same
 `S<:ElementarySpace` that labels the type of spaces associated with the individual tensor
@@ -233,7 +226,7 @@ as the singular value decomposition, can act directly on this matrix representat
     properties and would thus not constitute the matrix representation of the tensor in a
     compatible basis.
 
-In the general case
+In general:
 
 ```math
 \begin{aligned}
@@ -245,8 +238,12 @@ X^{a_1...a_{N_1}}_{c_a,\alpha}\circ t^{i,j,c_a,c_b}_{(a_1,...,a_{N_1})\alpha,(b_
 \circ (X^{b_1...b_{N_2}}_{c_b,\beta})^{†}
 \end{aligned}
 ```
-where ``t^{i,j,c_a,c_b}_{\alpha,\beta}`` is a tensor map
-from ``c_b`` to ``c_a``.
+where ``t^{ij}_{(a_1,...,a_{N_1}),(b_1,...,b_{N_2})}`` is a map from ``b_1⊗b_2⊗...⊗b_{N_2}``
+to ``a_1⊗a_2⊗...⊗a_{N_2}`` and
+``t^{i,j,c_a,c_b}_{(a_1,...,a_{N_1})\alpha,(b_1,...,b_{N_2})\beta}`` is a tensor map
+from ``c_b`` to ``c_a``. In ``X^{a_1, …, a_{N₁}}_{c,α}``, the index
+``α = (e_1, …, e_{N_1-2}; μ₁, …, μ_{N_1-1})`` is a collective label for the internal sectors
+`e` and the vertex degeneracy labels `μ` of a generic fusion tree.
 
 A symmetric tensor map should satisfy ``U_1 t = t U_2``, thus for each term of above
 equation of ``t``, we have
@@ -301,35 +298,20 @@ the form of a multidimensional array with size
 of with row size `dim(V1, a1)*…*dim(VN₁, aN₁) == dim(codomain, (a1, …, aN₁))` and column
 size `dim(W1, b1)*…*dim(WN₂, bN₂) == dim(domain, (b1, …, bN₂))`.
 
-However, there are multiple combinations of `(a1, …, aN₁)` giving rise to the same `c`, and
-so there is data associated with all of these, as well as all possible combinations of
-`(b1, …, bN₂)`. Stacking all matrices for different `(a1,…)` and a fixed value of `(b1,…)`
+There could be multiple combinations of `(a1, …, aN₁)` and `(b1, …, bN₂)` giving rise to the
+same `c`. Stacking all matrices for different `(a1,…)` and a fixed value of `(b1,…)`
 underneath each other, and for fixed value of `(a1,…)` and different values of `(b1,…)` next
 to each other, gives rise to a larger block matrix of all data associated with the central
-sector `c`. The size of this matrix is exactly
-`(blockdim(codomain, c), blockdim(domain, c))` and these matrices are exactly the diagonal
-blocks whose existence is guaranteed by Schur's lemma, and which are labeled by the coupled
-sector `c`. Indeed, if we would represent the tensor map `t` as a matrix without explicitly
-using the symmetries, we could reorder the rows and columns to group data corresponding to
-sectors that fuse to the same `c`, and the resulting block diagonal representation would
-emerge. This basis transform is thus a permutation, which is a unitary operation, that will
-cancel or go through trivially for linear algebra operations such as composing tensor maps
-(matrix multiplication) or tensor factorizations such as a singular value decomposition. For
-such linear algebra operations, we can thus directly act on these diagonal blocks that
-emerge after a basis transform, provided that the
-partition of the tensor indices in domain and codomain of the tensor are in line with our
-needs. For example, composing two tensor maps amounts to multiplying the matrices
-corresponding to the same `c` (provided that its subblocks labeled by the different
-combinations of sectors are ordered in the same way, which we guarantee by associating a
-canonical order with sectors). Henceforth, we refer to the `blocks` of a tensor map as those
-diagonal blocks, the existence of which is provided by Schur's lemma and which are labeled
-by the coupled sectors `c`. We directly store these blocks as `DenseMatrix` and gather them
-as values in a dictionary, together with the corresponding coupled sector `c` as key. For a
-given tensor `t`, we can access a specific block as `block(t, c)`, whereas `blocks(t)`
-yields an iterator over pairs `c=>block(t,c)`.
+sector `c`. The size of this matrix is `(blockdim(codomain, c), blockdim(domain, c))`. This
+matrix is a diagonal block labeled with sector `c` of a tensor map.
+
+Henceforth, we refer to the `blocks` of a tensor map as those diagonal blocks. We directly
+store these blocks as `DenseMatrix` and gather them as values in a dictionary, together with
+the corresponding coupled sector `c` as key. For a given tensor `t`, we can access a
+specific block as `block(t, c)`. The `blocks(t)` gives an iterator over `c=>block(t,c)`.
 
 The subblocks corresponding to a particular combination of sectors then correspond to a
-particular view for some range of the rows and some range of the colums, i.e.
+view for some range of the rows and some range of the columns, e.g.,
 `view(block(t, c), m₁:m₂, n₁:n₂)` where the ranges `m₁:m₂` associated with `(a1, …, aN₁)`
 and `n₁:n₂` associated with `(b₁, …, bN₂)` are stored within the fields of the instance `t`
 of type `TensorMap`. This `view` can then lazily be reshaped to a multidimensional array,
@@ -338,41 +320,43 @@ the data in this `view` is not contiguous, because the stride between the differ
 is larger than the length of the columns. Nonetheless, this does not pose a problem and even
 as multidimensional array there is still a definite stride associated with each dimension.
 
+If we would represent the tensor map `t` as a matrix, we could reorder the rows and columns
+to group data corresponding to sectors that fuse to the same `c`, and the resulting block
+diagonal representation would emerge. This basis transform is a permutation, which is a
+unitary operation, that will cancel or go through trivially for linear algebra operations
+such as composing tensor maps (matrix multiplication) or tensor factorizations such as a
+singular value decomposition. For such linear algebra operations, we can thus directly act
+on these diagonal blocks that emerge after a basis transform, provided that the partition
+of the tensor indices in domain and codomain of the tensor are in line with our needs.
+For example, composing two tensor maps amounts to multiplying the matrices corresponding to
+the same `c` (provided that its subblocks labeled by the different combinations of sectors
+are ordered in the same way, which we guarantee by associating a canonical order with
+sectors).
+
 When `FusionStyle(I) isa MultipleFusion`, things become slightly more complicated. Not only
 do `(a1, …, aN₁)` give rise to different coupled sectors `c`, there can be multiply ways in
 which they fuse to `c`. These different possibilities are enumerated by the iterator
 `fusiontrees((a1, …, aN₁), c)` and `fusiontrees((b1, …, bN₂), c)`, and with each of those,
 there is tensor data that takes the form of a multidimensional array, or, after reshaping, a
-matrix of size `(dim(codomain, (a1, …, aN₁)), dim(domain, (b1, …, bN₂))))`. Again, we can
-stack all such matrices with the same value of `f₁ ∈ fusiontrees((a1, …, aN₁), c)`
-horizontally (as they all have the same number of rows), and with the same value of `f₂ ∈
-fusiontrees((b1, …, bN₂), c)` vertically (as they have the same number of columns). What
-emerges is a large matrix of size `(blockdim(codomain, c), blockdim(domain, c))` containing
-all the tensor data associated with the coupled sector `c`, where `blockdim(P, c) =
-sum(dim(P, s)*length(fusiontrees(s, c)) for s in sectors(P))` for some instance `P` of
-`ProductSpace`. The tensor implementation does not distinguish between abelian or
-non-abelian sectors and still stores these matrices as a `DenseMatrix`, accessible via
-`block(t, c)`.
+matrix of size `(dim(codomain, (a1, …, aN₁)), dim(domain, (b1, …, bN₂))))`.
 
-At first sight, it might now be less clear what the relevance of this block is in relation
-to the full matrix representation of the tensor map, where the symmetry is not exploited.
-The essential interpretation is still the same. Schur's lemma now tells that there is a
-unitary basis transform which makes this matrix representation block diagonal, more
-specifically, of the form ``⨁_{c} B_c ⊗ 𝟙_{c}``, where ``B_c`` denotes `block(t,c)` and
-``𝟙_{c}`` is an identity matrix of size `(dim(c), dim(c))`. The reason for this extra
-identity is that the group representation is recoupled to act as ``⨁_{c} 𝟙 ⊗ u_c(g)`` for
-all ``g ∈ \mathsf{G}``, with ``u_c(g)`` the matrix representation of group element ``g``
-according to the irrep ``c``. In the abelian case, `dim(c) == 1`, i.e. all irreducible
-representations are one-dimensional and Schur's lemma only dictates that all off-diagonal
-blocks are zero. However, in the non-Abelian case the basis transform to the block diagonal
-representation is not simply a permutation matrix, but a more general unitary matrix
-composed of the different fusion trees. Indeed, let us denote the fusion trees `f₁ ∈
-fusiontrees((a1, …, aN₁), c)` as ``X^{a_1, …, a_{N₁}}_{c,α}`` where
-``α = (e_1, …, e_{N_1-2}; μ₁, …, μ_{N_1-1})`` is a collective label for the internal sectors
-`e` and the vertex degeneracy labels `μ` of a generic fusion tree, as discussed in the
-[corresponding section](@ref ss_fusiontrees).
+Again, we can stack all matrices with the same value of `f₁ ∈ fusiontrees((a1, …, aN₁), c)`
+horizontally (as they all have the same number of rows), and with the same value of
+`f₂ ∈ fusiontrees((b1, …, bN₂), c)` vertically (as they have the same number of columns).
+What emerges is a large matrix of size `(blockdim(codomain, c), blockdim(domain, c))`
+containing all the tensor data associated with the coupled sector `c`, where
+`blockdim(P, c) = sum(dim(P, s)*length(fusiontrees(s, c)) for s in sectors(P))` for some
+instance `P` of `ProductSpace`. The tensor implementation does not distinguish between
+abelian or non-abelian sectors and still stores these matrices as a `DenseMatrix`,
+accessible via `block(t, c)`.
 
-The tensor is then represented as
+Schur's lemma now tells that there is a unitary basis transform which makes the matrix
+representation of a tensor map block diagonal with the form ``⨁_{c} B_c ⊗ 𝟙_{c}``, where
+``B_c`` denotes `block(t,c)` and ``𝟙_{c}`` is an identity map from `c` to `c`. In the
+non-Abelian case the basis transform to the block diagonal form is not simply a permutation
+matrix, but a more general unitary matrix composed of the different fusion trees.
+
+Illustrate the block diagonalization of a tensor map graphically:
 
 ```math
 \begin{aligned}
@@ -387,12 +371,10 @@ t  = \sum_c\sum_{a_1,...,a_{N_1}}\sum_{b_1,...,b_{N_2}} \sum_{\alpha,\beta}
 ![tensor storage](img/tensor-decomposition.png)
 
 In this diagram, we have indicated how the tensor map can be rewritten in terms of a block
-diagonal matrix with a unitary matrix on its left and another unitary matrix (if domain and
-codomain are different) on its right. So the left and right matrices are squares and
-represent the unitary basis transform. In this picture, the white regions are zero.
+diagonal matrix with a unitary matrix on its left and another unitary matrix on its right.
+So the left and right matrices are squares and represent the unitary basis transform.
 
-To understand this better, we need to understand the basis transform, e.g. on the left
-(codomain) side. In more detail, it is given by
+In more detail, the basis transformation on the codomain side is given by
 
 ![tensor unitary](img/tensor-splitting_unitary.png)
 
@@ -417,14 +399,13 @@ tree to ``c_1``, labeled by ``c_1,(a)``, and two fusion trees to ``c_2``, labele
 ``c_1``, labeled by ``c,(a')``. The third sector ``(a'')`` only has a fusion tree to
 ``c_2``, labeld by ``c_2, (a'')``. Because the fusion trees do not act on the spaces
 ``ℂ^{n_{a_1} * …* n_{a_{N_1}}}``, the dotted lines which represent the different
-``n_{(a)}`` dimensions are also drawn vertically.
-For a given sector ``(a)`` and a specific splitting tree ``X^{(a)}_{c,α}: R_c→R_{(a)}``,
-the action is ``𝟙_{n_{(a)}} ⊗ X^{(a…)}_{c,α}``, which
-corresponds to the diagonal green blocks in this drawing where the same matrix
-``X^{(a)}_{c,α}`` is repeated along the diagonal. Note that the
-splitting tree is not a vector or single column, but a matrix with number of rows equal to
-``\mathrm{dim}(R_{(a)}) = d_{a_1} d_{a_2} … d_{a_{N_1}}`` and number of columns
-equal to ``d_c``.
+``n_{(a)}`` dimensions are also drawn vertically. For a given sector ``(a)`` and a
+specific splitting tree ``X^{(a)}_{c,α}: R_c→R_{(a)}``, the action is
+``𝟙_{n_{(a)}} ⊗ X^{(a)}_{c,α}``, which corresponds to the diagonal green blocks in this
+drawing where the same matrix ``X^{(a)}_{c,α}`` is repeated along the diagonal. Note that
+the splitting tree is a matrix with number of rows equal to
+``\mathrm{dim}(R_{(a)}) = d_{a_1} d_{a_2} … d_{a_{N_1}}``
+and number of columns equal to ``d_c``.
 
 ![tensor unitary](img/tensor-fusion_unitary.png)
 
@@ -465,14 +446,17 @@ Hence, as before, we only store the diagonal blocks ``B_c`` of size
 living are managed within the tensor implementation, and these subblocks can be accessed
 via `t[f₁,f₂]`, and is returned as a `StridedArray` of size
 ``n_{a_1} × n_{a_2} × … × n_{a_{N_1}} × n_{b_1} × … n_{b_{N₂}}``, or in code,
-`(dim(V1, a1), dim(V2, a2), …, dim(VN₁, aN₁), dim(W1, b1), …, dim(WN₂, bN₂))`. While the
-implementation does not distinguish between `FusionStyle isa UniqueFusion` or
+`(dim(V1, a1), dim(V2, a2), …, dim(VN₁, aN₁), dim(W1, b1), …, dim(WN₂, bN₂))`.
+
+While the implementation does not distinguish between `FusionStyle isa UniqueFusion` or
 `FusionStyle isa MultipleFusion`, in the former case the fusion tree is completely
 characterized by the uncoupled sectors, and so the subblocks can also be accessed as
-`t[a1, …, aN₁,b1', …, bN₂']`. When there is no symmetry at all, i.e.
-`sectortype(t) == Trivial`, `t[]` returns the raw tensor data as a `StridedArray` of size
-`(dim(V1), …, dim(VN₁), dim(W1), …, dim(WN₂))`, whereas `block(t, Trivial())` returns the
-same data as a `DenseMatrix` of size `(dim(V1) * … * dim(VN₁), dim(W1) * … * dim(WN₂))`.
+`t[a1, …, aN₁,b1', …, bN₂']`.
+
+When there is no symmetry at all, i.e. `sectortype(t) == Trivial`, `t[]` returns the raw
+tensor data as a `StridedArray` of size `(dim(V1), …, dim(VN₁), dim(W1), …, dim(WN₂))`,
+whereas `block(t, Trivial())` returns the same data as a `DenseMatrix` of size
+`(dim(V1) * … * dim(VN₁), dim(W1) * … * dim(WN₂))`.
 
 ## [Constructing tensor maps and accessing tensor data](@id ss_tensor_construction)
 
@@ -491,7 +475,7 @@ TensorMap(undef, codomain, domain)
 TensorMap(undef, eltype::Type{<:Number}, codomain, domain)
 ```
 
-Here, in the first form, `f` can be any function or object that is called with an argument
+In the first form, `f` can be any function or object that is called with an argument
 of type `Dims{2} = Tuple{Int,Int}` and is such that `f((m,n))` creates a `DenseMatrix`
 instance with `size(f(m,n)) == (m,n)`. In the second form, `f` is called as
 `f(eltype,(m,n))`. Possibilities for `f` are `randn` and `rand` from Julia Base.
@@ -505,8 +489,9 @@ could thus contain `NaN`s.
 In all of these constructors, the last two arguments can be replaced by `domain→codomain`
 or `codomain←domain`, where the arrows are obtained as `\rightarrow+TAB` and
 `\leftarrow+TAB` and create a `HomSpace` as explained in the section on
-[Spaces of morphisms](@ref ss_homspaces). Some examples are perhaps in order
+[Spaces of morphisms](@ref ss_homspaces).
 
+Some examples:
 ```@repl tensors
 t1 = TensorMap(randnormal, ℂ^2 ⊗ ℂ^3, ℂ^2)
 t2 = TensorMap(randisometry, Float32, ℂ^2 ⊗ ℂ^3 ← ℂ^2)
@@ -541,8 +526,7 @@ Furthermore, there could be specific implementations for tensors whose blocks ar
 ### Tensor maps from existing data
 
 To create a `TensorMap` with existing data, one can use the aforementioned form but with
-the function `f` replaced with the actual data, i.e. `TensorMap(data, codomain, domain)` or
-any of its equivalents.
+the function `f` replaced with the actual data, i.e. `TensorMap(data, codomain, domain)`.
 
 Here, `data` can be of two types. It can be a dictionary (any `Associative` subtype) which
 has blocksectors `c` of type `sectortype(codomain)` as keys, and the corresponding matrix
@@ -558,8 +542,9 @@ e.g. for `CartesianSpace` or `ComplexSpace`. Then the `data` array is just resha
 matrix form and referred to as such in the resulting `TensorMap` instance. When `spacetype`
 is `GradedSpace`, the `TensorMap` constructor will try to reconstruct the tensor data such
 that the resulting tensor `t` satisfies `data == convert(Array, t)`. This might not be
-possible, if the data does not respect the symmetry structure. Let's sketch this with a
-simple example
+possible, if the data does not respect the symmetry structure.
+
+Some examples:
 ```@repl tensors
 data = zeros(2,2,2,2)
 # encode the operator (σ_x * σ_x + σ_y * σ_y + σ_z * σ_z)/4
