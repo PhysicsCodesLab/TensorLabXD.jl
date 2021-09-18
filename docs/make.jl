@@ -1,10 +1,10 @@
-using TensorXD
+using TensorLabXD
 using Documenter
 
 makedocs(;
-    modules=[TensorXD],
+    modules=[TensorLabXD],
     authors="PhysicsCodesLab",
-    sitename="TensorXD.jl",
+    sitename="TensorLabXD.jl",
     format=Documenter.HTML(;
         prettyurls=get(ENV, "CI", nothing) == "true",
         mathengine = MathJax()
@@ -19,6 +19,6 @@ makedocs(;
 )
 
 deploydocs(;
-    repo="github.com/PhysicsCodesLab/TensorXD.jl.git",
+    repo="github.com/PhysicsCodesLab/TensorLabXD.jl.git",
     devbranch="master",
 )

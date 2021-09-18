@@ -11,7 +11,7 @@ In particular, we will as example also study the more general case of ``\mathbf{
 i.e. the category of super vector spaces, which contains ``\mathbf{Vect}`` as a subcategory
 and which is useful to describe fermions.
 
-In the end, the goal of identifying tensor manipulations in TensorXD.jl with concepts from
+In the end, the goal of identifying tensor manipulations in TensorLabXD.jl with concepts from
 category theory is to put the diagrammatic formulation of tensor networks in the most
 general context on a firmer footing. The following exposition is mostly based on [^turaev],
 combined with input from [^selinger], [^kassel], [^kitaev], and
@@ -343,7 +343,7 @@ corresponding (left or right) dimension of the object ``V``, i.e.
 a **spherical** category, both definitions of the trace coincide for all ``V`` and we simply
 refer to the trace ``\mathrm{tr}(f)`` of an endomorphism. The particular value
 ``\mathrm{dim}(V) = \mathrm{tr}(\mathrm{id}_V)`` is known as the (quantum) dimension of the
-object ``V``, referred to as `dim(V)` in TensorXD.jl.
+object ``V``, referred to as `dim(V)` in TensorLabXD.jl.
 
 We conclude this section by studying the example of
 ``\mathbf{SVect}``. Let us, in every super vector space ``V``, define a basis ``|n⟩``
@@ -581,14 +581,14 @@ positive, as they satisfy
 
 This concludes the most important categorical definitions and structures that we want to
 discuss for the category ``\mathbf{Vect}``, but which can also be realized in other
-categories. In particular, the interface of TensorXD.jl could *in principle* represent
+categories. In particular, the interface of TensorLabXD.jl could *in principle* represent
 morphisms from any ``𝕜``-linear monoidal category, but assumes categories with duals to be
 pivotal and in fact spherical, and categories with a braiding to be ribbon categories. A
 dagger ribbon category where the braiding is symmetric, i.e. a dagger category which is
 also a compact closed category and where the right (co)evaluation is given via the dagger
 of the left (co)evaluation is called a **dagger compact** category. This is the playground
 of quantum mechanics of bosonic and fermionic systems. However, we also allow
-for non-symmetric braiding in TensorXD.jl, though this functionality is currently much more
+for non-symmetric braiding in TensorLabXD.jl, though this functionality is currently much more
 limited.
 
 Again studying the category ``\mathbf{SVect}_{ℂ}`` (now explicitly over the complex
@@ -709,7 +709,7 @@ contragradient representation becomes the complex conjugated representation, den
 category can then be given the structure of a
 unitary ribbon (pre-)fusion category. (Note that the number of isomorphism classes of simple
 objects, i.e. the number of non-equivalent irreps, is finite only in the case of a finite
-group). This example is very relevant to working with symmetries in TensorXD.jl.
+group). This example is very relevant to working with symmetries in TensorLabXD.jl.
 
 Fusion categories have a number of simplifying properties. A pivotal fusion category is
 spherical as soon as ``\mathrm{dim}_{\mathrm{l}}(V_i) = \mathrm{dim}_{\mathrm{r}}(V_i)``
@@ -998,7 +998,7 @@ modular fusion category, the symmetric matrix ``S`` is non-degenerate, and in fa
 unitary fusion category) unitary. Note, however, that for a symmetric braiding ``S_{a,b} =
 \frac{d_a d_b}{D}`` and thus ``S`` is a rank 1 matrix. In particular,
 ``\mathbf{Rep}_{\mathsf{G}}`` is never a modular category and the properties associated with
-this are not of (direct) importance for TensorXD.jl. We refer to the references for further
+this are not of (direct) importance for TensorLabXD.jl. We refer to the references for further
 information about modular categories.
 
 ## Bibliography

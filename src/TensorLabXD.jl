@@ -1,9 +1,4 @@
-# TensorXD.jl
-#
-# Main file for module TensorXD, a Julia package for working with
-# with tensors, tensor operations and tensor factorizations
-# try
-module TensorXD
+module TensorLabXD
 
 # Exports
 #---------
@@ -84,13 +79,13 @@ export notrunc, truncerr, truncdim, truncspace, truncbelow
 
 # Imports
 #---------
-using TupleTools
-using TupleTools: StaticLength
+using TupleLabXD
+using TupleLabXD: StaticLength
 
-using Strided
+using StridedTensorXD
 
-using TensorOperations: TensorOperations, @tensor, @tensoropt, @ncon, ncon
-const TO = TensorOperations
+using TensorContractionsXD: TensorContractionsXD, @tensor, @tensoropt, @ncon, ncon
+const TO = TensorContractionsXD
 
 using LRUCache
 

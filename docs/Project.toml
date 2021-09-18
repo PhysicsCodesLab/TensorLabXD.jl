@@ -1,3 +1,2 @@
 [deps]
 Documenter = "e30172f5-a6a5-5a46-863b-614d45cd2de4"
-TensorXD = "87026d58-cfa7-4eb9-a354-f095ff43cb87"

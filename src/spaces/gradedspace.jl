@@ -41,8 +41,8 @@ function GradedSpace{I, NTuple{N, Int}}(dims; dual::Bool = false) where {I, N}
     for (c, dc) in dims
         i = findindex(values(I), convert(I, c))
         isset[i] && throw(ArgumentError("Sector $c appears multiple times"))
-        isset = TupleTools.setindex(isset, true, i)
-        d = TupleTools.setindex(d, dc, i)
+        isset = TupleLabXD.setindex(isset, true, i)
+        d = TupleLabXD.setindex(d, dc, i)
     end
     return GradedSpace{I, NTuple{N, Int}}(d, dual)
 end

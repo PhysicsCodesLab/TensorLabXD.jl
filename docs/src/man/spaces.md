@@ -1,7 +1,7 @@
 # [Vector spaces](@id s_spaces)
 
-```@setup TensorXD
-using TensorXD
+```@setup TensorLabXD
+using TensorLabXD
 ```
 ### Types
 ```julia
@@ -275,7 +275,7 @@ representation space of sector ``a``. In order for `flip(V)` to be isomorphic to
 such that, if `V = GradedSpace(a=>n_a,...)` then
 `flip(V) = dual(GradedSpace(dual(a)=>n_a,....))`.
 
-In the structure of `TensorXD.jl`, we only keep the simple objects. It means
+In the structure of `TensorLabXD.jl`, we only keep the simple objects. It means
 that we don't have objects correspond to ``a^*`` in the language of category.
 Therefore, `dual(a) = conj(a)` both correspond to ``\overline{a}``. The dual space
 of a space is denoted in the field named as `dual` in the type definitions. If
@@ -362,7 +362,7 @@ that are composed of a number of elementary spaces of type `S`. One concrete sub
 is the `ProductSpace{S,N}` which represents a homogeneous tensor product of `N` vector
 spaces of type `S`.
 
-Throughout TensorXD.jl, the function `spacetype` returns the type of `ElementarySpace`
+Throughout TensorLabXD.jl, the function `spacetype` returns the type of `ElementarySpace`
 associated with e.g. a composite space or a tensor. It works both on instances and type.
 
 ## [Fields](@id ss_fields)
@@ -384,7 +384,7 @@ this new type hierarchy instead of recycling the types from Julia's `Number` hie
 to introduce some syntactic sugar without committing type piracy.
 
 Some examples:
-```@repl TensorXD
+```@repl TensorLabXD
 3 ∈ ℝ
 5.0 ∈ ℂ
 5.0+1.0*im ∈ ℝ
@@ -455,7 +455,7 @@ of ``\mathbb{C}^d`` can be created by
 brackets are required because of the precedence rules, since `d' == d` for `d::Integer`.
 
 Some examples:
-```@repl TensorXD
+```@repl TensorLabXD
 dim(ℝ^10)
 (ℝ^10)' == ℝ^10 == ℝ[](10)
 isdual((ℂ^5))
@@ -504,7 +504,7 @@ construct `ProductSpace{S,3}((V1,V2,V3))` as `ProductSpace(V1,V2,V3)` or using
 convenience, the regular multiplication operator `*` also acts as tensor product between
 vector spaces, and as a consequence so does raising a vector space to a positive integer
 power, i.e.
-```@repl TensorXD
+```@repl TensorLabXD
 V1 = ℂ^2
 V2 = ℂ^3
 V1 ⊗ V2 ⊗ V1' == V1 * V2 * V1' == ProductSpace(V1,V2,V1') == ProductSpace(V1,V2) ⊗ V1'
@@ -548,7 +548,7 @@ are obtained as `\to+TAB` or `\leftarrow+TAB`, and as `\rightarrow+TAB` respecti
 Note that `HomSpace` is not a subtype of `VectorSpace`.
 
 Some properties of `HomSpace`:
-```@repl TensorXD
+```@repl TensorLabXD
 W = ℂ^2 ⊗ ℂ^3 → ℂ^3 ⊗ dual(ℂ^4)
 field(W)
 dual(W)
@@ -610,7 +610,7 @@ vice versa), by contracting that index with a unitary map from `V` to `flip(V)`.
 (**In the language of category, the we have `flip(a)==` ``\overline{a}^*`` .**)
 
 Some examples:
-```@repl TensorXD
+```@repl TensorLabXD
 ℝ^3 ≾ ℝ^5
 ℂ^3 ≾ (ℂ^5)'
 (ℂ^5) ≅ (ℂ^5)'
@@ -629,7 +629,7 @@ Applying `oneunit` to an elementary space returns the one-dimensional space, whi
 isomorphic to the scalar field of the space itself.
 
 Some examples:
-```@repl TensorXD
+```@repl TensorLabXD
 ℝ^5 ⊕ ℝ^3
 ℂ^5 ⊕ ℂ^3
 ℂ^5 ⊕ (ℂ^3)'
@@ -645,7 +645,7 @@ can define a unique infimum `V::ElementarySpace` with the same value of `isdual`
 satisfies `V ≾ V1` and `V ≾ V2`, as well as a unique supremum `W::ElementarySpace` that
 satisfies `W ≿ V1` and `W ≿ V2`. For `CartesianSpace` and `ComplexSpace`, this simply
 amounts to the space with minimal or maximal dimension, i.e.
-```@repl TensorXD
+```@repl TensorLabXD
 infimum(ℝ^5, ℝ^3)
 supremum(ℂ^5, ℂ^3)
 supremum(ℂ^5, (ℂ^3)')

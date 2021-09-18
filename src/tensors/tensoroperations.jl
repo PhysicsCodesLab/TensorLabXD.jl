@@ -187,8 +187,8 @@ Replace `tdst` with `braid(tsrc)*α + tdst*β`.
         throw(ArgumentError("incorrect levels $levels for tensor map
                                 $(codomain(tsrc)) ← $(domain(tsrc))"))
 
-    levels1 = TupleTools.getindices(levels, codomainind(tsrc))
-    levels2 = TupleTools.getindices(levels, domainind(tsrc))
+    levels1 = TupleLabXD.getindices(levels, codomainind(tsrc))
+    levels2 = TupleLabXD.getindices(levels, domainind(tsrc))
     _add!(α, tsrc, β, tdst, p1, p2, (f1, f2)->braid(f1, f2, levels1, levels2, p1, p2))
 end
 
@@ -347,17 +347,17 @@ function contract!(α, A::AbstractTensorMap{S}, B::AbstractTensorMap{S},
                     syms::Union{Nothing, NTuple{3, Symbol}} = nothing) where {S, N₁, N₂}
     # find optimal contraction scheme
     hsp = has_shared_permute
-    ipC = TupleTools.invperm((p1..., p2...))
-    oindAinC = TupleTools.getindices(ipC, ntuple(n->n, N₁))
-    oindBinC = TupleTools.getindices(ipC, ntuple(n->n+N₁, N₂))
+    ipC = TupleLabXD.invperm((p1..., p2...))
+    oindAinC = TupleLabXD.getindices(ipC, ntuple(n->n, N₁))
+    oindBinC = TupleLabXD.getindices(ipC, ntuple(n->n+N₁, N₂))
 
-    qA = TupleTools.sortperm(cindA)
-    cindA′ = TupleTools.getindices(cindA, qA)
-    cindB′ = TupleTools.getindices(cindB, qA)
+    qA = TupleLabXD.sortperm(cindA)
+    cindA′ = TupleLabXD.getindices(cindA, qA)
+    cindB′ = TupleLabXD.getindices(cindB, qA)
 
-    qB = TupleTools.sortperm(cindB)
-    cindA′′ = TupleTools.getindices(cindA, qB)
-    cindB′′ = TupleTools.getindices(cindB, qB)
+    qB = TupleLabXD.sortperm(cindB)
+    cindA′′ = TupleLabXD.getindices(cindA, qB)
+    cindB′′ = TupleLabXD.getindices(cindB, qB)
 
     dA, dB, dC = dim(A), dim(B), dim(C)
 
@@ -425,9 +425,9 @@ function _contract!(α, A::AbstractTensorMap{S}, B::AbstractTensorMap{S},
             end
         end
     end
-    ipC = TupleTools.invperm((p1..., p2...))
-    oindAinC = TupleTools.getindices(ipC, ntuple(n->n, N₁))
-    oindBinC = TupleTools.getindices(ipC, ntuple(n->n+N₁, N₂))
+    ipC = TupleLabXD.invperm((p1..., p2...))
+    oindAinC = TupleLabXD.getindices(ipC, ntuple(n->n, N₁))
+    oindBinC = TupleLabXD.getindices(ipC, ntuple(n->n+N₁, N₂))
     if has_shared_permute(C, oindAinC, oindBinC)
         C′ = permute(C, oindAinC, oindBinC)
         mul!(C′, A′, B′, α, β)
@@ -447,7 +447,7 @@ function _contract!(α, A::AbstractTensorMap{S}, B::AbstractTensorMap{S},
     return C
 end
 
-# Add support for cache and API (`@tensor` and other macros) from TensorOperations.jl:
+# Add support for cache and API (`@tensor` and other macros) from TensorContractionsXD.jl:
 """
     TO.memsize(t::TensorMap)
 
@@ -461,7 +461,7 @@ function TO.memsize(t::TensorMap)
     end
     return s
 end
-TO.memsize(t::AdjointTensorMap) = TensorOperations.memsize(t')
+TO.memsize(t::AdjointTensorMap) = TensorContractionsXD.memsize(t')
 
 """
     _similarstructure_from_indices(::Type{T}, p1::IndexTuple{N₁}, p2::IndexTuple{N₂},
@@ -562,13 +562,13 @@ function TO.add!(α, tsrc::AbstractTensorMap{S}, CA::Symbol, β,
 
     if CA == :N
         p = (p1..., p2...)
-        pl = TupleTools.getindices(p, codomainind(tdst))
-        pr = TupleTools.getindices(p, domainind(tdst))
+        pl = TupleLabXD.getindices(p, codomainind(tdst))
+        pr = TupleLabXD.getindices(p, domainind(tdst))
         add!(α, tsrc, β, tdst, pl, pr)
     else
         p = adjointtensorindices(tsrc, (p1..., p2...))
-        pl = TupleTools.getindices(p, codomainind(tdst))
-        pr = TupleTools.getindices(p, domainind(tdst))
+        pl = TupleLabXD.getindices(p, codomainind(tdst))
+        pr = TupleLabXD.getindices(p, domainind(tdst))
         add!(α, adjoint(tsrc), β, tdst, pl, pr)
     end
     return tdst
@@ -580,13 +580,13 @@ function TO.trace!(α, tsrc::AbstractTensorMap{S}, CA::Symbol, β,
 
     if CA == :N
         p = (p1..., p2...)
-        pl = TupleTools.getindices(p, codomainind(tdst))
-        pr = TupleTools.getindices(p, domainind(tdst))
+        pl = TupleLabXD.getindices(p, codomainind(tdst))
+        pr = TupleLabXD.getindices(p, domainind(tdst))
         trace!(α, tsrc, β, tdst, pl, pr, q1, q2)
     else
         p = adjointtensorindices(tsrc, (p1..., p2...))
-        pl = TupleTools.getindices(p, codomainind(tdst))
-        pr = TupleTools.getindices(p, domainind(tdst))
+        pl = TupleLabXD.getindices(p, codomainind(tdst))
+        pr = TupleLabXD.getindices(p, domainind(tdst))
         q1 = adjointtensorindices(tsrc, q1)
         q2 = adjointtensorindices(tsrc, q2)
         trace!(α, adjoint(tsrc), β, tdst, pl, pr, q1, q2)

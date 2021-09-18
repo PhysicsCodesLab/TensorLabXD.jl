@@ -1,11 +1,11 @@
 using Test
 using TestExtras
 using Random
-using TensorXD
+using TensorLabXD
 using Combinatorics
-using TensorXD: ProductSector, fusiontensor
-using TensorOperations
-TensorOperations.disable_cache() # avoids memory overflow during CI?
+using TensorLabXD: ProductSector, fusiontensor
+using TensorContractionsXD
+TensorContractionsXD.disable_cache() # avoids memory overflow during CI?
 using Base.Iterators: take, product
 #using SUNRepresentations: SUNIrrep
 #const SU3Irrep = SUNIrrep{3}
@@ -14,7 +14,7 @@ import LinearAlgebra
 include("newsectors.jl")
 using .NewSectors
 
-const TK = TensorXD
+const TK = TensorLabXD
 
 Random.seed!(1234)
 
@@ -51,7 +51,7 @@ function hasfusiontensor(I::Type{<:Sector})
     end
 end
 
-sectorlist = (Z2Irrep, Z3Irrep, Z4Irrep, U1Irrep, CU1Irrep, SU2Irrep, NewSU2Irrep, 
+sectorlist = (Z2Irrep, Z3Irrep, Z4Irrep, U1Irrep, CU1Irrep, SU2Irrep, NewSU2Irrep,
               FibonacciAnyon, IsingAnyon, FermionParity, FermionNumber, FermionSpin,
               FermionParity ⊠ FermionParity, Z3Irrep ⊠ Z4Irrep, FermionNumber ⊠ SU2Irrep,
               FermionSpin ⊠ SU2Irrep, NewSU2Irrep ⊠ NewSU2Irrep, NewSU2Irrep ⊠ SU2Irrep,

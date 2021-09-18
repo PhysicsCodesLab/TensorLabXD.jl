@@ -1,7 +1,7 @@
 # [Tensors and the `TensorMap` type](@id s_tensors)
 
 ```@setup tensors
-using TensorXD
+using TensorLabXD
 using LinearAlgebra
 ```
 ### Types
@@ -176,7 +176,7 @@ catcodomain(t1::AbstractTensorMap{S, 1, N₂}, t2::AbstractTensorMap{S, 1, N₂}
 ```
 
 ## General arguments
-All tensors in TensorXD.jl are interpreted as linear maps from a domain
+All tensors in TensorLabXD.jl are interpreted as linear maps from a domain
 (`ProductSpace{S,N₂}`) to a codomain (`ProductSpace{S,N₁}`), with the same
 `S<:ElementarySpace` that labels the type of spaces associated with the individual tensor
 indices. The overall type for all such tensor maps is `AbstractTensorMap{S, N₁, N₂}`. The
@@ -315,7 +315,7 @@ view for some range of the rows and some range of the columns, e.g.,
 `view(block(t, c), m₁:m₂, n₁:n₂)` where the ranges `m₁:m₂` associated with `(a1, …, aN₁)`
 and `n₁:n₂` associated with `(b₁, …, bN₂)` are stored within the fields of the instance `t`
 of type `TensorMap`. This `view` can then lazily be reshaped to a multidimensional array,
-for which we rely on the package [Strided.jl](https://github.com/Jutho/Strided.jl). Indeed,
+for which we rely on the package [StridedTensorXD.jl](https://github.com/Jutho/StridedTensorXD.jl). Indeed,
 the data in this `view` is not contiguous, because the stride between the different columns
 is larger than the length of the columns. Nonetheless, this does not pose a problem and even
 as multidimensional array there is still a definite stride associated with each dimension.
@@ -479,7 +479,7 @@ In the first form, `f` can be any function or object that is called with an argu
 of type `Dims{2} = Tuple{Int,Int}` and is such that `f((m,n))` creates a `DenseMatrix`
 instance with `size(f(m,n)) == (m,n)`. In the second form, `f` is called as
 `f(eltype,(m,n))`. Possibilities for `f` are `randn` and `rand` from Julia Base.
-TensorXD.jl provides `randnormal` and `randuniform` as an synonym for `randn` and `rand`,
+TensorLabXD.jl provides `randnormal` and `randuniform` as an synonym for `randn` and `rand`,
 as well as the new function  `randisometry`, alternatively called `randhaar`, that creates
 a random isometric `m × n` matrix `w` satisfying `w'*w ≈ I` distributed according to the
 Haar measure (this requires `m>= n`). The third and fourth calling syntax use the
@@ -602,7 +602,7 @@ optionally define a new codomain and domain for the resulting tensor. By default
 values just take the value from the input tensor `t`. The result will be a new `TensorMap`
 instance, with `undef` data, but whose data is stored in the same subtype of `DenseMatrix`
 (e.g. `Matrix` or `CuMatrix` or ...) as `t`. In particular, this uses the methods
-`storagetype(t)` and `TensorXD.similarstoragetype(t, T)`.
+`storagetype(t)` and `TensorLabXD.similarstoragetype(t, T)`.
 
 ### Special purpose constructors
 
@@ -724,7 +724,7 @@ to `codomain(t, i) = codomain(t)[i]`. For `i ∈ (N₁+1:N₁+N₂)`, this corre
 
 The total number of indices, i.e. `N₁+N₂`, is given by `numind(t)`, with `N₁ == numout(t)`
 and `N₂ == numin(t)`, the number of outgoing and incoming indices. There are also the
-unexported methods `TensorXD.codomainind(t)` and `TensorXD.domainind(t)` which return the
+unexported methods `TensorLabXD.codomainind(t)` and `TensorLabXD.domainind(t)` which return the
 tuples `(1, 2, …, N₁)` and `(N₁+1, …, N₁+N₂)`, and are useful for internal purposes. The
 type parameter `S<:ElementarySpace` can be obtained as `spacetype(t)`; the corresponding
 sector can directly obtained as `sectortype(t)` and is `Trivial` when
@@ -734,7 +734,7 @@ tensor data, i.e. the type parameter `T` in the (subtype of) `DenseMatrix{T}` in
 matrix blocks are stored. Note that during construction, a (one-time) warning is printed if
 `!(T ⊂ field(S))`. The specific `DenseMatrix{T}` subtype in which the tensor data is stored
 is obtained as `storagetype(t)`. Each of the methods `numind`, `numout`, `numin`,
-`TensorXD.codomainind`, `TensorXD.domainind`, `spacetype`, `sectortype`, `field`, `eltype`
+`TensorLabXD.codomainind`, `TensorLabXD.domainind`, `spacetype`, `sectortype`, `field`, `eltype`
 and `storagetype` work in the type domain as well, i.e. they are encoded in `typeof(t)`.
 
 There are methods to probe the data.
@@ -798,7 +798,7 @@ using any of the provided Julia packages such as
 `AbstractTensorMap` instances `t` represent linear maps, i.e. homomorphisms in a `𝕜`-linear
 category, just like matrices. To a large extent, they follow the interface of `Matrix` in
 Julia's `LinearAlgebra` standard library. Many methods from `LinearAlgebra` are (re)exported
-by TensorXD.jl, and can then us be used without `using LinearAlgebra` explicitly. In all
+by TensorLabXD.jl, and can then us be used without `using LinearAlgebra` explicitly. In all
 of the following methods, the implementation acts directly on the underlying matrix blocks
 and never needs to perform any basis transforms.
 
@@ -817,8 +817,8 @@ given by `adjoint(t)` or simply `t'`, such that `domain(t') == codomain(t)` and
 `codomain(t') == domain(t)`. Note that for an instance `t::TensorMap{S,N₁,N₂}`, `t'` is
 stored in a wrapper called `AdjointTensorMap{S,N₂,N₁}`, which is another subtype
 of `AbstractTensorMap`. Index `i` of `t` appears in `t'` at index position
-`j = TensorXD.adjointtensorindex(t, i)`. There is also a plural
-`TensorXD.adjointtensorindices` to convert multiple indices at once. Since the adjoint
+`j = TensorLabXD.adjointtensorindex(t, i)`. There is also a plural
+`TensorLabXD.adjointtensorindices` to convert multiple indices at once. Since the adjoint
 interchanges domain and codomain, we have `space(t', j) == space(t, i)'`.
 
 ```julia
@@ -1026,7 +1026,7 @@ both of which return an instance of `AbstractTensorMap{S,N₁′,N₂′}`.
 In these methods, `p1` and `p2` specify which of the original tensor indices ranging from
 `1` to `N₁+N₂` make up the new codomain (with `N₁′` spaces) and new domain (with `N₂′`
 spaces). Hence, `(p1..., p2...)` should be a valid permutation of `1:(N₁+N₂)`. Note that,
-throughout TensorXD.jl, permutations are always specified using tuples of `Int`s, for
+throughout TensorLabXD.jl, permutations are always specified using tuples of `Int`s, for
 reasons of type stability. For `braid`, we also need to specify `levels` or depths for each
 of the indices of the original tensor, which determine whether indices will braid over or
 underneath each other (use the braiding or its inverse). We refer to the section on
@@ -1046,7 +1046,7 @@ existing tensor, i.e. [`braid!(tdst, tsrc, levels, p1, p2)`](@ref) and
 
 Another operation that belongs und index manipulations is taking the `transpose` of a
 tensor, i.e. `LinearAlgebra.transpose(t)` and `LinearAlgebra.transpose!(tdst, tsrc)`, both
-of which are reexported by TensorXD.jl. Note that `transpose(t)` is not simply equal to
+of which are reexported by TensorLabXD.jl. Note that `transpose(t)` is not simply equal to
 reshuffling domain and codomain with
 `braid(t, (1:(N₁+N₂)...), reverse(domainind(tsrc)), reverse(codomainind(tsrc))))`. Indeed,
 the graphical representation (where we draw the codomain and domain as a single object),
@@ -1168,7 +1168,7 @@ to either `eig` or `eigh`.
 
 ### Orthogonal factorizations
 
-Other factorizations that are provided by TensorXD.jl are orthogonal or unitary in nature,
+Other factorizations that are provided by TensorLabXD.jl are orthogonal or unitary in nature,
 and thus always require a `AbstractEuclideanTensorMap`. However, they don't require equal
 domain and codomain. Let us first discuss the *singular value decomposition*, for which we
 define and export the methods [`tsvd`](@ref) and [`tsvd!`](@ref) (where as always, the
@@ -1392,7 +1392,7 @@ two-dimensional diagram cannot easily be encoded in a single line of code.
 However, things simplify when the braiding is symmetric (such that over- and under-
 crossings become equivalent, i.e. just crossings), and when twists, i.e. self-crossings in
 this case, are trivial. This amounts to `BraidingStyle(I) == Bosonic()` in the language of
-TensorXD.jl, and is true for any subcategory of ``\mathbf{Vect}``, i.e. ordinary tensors,
+TensorLabXD.jl, and is true for any subcategory of ``\mathbf{Vect}``, i.e. ordinary tensors,
 possibly with some symmetry constraint. The case of ``\mathbf{SVect}`` and its
 subcategories, and more general categories, are discussed below.
 
@@ -1418,7 +1418,7 @@ and specifies which indices are connected by the evaluation map using Einstein's
 conventation. Indeed, for `BraidingStyle(I) == Bosonic()`, such a tensor contraction can
 take the same format as if all tensors were just multi-dimensional arrays. For this, we
 rely on the interface provided by the package
-[TensorOperations.jl](https://github.com/Jutho/TensorOperations.jl).
+[TensorContractionsXD.jl](https://github.com/PhysicsCodesLab/TensorContractionsXS.jl).
 
 The above picture would be encoded as
 ```julia
@@ -1431,7 +1431,7 @@ or
 where the latter syntax is known as NCON-style, and labels the unconnected or outgoing
 indices with negative integers, and the contracted indices with positive integers.
 
-A number of remarks are in order. TensorOperations.jl accepts both integers and any valid
+A number of remarks are in order. TensorContractionsXS.jl accepts both integers and any valid
 variable name as dummy label for indices, and everything in `[ ]` is not resolved in
 the current context but interpreted as a dummy label. Here, we label the indices of a
 `TensorMap`, like `A::TensorMap{S,N₁,N₂}`, in a linear fashion, where the first position
@@ -1489,7 +1489,7 @@ contraction in a more efficient manner. In particular, the NCON-style of specify
 contraction gives the user control over the order, and there are other macros, such as
 `@tensoropt`, that try to automate this process. There is also an `@ncon` macro and `ncon`
 function, an we recommend reading the
-[manual of TensorOperations.jl](https://jutho.github.io/TensorOperations.jl/stable/) to
+[manual of TensorContractionsXS.jl](https://PhysicsCodesLab.github.io/TensorContractionsXS.jl/dev/) to
 learn more about the possibilities and how they work.
 
 A final remark involves the use of adjoints of tensors. The current framework is such that

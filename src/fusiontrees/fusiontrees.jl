@@ -103,7 +103,7 @@ _abelianinner(outer::Tuple{I, I, I}) where {I<:Sector} =
     first(⊗(outer...)) == one(I) ? () : throw(SectorMismatch())
 function _abelianinner(outer::NTuple{N, I}) where {I<:Sector, N}
     c = first(outer[1] ⊗ outer[2])
-    return (c, _abelianinner((c, TupleTools.tail2(outer)...))...)
+    return (c, _abelianinner((c, TupleLabXD.tail2(outer)...))...)
 end
 
 function FusionTree{I}(uncoupled::NTuple{N}, coupled = one(I),
@@ -232,8 +232,8 @@ function Base.convert(A::Type{<:AbstractArray}, f::FusionTree{I, 2}) where {I}
 end
 
 function Base.convert(A::Type{<:AbstractArray}, f::FusionTree{I,N}) where {I,N}
-    tailout = (f.innerlines[1], TupleTools.tail2(f.uncoupled)...)
-    isdualout = (false, TupleTools.tail2(f.isdual)...)
+    tailout = (f.innerlines[1], TupleLabXD.tail2(f.uncoupled)...)
+    isdualout = (false, TupleLabXD.tail2(f.isdual)...)
     ftail = FusionTree(tailout, f.coupled, isdualout,
                         Base.tail(f.innerlines), Base.tail(f.vertices))
     Ctail = convert(A, ftail)

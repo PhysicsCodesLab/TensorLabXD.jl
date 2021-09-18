@@ -441,8 +441,8 @@ correspond to the dual of each sector in the domain.
 
     FusionStyle(I) isa UniqueFusion ||
         throw(SectorMismatch("Indexing with sectors only possible if unique fusion"))
-    s1 = TupleTools.getindices(sectors, codomainind(t))
-    s2 = map(dual, TupleTools.getindices(sectors, domainind(t)))
+    s1 = TupleLabXD.getindices(sectors, codomainind(t))
+    s2 = map(dual, TupleLabXD.getindices(sectors, domainind(t)))
     c1 = length(s1) == 0 ? one(I) : (length(s1) == 1 ? s1[1] : first(⊗(s1...)))
     @boundscheck begin
         c2 = length(s2) == 0 ? one(I) : (length(s2) == 1 ? s2[1] : first(⊗(s2...)))

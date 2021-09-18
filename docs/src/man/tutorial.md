@@ -2,15 +2,15 @@
 
 Before discussing at length all aspects of this package, both its usage and implementation,
 we start with a short tutorial to sketch the main capabilities. Thereto, we start by
-loading TensorXD.jl
+loading TensorLabXD.jl
 
 ```@repl tutorial
-using TensorXD
+using TensorLabXD
 ```
 
 ## Cartesian tensors
 
-The most important objects in TensorXD.jl are tensors, which we now create with random
+The most important objects in TensorLabXD.jl are tensors, which we now create with random
 normally distributed entries in the following manner
 ```@repl tutorial
 A = Tensor(randn, ℝ^3 ⊗ ℝ^2 ⊗ ℝ^4)
@@ -75,7 +75,7 @@ space(permute(B′,(3,2,1))) == space(A)
 ```
 
 We can contract two tensors using Einstein summation convention, which takes the interface
-from [TensorOperations.jl](https://github.com/Jutho/TensorOperations.jl). TensorXD.jl
+from [TensorContractionsXS.jl](https://github.com/PhysicsCodesLab/TensorContractionsXS.jl). TensorLabXD.jl
 reexports the `@tensor` macro
 ```@repl tutorial
 @tensor D[a,b,c,d] := A[a,b,e]*B[d,c,e]
@@ -88,7 +88,7 @@ scalar, regular assignment with `=` can be used.
 
 We can also factorize a tensor. With a plain Julia `Array`, one would apply `permutedims`
 and `reshape` to cast the array into a matrix before applying e.g. the singular value
-decomposition. With TensorXD.jl, one just specifies which indices go to the left (rows)
+decomposition. With TensorLabXD.jl, one just specifies which indices go to the left (rows)
 and right (columns)
 ```@repl tutorial
 U, S, Vd = tsvd(A, (1,3), (2,));
@@ -259,7 +259,7 @@ associated with charge 0 (the trivial irrep of ``ℤ₂``) and a two-dimensional
 charge 1 (the non-trivial irrep). Similar for `V2`, where both subspaces are one-
 dimensional. Representing the tensor as a dense `Array`, we see that it is zero in those
 regions where the charges don't add to zero (modulo 2). The `Tensor(Map)` type
-in TensorXD.jl won't store these zero blocks, and only stores the non-zero information,
+in TensorLabXD.jl won't store these zero blocks, and only stores the non-zero information,
 which we can recognize in the full `Array` representation.
 
 From there on, the resulting tensors support all of the same operations as the ones we
@@ -313,7 +313,7 @@ a certain sector `s` in a space `V` with `dim(V, s)`.
 The `GradedSpace` is a subtype of `EuclideanSpace{ℂ}`, i.e., it has the standard Euclidean
 inner product and we assume all representations to be unitary.
 
-TensorXD.jl also allows for non-abelian symmetries such as `SU₂`. In this case, the vector
+TensorLabXD.jl also allows for non-abelian symmetries such as `SU₂`. In this case, the vector
 space is characterized via the spin quantum number (i.e. the irrep label of `SU₂`) for each
 of its subspaces, and is created using `SU₂Space` (or `SU2Space` or
 `Rep[SU₂]`)
@@ -348,7 +348,7 @@ requires what is known as the topological data of the group (or its representati
 In fact, this formalism extends beyond the case of group representations on vector spaces,
 and can also deal with super vector spaces (to describe fermions) and more general
 (unitary) fusion categories. Preliminary support for these generalizations is present in
-TensorXD.jl and will be extended in the near future.
+TensorLabXD.jl and will be extended in the near future.
 
 All of these concepts will be explained throughout the remainder of this manual, including
 several details regarding their implementation. However, to just use tensors and their

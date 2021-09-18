@@ -32,7 +32,7 @@ function _fusiondim(u::Tuple{I, I, Vararg{I}}, c::I) where {I<:Sector}
     b = u[2]
     d = 0
     for c′ in a ⊗ b
-        d += Nsymbol(a, b, c′)*_fusiondim((c′, TupleTools.tail2(u)...), c)
+        d += Nsymbol(a, b, c′)*_fusiondim((c′, TupleLabXD.tail2(u)...), c)
     end
     return d
 end
@@ -59,7 +59,7 @@ end
 """
 	labelvertices(uncoupled::NTuple{N, I}, coupled::I, lines, vertices) where {I<:Sector, N}
 
-Return the vertices with the label type of its elements defined by the function 
+Return the vertices with the label type of its elements defined by the function
 `vertex_ind2label`. It is used to construct the instances of `FusionTree`.
 """
 labelvertices(uncoupled::NTuple{2, I}, coupled::I,
@@ -70,7 +70,7 @@ function labelvertices(uncoupled::NTuple{N, I}, coupled::I, lines,
                         vertices) where {I<:Sector, N}
     c = lines[1]
 	l = vertex_ind2label(vertices[1], uncoupled[1], uncoupled[2], c)
-    resttree = tuple(c, TupleTools.tail2(uncoupled)...)
+    resttree = tuple(c, TupleLabXD.tail2(uncoupled)...)
     rest = labelvertices(resttree, coupled, tail(lines), tail(vertices))
     return (l, rest...)
 end
@@ -88,13 +88,13 @@ function _iterate(uncoupled::NTuple{N, I}, coupled::I) where {N, I<:Sector}
     it = a ⊗ b
     next = iterate(it)
     c, s = next
-    resttree = tuple(c, TupleTools.tail2(uncoupled)...)
+    resttree = tuple(c, TupleLabXD.tail2(uncoupled)...)
     rest = _iterate(resttree, coupled)
     while rest === nothing
         next = iterate(it, s)
         next === nothing && return nothing
         c, s = next
-        resttree = tuple(c, TupleTools.tail2(uncoupled)...)
+        resttree = tuple(c, TupleLabXD.tail2(uncoupled)...)
         rest = _iterate(resttree, coupled)
     end
     n = 1
@@ -124,13 +124,13 @@ function _iterate(uncoupled::NTuple{N, I}, coupled::I, lines, vertices,
         return lines, (n, restvertices...), states
     end
     n = 1
-    resttree = tuple(c, TupleTools.tail2(uncoupled)...)
+    resttree = tuple(c, TupleLabXD.tail2(uncoupled)...)
     rest = _iterate(resttree, coupled, restlines, restvertices, reststates)
     while rest === nothing
         next = iterate(it, s)
         next === nothing && return nothing
         c, s = next
-        resttree = tuple(c, TupleTools.tail2(uncoupled)...)
+        resttree = tuple(c, TupleLabXD.tail2(uncoupled)...)
         rest = _iterate(resttree, coupled)
     end
     restlines, restvertices, reststate = rest

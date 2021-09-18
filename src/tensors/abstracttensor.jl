@@ -238,9 +238,9 @@ function Base.convert(::Type{Array}, t::AbstractTensorMap{S, N₁, N₂}) where 
             F2 = convert(Array, f2)
             sz1 = size(F1)
             sz2 = size(F2)
-            d1 = TupleTools.front(sz1)
-            d2 = TupleTools.front(sz2)
-            F = reshape(reshape(F1, TupleTools.prod(d1), sz1[end])*reshape(F2, TupleTools.prod(d2), sz2[end])', (d1..., d2...))
+            d1 = TupleLabXD.front(sz1)
+            d2 = TupleLabXD.front(sz2)
+            F = reshape(reshape(F1, TupleLabXD.prod(d1), sz1[end])*reshape(F2, TupleLabXD.prod(d2), sz2[end])', (d1..., d2...))
             if !(@isdefined A)
                 if eltype(F) <: Complex
                     T = complex(float(eltype(t)))

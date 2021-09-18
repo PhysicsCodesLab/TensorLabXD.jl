@@ -74,7 +74,7 @@ end
 
 for V in spacelist
     I = sectortype(first(V))
-    Istr = TensorXD.type_repr(I)
+    Istr = TensorLabXD.type_repr(I)
     println("---------------------------------------")
     println("Tensors with symmetry: $Istr")
     println("---------------------------------------")
@@ -338,7 +338,7 @@ for V in spacelist
             # Test both a normal tensor and an adjoint one.
             ts = (Tensor(rand, T, W), Tensor(rand, T, W)')
             for t in ts
-                @testset "leftorth with $alg" for alg in (TensorXD.QR(), TensorXD.QRpos(), TensorXD.QL(), TensorXD.QLpos(), TensorXD.Polar(), TensorXD.SVD(), TensorXD.SDD())
+                @testset "leftorth with $alg" for alg in (TensorLabXD.QR(), TensorLabXD.QRpos(), TensorLabXD.QL(), TensorLabXD.QLpos(), TensorLabXD.Polar(), TensorLabXD.SVD(), TensorLabXD.SDD())
                     Q, R = @constinferred leftorth(t, (3,4,2), (1,5); alg = alg)
                     QdQ = Q'*Q
                     @test QdQ ≈ one(QdQ)
@@ -348,13 +348,13 @@ for V in spacelist
                         @test domain(R) == codomain(R) == space(t, 1)' ⊗ space(t, 5)'
                     end
                 end
-                @testset "leftnull with $alg" for alg in (TensorXD.QR(), TensorXD.SVD(), TensorXD.SDD())
+                @testset "leftnull with $alg" for alg in (TensorLabXD.QR(), TensorLabXD.SVD(), TensorLabXD.SDD())
                     N = @constinferred leftnull(t, (3,4,2),(1,5); alg = alg)
                     NdN = N'*N
                     @test NdN ≈ one(NdN)
                     @test norm(N'*permute(t, (3,4,2),(1,5))) < 100*eps(norm(t))
                 end
-                @testset "rightorth with $alg" for alg in (TensorXD.RQ(), TensorXD.RQpos(), TensorXD.LQ(), TensorXD.LQpos(), TensorXD.Polar(), TensorXD.SVD(), TensorXD.SDD())
+                @testset "rightorth with $alg" for alg in (TensorLabXD.RQ(), TensorLabXD.RQpos(), TensorLabXD.LQ(), TensorLabXD.LQpos(), TensorLabXD.Polar(), TensorLabXD.SVD(), TensorLabXD.SDD())
                     L, Q = @constinferred rightorth(t, (3,4),(2,1,5); alg = alg)
                     QQd = Q*Q'
                     @test QQd ≈ one(QQd)
@@ -364,13 +364,13 @@ for V in spacelist
                         @test domain(L) == codomain(L) == space(t, 3) ⊗ space(t, 4)
                     end
                 end
-                @testset "rightnull with $alg" for alg in (TensorXD.LQ(), TensorXD.SVD(), TensorXD.SDD())
+                @testset "rightnull with $alg" for alg in (TensorLabXD.LQ(), TensorLabXD.SVD(), TensorLabXD.SDD())
                     M = @constinferred rightnull(t, (3,4),(2,1,5); alg = alg)
                     MMd = M*M'
                     @test MMd ≈ one(MMd)
                     @test norm(permute(t, (3,4),(2,1,5))*M') < 100*eps(norm(t))
                 end
-                @testset "tsvd with $alg" for alg in (TensorXD.SVD(), TensorXD.SDD())
+                @testset "tsvd with $alg" for alg in (TensorLabXD.SVD(), TensorLabXD.SDD())
                     U, S, V = @constinferred tsvd(t, (3,4,2),(1,5); alg = alg)
                     UdU = U'*U
                     @test UdU ≈ one(UdU)
@@ -381,27 +381,27 @@ for V in spacelist
             end
             @testset "empty tensor" begin
                 t = TensorMap(randn, T, V1 ⊗ V2, typeof(V1)())
-                @testset "leftorth with $alg" for alg in (TensorXD.QR(), TensorXD.QRpos(), TensorXD.QL(), TensorXD.QLpos(), TensorXD.Polar(), TensorXD.SVD(), TensorXD.SDD())
+                @testset "leftorth with $alg" for alg in (TensorLabXD.QR(), TensorLabXD.QRpos(), TensorLabXD.QL(), TensorLabXD.QLpos(), TensorLabXD.Polar(), TensorLabXD.SVD(), TensorLabXD.SDD())
                     Q, R = @constinferred leftorth(t; alg = alg)
                     @test Q == t
                     @test dim(Q) == dim(R) == 0
                 end
-                @testset "leftnull with $alg" for alg in (TensorXD.QR(), TensorXD.SVD(), TensorXD.SDD())
+                @testset "leftnull with $alg" for alg in (TensorLabXD.QR(), TensorLabXD.SVD(), TensorLabXD.SDD())
                     N = @constinferred leftnull(t; alg = alg)
                     @test N'*N ≈ id(domain(N))
                     @test N*N' ≈ id(codomain(N))
                 end
-                @testset "rightorth with $alg" for alg in (TensorXD.RQ(), TensorXD.RQpos(), TensorXD.LQ(), TensorXD.LQpos(), TensorXD.Polar(), TensorXD.SVD(), TensorXD.SDD())
+                @testset "rightorth with $alg" for alg in (TensorLabXD.RQ(), TensorLabXD.RQpos(), TensorLabXD.LQ(), TensorLabXD.LQpos(), TensorLabXD.Polar(), TensorLabXD.SVD(), TensorLabXD.SDD())
                     L, Q = @constinferred rightorth(copy(t'); alg = alg)
                     @test Q == t'
                     @test dim(Q) == dim(L) == 0
                 end
-                @testset "rightnull with $alg" for alg in (TensorXD.LQ(), TensorXD.SVD(), TensorXD.SDD())
+                @testset "rightnull with $alg" for alg in (TensorLabXD.LQ(), TensorLabXD.SVD(), TensorLabXD.SDD())
                     M = @constinferred rightnull(copy(t'); alg = alg)
                     @test M*M' ≈ id(codomain(M))
                     @test M'*M ≈ id(domain(M))
                 end
-                @testset "tsvd with $alg" for alg in (TensorXD.SVD(), TensorXD.SDD())
+                @testset "tsvd with $alg" for alg in (TensorLabXD.SVD(), TensorLabXD.SDD())
                     U, S, V = @constinferred tsvd(t; alg = alg)
                     @test U == t
                     @test dim(U) == dim(S) == dim(V)

@@ -1,7 +1,7 @@
 # [Sectors, representation spaces and fusion trees](@id s_sectorsrepfusion)
 
 ```@setup sectors
-using TensorXD
+using TensorLabXD
 import LinearAlgebra.I
 ```
 ### Types
@@ -350,7 +350,7 @@ Any concrete subtype of `Sector` should be such that its instances represent a c
 set of sectors, corresponding to the irreps of a group, or, more generally, the simple
 objects of an unitary fusion category.
 
-Throughout TensorXD.jl, the method `sectortype` can be used to query the subtype of `Sector`
+Throughout TensorLabXD.jl, the method `sectortype` can be used to query the subtype of `Sector`
 associated with an object, e.g., a vector space, fusion tree, tensor map, or a sector. It
 works on both instances and types.
 
@@ -742,27 +742,27 @@ and implements the following minimal set of methods
 Base.one(::Type{I}) = I(...)
 Base.conj(a::I) = I(...)
 Base.isreal(::Type{I}) = ... # true or false
-TensorXD.FusionStyle(::Type{I}) = ... # UniqueFusion(), SimpleFusion(), GenericFusion()
-TensorXD.BraidingStyle(::Type{I}) = ... # Bosonic(), Fermionic(), Anyonic()
-TensorXD.Nsymbol(a::I, b::I, c::I) = ... # Bool or Integer
+TensorLabXD.FusionStyle(::Type{I}) = ... # UniqueFusion(), SimpleFusion(), GenericFusion()
+TensorLabXD.BraidingStyle(::Type{I}) = ... # Bosonic(), Fermionic(), Anyonic()
+TensorLabXD.Nsymbol(a::I, b::I, c::I) = ... # Bool or Integer
 Base.:⊗(a::I, b::I) = ... # some iterable object that generates all possible fusion outputs
-TensorXD.Fsymbol(a::I, b::I, c::I, d::I, e::I, f::I)
-TensorXD.Rsymbol(a::I, b::I, c::I)
+TensorLabXD.Fsymbol(a::I, b::I, c::I, d::I, e::I, f::I)
+TensorLabXD.Rsymbol(a::I, b::I, c::I)
 Base.hash(a::I, h::UInt)
 Base.isless(a::I, b::I)
-Base.iterate(::TensorXD.SectorValues{I}[, state]) = ...
-Base.IteratorSize(::Type{TensorXD.SectorValues{I}}) = ... # HasLenght() or IsInfinite()
+Base.iterate(::TensorLabXD.SectorValues{I}[, state]) = ...
+Base.IteratorSize(::Type{TensorLabXD.SectorValues{I}}) = ... # HasLenght() or IsInfinite()
 # if previous function returns HasLength():
-Base.length(::TensorXD.SectorValues{I}) = ...
-Base.getindex(::TensorXD.SectorValues{I}, i::Int) = ...
-TensorXD.findindex(::TensorXD.SectorValues{I}, c::I) = ...
+Base.length(::TensorLabXD.SectorValues{I}) = ...
+Base.getindex(::TensorLabXD.SectorValues{I}, i::Int) = ...
+TensorLabXD.findindex(::TensorLabXD.SectorValues{I}, c::I) = ...
 ```
 
 Additionally, suitable definitions can be given for
 ```julia
-TensorXD.dim(a::I) = ...
-TensorXD.frobeniusschur(a::I) = ...
-TensorXD.Bsymbol(a::I, b::I, c::I) = ...
+TensorLabXD.dim(a::I) = ...
+TensorLabXD.frobeniusschur(a::I) = ...
+TensorLabXD.Bsymbol(a::I, b::I, c::I) = ...
 ```
 There is a default implementation for these three functions that just relies on `Fsymbol`,
 and alternative definitions need to be given only if a more efficient version is available.
@@ -771,7 +771,7 @@ If `FusionStyle(I) == GenericFusion()`, then the multiple outputs `c` in the ten
 product of `a` and `b` will be labeled as `i=1`, `2`, …, `Nsymbol(a,b,c)`. Optionally, a
 different label can be provided by defining
 ```julia
-TensorXD.vertex_ind2label(i::Int, a::I, b::I, c::I) = ...
+TensorLabXD.vertex_ind2label(i::Int, a::I, b::I, c::I) = ...
 # some label, e.g. a `Char` or `Symbol`
 ```
 The following function will then automatically determine the corresponding label type (which
@@ -806,7 +806,7 @@ correspondence to the topological data for specifying a unitary (spherical and b
 hence ribbon) fusion category. For such general categories, the objects are not necessarily
 vector spaces and the fusion and splitting tensors ``X^{ab}_{c,μ}`` do not necessarily
 exist as actual tensors. The morphism spaces ``c → a ⊗ b`` still behave as vector spaces,
-and the ``X^{ab}_{c,μ}`` acts as generic basis for that space. As TensorXD.jl does not rely
+and the ``X^{ab}_{c,μ}`` acts as generic basis for that space. As TensorLabXD.jl does not rely
 on the ``X^{ab}_{c,μ}`` themselves it can also deal with such general fusion categories.
 When ``X^{ab}_{c,μ}`` does exist, it is available as `fusiontensor(a,b,c[,μ])`
 and can be useful for checking purposes.
@@ -829,7 +829,7 @@ of `values(I)`. If it is `Union{IsInfinite, SizeUnknown}`, the sectors ``a``and 
 corresponding degeneracy ``n_a`` are stored as key value pairs in a dictionary
 `dims::SectorDict`. Only sectors ``a`` for which ``n_a\neq 0`` are stored. Here,
 `SectorDict` is a constant type alias for a specific dictionary implementation, which
-currently resorts to `SortedVectorDict` implemented in TensorXD.jl. Hence, the sectors and
+currently resorts to `SortedVectorDict` implemented in TensorLabXD.jl. Hence, the sectors and
 their corresponding dimensions are stored as two matching lists (`Vector` instances), which
 are ordered based on the property `isless(a::I, b::I)`. This ensures that the space
 ``V = ⨁_a ℂ^{n_a} ⊗ R_{a}`` has some unique canonical order in the direct sum
@@ -1125,7 +1125,7 @@ code. We use contact to determine how to print a sector. In isolation, `s2` is p
 
 We now discuss elementary planar manipulations (without braiding) on splitting trees.
 These manipulations are used as low-level methods by the `TensorMap` methods. As such, they
-are not exported by `TensorXD.jl`, nor do they overload similarly named methods from `Base`.
+are not exported by `TensorLabXD.jl`, nor do they overload similarly named methods from `Base`.
 
 ```julia
 split(f::FusionTree{I,N}, M::Int)
@@ -1393,15 +1393,15 @@ The `braid` and `permute` routines for fusion-splitting trees will be the main a
 corresponding manipulations on tensors. As a consequence, results from this routine are
 memorized, i.e. they are stored in some package wide 'least-recently used' cache (from
 [LRUCache.jl](https://github.com/JuliaCollections/LRUCache.jl)) that can be accessed as
-`TensorXD.braidcache`. By default, this cache stores up to `10^5` different `braid` or
+`TensorLabXD.braidcache`. By default, this cache stores up to `10^5` different `braid` or
 `permute` results, where each result corresponds to one particular combination of `(f1, f2,
 p1, p2, levels1, levels2)`. This should be sufficient for most algorithms. While there are
 currently no (official) access methods to change the default settings of this cache (one can
-always resort to `resize!(TensorXD.permutecache)` and other methods from LRUCache.jl), this
+always resort to `resize!(TensorLabXD.permutecache)` and other methods from LRUCache.jl), this
 might change in the future. The use of this cache is however controlled by two constants of
 type `RefValue{Bool}`, namely `usebraidcache_abelian` and `usebraidcache_nonabelian`. The
-default values are given by `TensorXD.usebraidcache_abelian[] = false` and
-`TensorXD.usebraidcache_nonabelian[] = true`, and respectively reflect that the cache is
+default values are given by `TensorLabXD.usebraidcache_abelian[] = false` and
+`TensorLabXD.usebraidcache_nonabelian[] = true`, and respectively reflect that the cache is
 likely not going to help (or even slow down) fusion trees with `FusionStyle(f) isa UniqueFusion`,
 but is probably useful for fusion trees with `FusionStyle(f) isa MultipleFusion`. One can change
 these values and test the effect on their application.

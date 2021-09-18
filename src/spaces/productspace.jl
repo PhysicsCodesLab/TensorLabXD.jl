@@ -245,10 +245,10 @@ scalars.
 function insertunit(P::ProductSpace, i::Int = length(P)+1; dual = false, conj = false)
     u = oneunit(spacetype(P))
     if dual
-        u = TensorXD.dual(u)
+        u = TensorLabXD.dual(u)
     end
     if conj
-        u = TensorXD.conj(u)
+        u = TensorLabXD.conj(u)
     end
-    ProductSpace(TupleTools.insertafter(P.spaces, i-1, (u,)))
+    ProductSpace(TupleLabXD.insertafter(P.spaces, i-1, (u,)))
 end

@@ -1,6 +1,6 @@
 # [Introduction](@id s_intro)
 
-Before providing a typical "user guide" and discussing the implementation of TensorXD.jl,
+Before providing a typical "user guide" and discussing the implementation of TensorLabXD.jl,
 let us discuss some of the rationale behind this package.
 
 ## [What is a tensor?](@id ss_whatistensor)
@@ -88,7 +88,7 @@ This brings us to our final formal definition of a tensor map:
 
 Physical problems often have some symmetries, i.e., the system is invariant under the action
 of a group ``\mathsf{G}`` which acts on the vector spaces ``V`` of the system according to a
-certain representation. Having quantum mechanics in mind, TensorXD.jl is so far restricted
+certain representation. Having quantum mechanics in mind, TensorLabXD.jl is so far restricted
 to unitary representations.
 
 A general representation space ``V`` can be specified as the number of times every

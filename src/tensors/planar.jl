@@ -802,8 +802,8 @@ function reorder_indices(codA, domA, codB, domB, oindA, oindB, p1, p2)
     N₂ = length(oindB)
     @assert length(p1) == N₁ && all(in(p1), 1:N₁)
     @assert length(p2) == N₂ && all(in(p2), N₁ .+ (1:N₂))
-    oindA2 = TupleTools.getindices(oindA, p1)
-    oindB2 = TupleTools.getindices(oindB, p2 .- N₁)
+    oindA2 = TupleLabXD.getindices(oindA, p1)
+    oindB2 = TupleLabXD.getindices(oindB, p2 .- N₁)
     indA = (codA..., reverse(domA)...)
     indB = (codB..., reverse(domB)...)
     # cycle indA to be of the form (oindA2..., reverse(cindA2)...)
@@ -823,8 +823,8 @@ function reorder_indices(codA, domA, codB, domB, oindA, oindB, p1, p2)
     Nc = length(indA) - N₁
     @assert Nc == length(indB) - N₂
     pc = ntuple(identity, Nc)
-    cindA2 = reverse(TupleTools.getindices(indA, N₁ .+ pc))
-    cindB2 = TupleTools.getindices(indB, pc)
+    cindA2 = reverse(TupleLabXD.getindices(indA, N₁ .+ pc))
+    cindB2 = TupleLabXD.getindices(indB, pc)
     return oindA2, cindA2, oindB2, cindB2
 end
 
@@ -846,8 +846,8 @@ function reorder_indices(codA, domA, codB, domB, oindA, cindA, oindB, cindB, p1,
             cindB2 = _cyclicpermute(cindB2)
         end
     end
-    @assert TupleTools.sort(cindA) == TupleTools.sort(cindA2)
-    @assert TupleTools.sort(tuple.(cindA2, cindB2)) == TupleTools.sort(tuple.(cindA, cindB))
+    @assert TupleLabXD.sort(cindA) == TupleLabXD.sort(cindA2)
+    @assert TupleLabXD.sort(tuple.(cindA2, cindB2)) == TupleLabXD.sort(tuple.(cindA, cindB))
     return oindA2, cindA2, oindB2, cindB2
 end
 

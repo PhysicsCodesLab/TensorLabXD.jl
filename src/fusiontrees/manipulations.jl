@@ -73,18 +73,18 @@ function insertat(f1::FusionTree{I}, i::Int, f2::FusionTree{I, 0}) where {I}
     (f1.uncoupled[i] == f2.coupled && !f1.isdual[i]) ||
         throw(SectorMismatch("cannot connect $(f2.uncoupled) to $(f1.uncoupled[i])"))
     coeff = Fsymbol(one(I), one(I), one(I), one(I), one(I), one(I))[1,1,1,1]
-    uncoupled = TupleTools.deleteat(f1.uncoupled, i)
+    uncoupled = TupleLabXD.deleteat(f1.uncoupled, i)
     coupled = f1.coupled
-    isdual = TupleTools.deleteat(f1.isdual, i)
+    isdual = TupleLabXD.deleteat(f1.isdual, i)
     if length(uncoupled) <= 2
         inner = ()
     else
-        inner = TupleTools.deleteat(f1.innerlines, max(1, i-2))
+        inner = TupleLabXD.deleteat(f1.innerlines, max(1, i-2))
     end
     if length(uncoupled) <= 1
         vertices = ()
     else
-        vertices = TupleTools.deleteat(f1.vertices, max(1, i-1))
+        vertices = TupleLabXD.deleteat(f1.vertices, max(1, i-1))
     end
     f = FusionTree(uncoupled, coupled, isdual, inner, vertices)
     return fusiontreedict(I)(f => coeff)
@@ -94,7 +94,7 @@ function insertat(f1::FusionTree{I}, i::Int, f2::FusionTree{I, 1}) where {I}
     (f1.uncoupled[i] == f2.coupled && !f1.isdual[i]) ||
         throw(SectorMismatch("cannot connect $(f2.uncoupled) to $(f1.uncoupled[i])"))
     coeff = Fsymbol(one(I), one(I), one(I), one(I), one(I), one(I))[1,1,1,1]
-    isdual′ = TupleTools.setindex(f1.isdual, f2.isdual[1], i)
+    isdual′ = TupleLabXD.setindex(f1.isdual, f2.isdual[1], i)
     f = FusionTree{I}(f1.uncoupled, f1.coupled, isdual′, f1.innerlines, f1.vertices)
     return fusiontreedict(I)(f => coeff)
 end
@@ -117,8 +117,8 @@ function insertat(f1::FusionTree{I}, i::Int, f2::FusionTree{I, 2}) where {I}
         f′ = FusionTree(uncoupled′, coupled, isdual′, inner′, vertices′)
         return fusiontreedict(I)(f′ => coeff)
     end
-    uncoupled′ = TupleTools.insertafter(Base.setindex(uncoupled, b, i), i, (c,))
-    isdual′ = TupleTools.insertafter(Base.setindex(isdual, isdualb, i), i, (isdualc,))
+    uncoupled′ = TupleLabXD.insertafter(Base.setindex(uncoupled, b, i), i, (c,))
+    isdual′ = TupleLabXD.insertafter(Base.setindex(isdual, isdualb, i), i, (isdualc,))
     a = i == 2 ? uncoupled[1] : inner[i-2]
     d = i == length(f1) ? coupled : inner[i-1]
     e′ = uncoupled[i]
@@ -127,7 +127,7 @@ function insertat(f1::FusionTree{I}, i::Int, f2::FusionTree{I, 2}) where {I}
         for e in a ⊗ b
             coeff = conj(Fsymbol(a, b, c, d, e, e′))
             iszero(coeff) && continue
-            inner′ = TupleTools.insertafter(inner, i-2, (e,))
+            inner′ = TupleLabXD.insertafter(inner, i-2, (e,))
             f′ = FusionTree(uncoupled′, coupled, isdual′, inner′)
             if @isdefined newtrees
                 push!(newtrees, f′=> coeff)
@@ -141,13 +141,13 @@ function insertat(f1::FusionTree{I}, i::Int, f2::FusionTree{I, 2}) where {I}
         κ = f2.vertices[1]
         λ = f1.vertices[i-1]
         for e in a ⊗ b
-            inner′ = TupleTools.insertafter(inner, i-2, (e,))
+            inner′ = TupleLabXD.insertafter(inner, i-2, (e,))
             Fmat = Fsymbol(a, b, c, d, e, e′)
             for μ = 1:size(Fmat, 1), ν = 1:size(Fmat, 2)
                 coeff = conj(Fmat[μ,ν,κ,λ])
                 iszero(coeff) && continue
-                vertices′ = TupleTools.setindex(f1.vertices, ν, i-1)
-                vertices′ = TupleTools.insertafter(vertices′, i-2, (μ,))
+                vertices′ = TupleLabXD.setindex(f1.vertices, ν, i-1)
+                vertices′ = TupleLabXD.insertafter(vertices′, i-2, (μ,))
                 f′ = FusionTree(uncoupled′, coupled, isdual′, inner′, vertices′)
                 if @isdefined newtrees
                     push!(newtrees, f′=> coeff)
@@ -675,20 +675,20 @@ function elementary_trace(f::FusionTree{I, N}, i) where {I<:Sector, N}
         a = i == 1 ? one(I) : (i == 2 ? f.uncoupled[1] : f.innerlines[i-2])
         d = i == N-1 ? f.coupled : f.innerlines[i]
         a == d || return newtrees
-        uncoupled′ = TupleTools.deleteat(TupleTools.deleteat(f.uncoupled, i+1), i)
-        isdual′ = TupleTools.deleteat(TupleTools.deleteat(f.isdual, i+1), i)
+        uncoupled′ = TupleLabXD.deleteat(TupleLabXD.deleteat(f.uncoupled, i+1), i)
+        isdual′ = TupleLabXD.deleteat(TupleLabXD.deleteat(f.isdual, i+1), i)
         coupled′ = f.coupled
         if N <= 4
             inner′ = ()
         else
             inner′ = i <= 2 ? Base.tail(Base.tail(f.innerlines)) :
-                        TupleTools.deleteat(TupleTools.deleteat(f.innerlines, i-1), i-2)
+                        TupleLabXD.deleteat(TupleLabXD.deleteat(f.innerlines, i-1), i-2)
         end
         if N <= 3
             vertices′ = ()
         else
             vertices′ = i <= 2 ? Base.tail(Base.tail(f.vertices)) :
-                        TupleTools.deleteat(TupleTools.deleteat(f.vertices, i), i-1)
+                        TupleLabXD.deleteat(TupleLabXD.deleteat(f.vertices, i), i-1)
         end
         f′ = FusionTree{I}(uncoupled′, coupled′, isdual′, inner′, vertices′)
         coeff = sqrtdim(b)
@@ -782,10 +782,10 @@ function planar_trace(f::FusionTree{I,N},
     k > N₃ && throw(ArgumentError("Not a planar trace"))
 
     q1′ = let i = i, j = j
-        map(l->(l - (l>i) - (l>j)), TupleTools.deleteat(q1, k))
+        map(l->(l - (l>i) - (l>j)), TupleLabXD.deleteat(q1, k))
     end
     q2′ = let i = i, j = j
-        map(l->(l - (l>i) - (l>j)), TupleTools.deleteat(q2, k))
+        map(l->(l - (l>i) - (l>j)), TupleLabXD.deleteat(q2, k))
     end
     for (f′, coeff′) in elementary_trace(f, i)
         for (f′′, coeff′′) in planar_trace(f′, q1′, q2′)
@@ -824,11 +824,11 @@ function planar_trace(f1::FusionTree{I}, f2::FusionTree{I},
     linearindex = (ntuple(identity, Val(length(f1)))...,
                     reverse(length(f1) .+ ntuple(identity, Val(length(f2))))...)
 
-    q1′ = TupleTools.getindices(linearindex, q1)
-    q2′ = TupleTools.getindices(linearindex, q2)
+    q1′ = TupleLabXD.getindices(linearindex, q1)
+    q2′ = TupleLabXD.getindices(linearindex, q2)
     p1′, p2′ = let q′ = (q1′..., q2′...)
-        (map(l-> l - count(l .> q′), TupleTools.getindices(linearindex, p1)),
-            map(l-> l - count(l .> q′), TupleTools.getindices(linearindex, p2)))
+        (map(l-> l - count(l .> q′), TupleLabXD.getindices(linearindex, p1)),
+            map(l-> l - count(l .> q′), TupleLabXD.getindices(linearindex, p2)))
     end
 
     u = one(I)
@@ -869,8 +869,8 @@ function artin_braid(f::FusionTree{I, N}, i; inv::Bool = false) where {I<:Sector
         throw(ArgumentError("Cannot swap outputs i=$i and i+1 out of only $N outputs"))
     uncoupled = f.uncoupled
     coupled′ = f.coupled
-    isdual′ = TupleTools.setindex(f.isdual, f.isdual[i], i+1)
-    isdual′ = TupleTools.setindex(isdual′, f.isdual[i+1], i)
+    isdual′ = TupleLabXD.setindex(f.isdual, f.isdual[i], i+1)
+    isdual′ = TupleLabXD.setindex(isdual′, f.isdual[i+1], i)
     inner = f.innerlines
     vertices = f.vertices
     u = one(I)
@@ -878,8 +878,8 @@ function artin_braid(f::FusionTree{I, N}, i; inv::Bool = false) where {I<:Sector
     if i == 1
         a, b = uncoupled[1], uncoupled[2]
         c = N > 2 ? inner[1] : coupled′
-        uncoupled′ = TupleTools.setindex(uncoupled, b, 1)
-        uncoupled′ = TupleTools.setindex(uncoupled′, a, 2)
+        uncoupled′ = TupleLabXD.setindex(uncoupled, b, 1)
+        uncoupled′ = TupleLabXD.setindex(uncoupled′, a, 2)
         if FusionStyle(I) isa MultiplicityFreeFusion
             R = oftype(oneT, (inv ? conj(Rsymbol(b, a, c)) : Rsymbol(a, b, c)))
             f′ = FusionTree{I}(uncoupled′, coupled′, isdual′, inner, vertices)
@@ -891,7 +891,7 @@ function artin_braid(f::FusionTree{I, N}, i; inv::Bool = false) where {I<:Sector
             for ν = 1:size(Rmat, 2)
                 R = oftype(oneT, Rmat[μ,ν])
                 iszero(R) && continue
-                vertices′ = TupleTools.setindex(vertices, ν, 1)
+                vertices′ = TupleLabXD.setindex(vertices, ν, 1)
                 f′ = FusionTree{I}(uncoupled′, coupled′, isdual′, inner, vertices′)
                 if (@isdefined newtrees)
                     push!(newtrees, f′ => R)
@@ -908,10 +908,10 @@ function artin_braid(f::FusionTree{I, N}, i; inv::Bool = false) where {I<:Sector
     a = i == 2 ? uncoupled[1] : inner[i-2]
     c = inner[i-1]
     e = i == N-1 ? coupled′ : inner[i]
-    uncoupled′ = TupleTools.setindex(uncoupled, d, i)
-    uncoupled′ = TupleTools.setindex(uncoupled′, b, i+1)
+    uncoupled′ = TupleLabXD.setindex(uncoupled, d, i)
+    uncoupled′ = TupleLabXD.setindex(uncoupled′, b, i+1)
     if FusionStyle(I) isa UniqueFusion
-        inner′ = TupleTools.setindex(inner, first(a ⊗ d), i-1)
+        inner′ = TupleLabXD.setindex(inner, first(a ⊗ d), i-1)
         bd = first(b ⊗ d)
         R = oftype(oneT, inv ? conj(Rsymbol(d, b, bd)) : Rsymbol(b, d, bd))
         f′ = FusionTree{I}(uncoupled′, coupled′, isdual′, inner′)
@@ -925,7 +925,7 @@ function artin_braid(f::FusionTree{I, N}, i; inv::Bool = false) where {I<:Sector
                     Rsymbol(c, d, e)*conj(Fsymbol(d, a, b, e, c′, c))*conj(Rsymbol(a, d, c′))
                 end)
             iszero(coeff) && continue
-            inner′ = TupleTools.setindex(inner, c′, i-1)
+            inner′ = TupleLabXD.setindex(inner, c′, i-1)
             f′ = FusionTree{I}(uncoupled′, coupled′, isdual′, inner′)
             if (@isdefined newtrees)
                 push!(newtrees, f′ => coeff)
@@ -949,9 +949,9 @@ function artin_braid(f::FusionTree{I, N}, i; inv::Bool = false) where {I<:Sector
                         coeff += Rmat1[ν,ρ]*conj(Fmat[κ,λ,μ,ρ])*conj(Rmat2[σ,κ])
                     end
                     iszero(coeff) && continue
-                    vertices′ = TupleTools.setindex(vertices, σ, i-1)
-                    vertices′ = TupleTools.setindex(vertices′, λ, i)
-                    inner′ = TupleTools.setindex(inner, c′, i-1)
+                    vertices′ = TupleLabXD.setindex(vertices, σ, i-1)
+                    vertices′ = TupleLabXD.setindex(vertices′, λ, i)
+                    inner′ = TupleLabXD.setindex(inner, c′, i-1)
                     f′ = FusionTree{I}(uncoupled′, coupled′, isdual′, inner′, vertices′)
                     if (@isdefined newtrees)
                         push!(newtrees, f′ => coeff)
@@ -1006,7 +1006,7 @@ braid, but a general braid can be obtained by combining such operations.
 function braid(f::FusionTree{I, N},
                 levels::NTuple{N, Int},
                 p::NTuple{N, Int}) where {I<:Sector, N}
-    TupleTools.isperm(p) || throw(ArgumentError("not a valid permutation: $p"))
+    TupleLabXD.isperm(p) || throw(ArgumentError("not a valid permutation: $p"))
     if FusionStyle(I) isa UniqueFusion && BraidingStyle(I) isa SymmetricBraiding
         coeff = Rsymbol(one(I), one(I), one(I))
         for i = 2:N
@@ -1017,9 +1017,9 @@ function braid(f::FusionTree{I, N},
                 end
             end
         end
-        uncoupled′ = TupleTools._permute(f.uncoupled, p)
+        uncoupled′ = TupleLabXD._permute(f.uncoupled, p)
         coupled′ = f.coupled
-        isdual′ = TupleTools._permute(f.isdual, p)
+        isdual′ = TupleLabXD._permute(f.isdual, p)
         f′ = FusionTree{I}(uncoupled′, coupled′, isdual′)
         return fusiontreedict(I)(f′ => coeff)
     else
@@ -1034,8 +1034,8 @@ function braid(f::FusionTree{I, N},
                 end
             end
             l = levels[s]
-            levels = TupleTools.setindex(levels, levels[s+1], s)
-            levels = TupleTools.setindex(levels, l, s+1)
+            levels = TupleLabXD.setindex(levels, levels[s+1], s)
+            levels = TupleLabXD.setindex(levels, l, s+1)
             trees, newtrees = newtrees, trees
             empty!(newtrees)
         end
@@ -1083,7 +1083,7 @@ function braid(f1::FusionTree{I}, f2::FusionTree{I},
                 p1::IndexTuple{N₁}, p2::IndexTuple{N₂}) where {I<:Sector, N₁, N₂}
     @assert length(f1) + length(f2) == N₁ + N₂
     @assert length(f1) == length(levels1) && length(f2) == length(levels2)
-    @assert TupleTools.isperm((p1..., p2...))
+    @assert TupleLabXD.isperm((p1..., p2...))
     if FusionStyle(f1) isa UniqueFusion &&
         BraidingStyle(f1) isa SymmetricBraiding
         if usebraidcache_abelian[]

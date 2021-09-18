@@ -2,8 +2,8 @@ println("------------------------------------")
 println("Fusion Trees")
 println("------------------------------------")
 ti = time()
-@timedtestset "Fusion trees for $(TensorXD.type_repr(I))" for I in sectorlist
-    Istr = TensorXD.type_repr(I)
+@timedtestset "Fusion trees for $(TensorLabXD.type_repr(I))" for I in sectorlist
+    Istr = TensorLabXD.type_repr(I)
     N = 5
     out = ntuple(n->randsector(I), N)
     isdual = ntuple(n->rand(Bool), N)
@@ -64,7 +64,7 @@ ti = time()
             if (BraidingStyle(I) isa Bosonic) && hasfusiontensor(I)
                 Af1 = convert(Array, f1)
                 Af2 = convert(Array, f2)
-                Af = TensorOperations.tensorcontract(Af1, [1:i-1; -1; N-1 .+ (i+1:N+1)],
+                Af = TensorContractionsXD.tensorcontract(Af1, [1:i-1; -1; N-1 .+ (i+1:N+1)],
                                                      Af2, [i-1 .+ (1:N); -1], 1:2N)
                 Af′ = zero(Af)
                 for (f, coeff) in trees
@@ -93,8 +93,8 @@ ti = time()
                         else
                             oind = tuple(vcat(2:N-1, N+1)...)
                         end
-                        bf = TensorOperations.similar_from_indices(T, oind, (), af, :N)
-                        TensorOperations.trace!(1, af, :N, 0, bf, oind, (), (i,), (j,))
+                        bf = TensorContractionsXD.similar_from_indices(T, oind, (), af, :N)
+                        TensorContractionsXD.trace!(1, af, :N, 0, bf, oind, (), (i,), (j,))
                         bf′ = zero(bf)
                         for (f′, coeff) in d
                             bf′ .+= coeff .* convert(Array, f′)
@@ -104,8 +104,8 @@ ti = time()
 
                     d2 = @constinferred TK.planar_trace(f, (1, 3), (2, 4))
                     oind2 = (5, 6, 7)
-                    bf2 = TensorOperations.similar_from_indices(T, oind2, (), af, :N)
-                    TensorOperations.trace!(1, af, :N, 0, bf2, oind2, (), (1, 3), (2, 4))
+                    bf2 = TensorContractionsXD.similar_from_indices(T, oind2, (), af, :N)
+                    TensorContractionsXD.trace!(1, af, :N, 0, bf2, oind2, (), (1, 3), (2, 4))
                     bf2′ = zero(bf2)
                     for (f2′, coeff) in d2
                         bf2′ .+= coeff .* convert(Array, f2′)
@@ -114,8 +114,8 @@ ti = time()
 
                     d2 = @constinferred TK.planar_trace(f, (5, 6), (2, 1))
                     oind2 = (3, 4, 7)
-                    bf2 = TensorOperations.similar_from_indices(T, oind2, (), af, :N)
-                    TensorOperations.trace!(1, af, :N, 0, bf2, oind2, (), (5, 6), (2, 1))
+                    bf2 = TensorContractionsXD.similar_from_indices(T, oind2, (), af, :N)
+                    TensorContractionsXD.trace!(1, af, :N, 0, bf2, oind2, (), (5, 6), (2, 1))
                     bf2′ = zero(bf2)
                     for (f2′, coeff) in d2
                         bf2′ .+= coeff .* convert(Array, f2′)
@@ -124,8 +124,8 @@ ti = time()
 
                     d2 = @constinferred TK.planar_trace(f, (5, 6), (2, 1))
                     oind2 = (3, 4, 7)
-                    bf2 = TensorOperations.similar_from_indices(T, oind2, (), af, :N)
-                    TensorOperations.trace!(1, af, :N, 0, bf2, oind2, (), (5, 6), (2, 1))
+                    bf2 = TensorContractionsXD.similar_from_indices(T, oind2, (), af, :N)
+                    TensorContractionsXD.trace!(1, af, :N, 0, bf2, oind2, (), (5, 6), (2, 1))
                     bf2′ = zero(bf2)
                     for (f2′, coeff) in d2
                         bf2′ .+= coeff .* convert(Array, f2′)
@@ -134,8 +134,8 @@ ti = time()
 
                     d2 = @constinferred TK.planar_trace(f, (1, 4), (6, 3))
                     oind2 = (2, 5, 7)
-                    bf2 = TensorOperations.similar_from_indices(T, oind2, (), af, :N)
-                    TensorOperations.trace!(1, af, :N, 0, bf2, oind2, (), (6, 3), (1, 4))
+                    bf2 = TensorContractionsXD.similar_from_indices(T, oind2, (), af, :N)
+                    TensorContractionsXD.trace!(1, af, :N, 0, bf2, oind2, (), (6, 3), (1, 4))
                     bf2′ = zero(bf2)
                     for (f2′, coeff) in d2
                         bf2′ .+= coeff .* convert(Array, f2′)
@@ -146,8 +146,8 @@ ti = time()
                     q2 = (2, 4, 6)
                     d3 = @constinferred TK.planar_trace(f, q1, q2)
                     oind3 = (7,)
-                    bf3 = TensorOperations.similar_from_indices(T, oind3, (), af, :N)
-                    TensorOperations.trace!(1, af, :N, 0, bf3, oind3, (), q1, q2)
+                    bf3 = TensorContractionsXD.similar_from_indices(T, oind3, (), af, :N)
+                    TensorContractionsXD.trace!(1, af, :N, 0, bf3, oind3, (), q1, q2)
                     bf3′ = zero(bf3)
                     for (f3′, coeff) in d3
                         bf3′ .+= coeff .* convert(Array, f3′)
@@ -158,8 +158,8 @@ ti = time()
                     q2 = (6, 2, 4)
                     d3 = @constinferred TK.planar_trace(f, q1, q2)
                     oind3 = (7,)
-                    bf3 = TensorOperations.similar_from_indices(T, oind3, (), af, :N)
-                    TensorOperations.trace!(1, af, :N, 0, bf3, oind3, (), q1, q2)
+                    bf3 = TensorContractionsXD.similar_from_indices(T, oind3, (), af, :N)
+                    TensorContractionsXD.trace!(1, af, :N, 0, bf3, oind3, (), q1, q2)
                     bf3′ = zero(bf3)
                     for (f3′, coeff) in d3
                         bf3′ .+= coeff .* convert(Array, f3′)
@@ -170,8 +170,8 @@ ti = time()
                     q2 = (6, 5, 4)
                     d3 = @constinferred TK.planar_trace(f, q1, q2)
                     oind3 = (7,)
-                    bf3 = TensorOperations.similar_from_indices(T, oind3, (), af, :N)
-                    TensorOperations.trace!(1, af, :N, 0, bf3, oind3, (), q1, q2)
+                    bf3 = TensorContractionsXD.similar_from_indices(T, oind3, (), af, :N)
+                    TensorContractionsXD.trace!(1, af, :N, 0, bf3, oind3, (), q1, q2)
                     bf3′ = zero(bf3)
                     for (f3′, coeff) in d3
                         bf3′ .+= coeff .* convert(Array, f3′)
@@ -182,8 +182,8 @@ ti = time()
                     q2 = (6, 3, 5)
                     d3 = @constinferred TK.planar_trace(f, q1, q2)
                     oind3 = (7,)
-                    bf3 = TensorOperations.similar_from_indices(T, oind3, (), af, :N)
-                    TensorOperations.trace!(1, af, :N, 0, bf3, oind3, (), q1, q2)
+                    bf3 = TensorContractionsXD.similar_from_indices(T, oind3, (), af, :N)
+                    TensorContractionsXD.trace!(1, af, :N, 0, bf3, oind3, (), q1, q2)
                     bf3′ = zero(bf3)
                     for (f3′, coeff) in d3
                         bf3′ .+= coeff .* convert(Array, f3′)
@@ -332,9 +332,9 @@ ti = time()
                     Af1 = convert(Array, f1)
                     Af2 = convert(Array, f2)
                     Af0 = convert(Array, FusionTree((f1.coupled, f2.coupled), c, (false, false), (), (μ,)))
-                    _Af = TensorOperations.tensorcontract(Af1, [1:N;-1],
+                    _Af = TensorContractionsXD.tensorcontract(Af1, [1:N;-1],
                                                             Af0, [-1;N+1;N+2], 1:N+2)
-                    Af = TensorOperations.tensorcontract(Af2, [N .+ (1:N); -1],
+                    Af = TensorContractionsXD.tensorcontract(Af2, [N .+ (1:N); -1],
                                                             _Af, [1:N; -1; 2N+1], 1:2N+1)
                     Af′ = zero(Af)
                     for (f, coeff) in trees1
@@ -412,11 +412,11 @@ ti = time()
                 ip = invperm(p)
                 ip1, ip2 = ip[1:N], ip[N+1:2N]
 
-                d = @constinferred TensorXD.permute(f1, f2, p1, p2)
+                d = @constinferred TensorLabXD.permute(f1, f2, p1, p2)
                 @test dim(incoming) ≈ sum(abs2(coef)*dim(f1.coupled) for ((f1,f2), coef) in d)
                 d2 = Dict{typeof((f1,f2)), valtype(d)}()
                 for ((f1′,f2′), coeff) in d
-                    d′ = TensorXD.permute(f1′,f2′, ip1, ip2)
+                    d′ = TensorLabXD.permute(f1′,f2′, ip1, ip2)
                     for ((f1′′,f2′′), coeff2) in d′
                         d2[(f1′′,f2′′)] = get(d2, (f1′′,f2′′), zero(coeff)) + coeff2*coeff
                     end

@@ -63,11 +63,11 @@ end
     @test @constinferred(sectortype(V)) == Trivial
     @test ((@constinferred sectors(V))...,) == (Trivial(),)
     @test length(sectors(V)) == 1
-    @test @constinferred(TensorXD.hassector(V, Trivial()))
+    @test @constinferred(TensorLabXD.hassector(V, Trivial()))
     @test @constinferred(dim(V)) == d == @constinferred(dim(V, Trivial()))
     @test dim(@constinferred(typeof(V)())) == 0
     @test (sectors(typeof(V)())...,) == ()
-    @test @constinferred(TensorXD.axes(V)) == Base.OneTo(d)
+    @test @constinferred(TensorLabXD.axes(V)) == Base.OneTo(d)
     @test ℝ^d == ℝ[](d) == CartesianSpace(d) == typeof(V)(d)
     W = @constinferred ℝ^1
     @test @constinferred(oneunit(V)) == W == oneunit(typeof(V))
@@ -107,11 +107,11 @@ end
     @test @constinferred(sectortype(V)) == Trivial
     @test ((@constinferred sectors(V))...,) == (Trivial(),)
     @test length(sectors(V)) == 1
-    @test @constinferred(TensorXD.hassector(V, Trivial()))
+    @test @constinferred(TensorLabXD.hassector(V, Trivial()))
     @test @constinferred(dim(V)) == d == @constinferred(dim(V, Trivial()))
     @test dim(@constinferred(typeof(V)())) == 0
     @test (sectors(typeof(V)())...,) == ()
-    @test @constinferred(TensorXD.axes(V)) == Base.OneTo(d)
+    @test @constinferred(TensorLabXD.axes(V)) == Base.OneTo(d)
     @test ℂ^d == Vect[Trivial](d) == Vect[](Trivial()=>d) == ℂ[](d) == typeof(V)(d)
     W = @constinferred ℂ^1
     @test @constinferred(oneunit(V)) == W == oneunit(typeof(V))
@@ -145,10 +145,10 @@ end
     @test isdual(V')
     @test !isdual(conj(V))
     @test isdual(conj(V'))
-    @test !TensorXD.isconj(V)
-    @test !TensorXD.isconj(V')
-    @test TensorXD.isconj(conj(V))
-    @test TensorXD.isconj(conj(V'))
+    @test !TensorLabXD.isconj(V)
+    @test !TensorLabXD.isconj(V')
+    @test TensorLabXD.isconj(conj(V))
+    @test TensorLabXD.isconj(conj(V'))
     @test isa(V, VectorSpace)
     @test isa(V, ElementarySpace)
     @test !isa(V, InnerProductSpace)
@@ -157,12 +157,12 @@ end
     @test @constinferred(dual(V)) != @constinferred(conj(V)) != V
     @test @constinferred(field(V)) == ℂ
     @test @constinferred(sectortype(V)) == Trivial
-    @test @constinferred(TensorXD.hassector(V, Trivial()))
+    @test @constinferred(TensorLabXD.hassector(V, Trivial()))
     @test @constinferred(dim(V)) == d == @constinferred(dim(V, Trivial()))
-    @test @constinferred(TensorXD.axes(V)) == Base.OneTo(d)
+    @test @constinferred(TensorLabXD.axes(V)) == Base.OneTo(d)
 end
 
-@timedtestset "ElementarySpace: $(TensorXD.type_repr(Vect[I]))" for I in sectorlist
+@timedtestset "ElementarySpace: $(TensorLabXD.type_repr(Vect[I]))" for I in sectorlist
     if Base.IteratorSize(values(I)) === Base.IsInfinite()
         set = unique(vcat(one(I), [randsector(I) for k = 1:10]))
         gen = (c=>2 for c in set)
@@ -170,7 +170,7 @@ end
         gen = (values(I)[k]=>(k+1) for k in 1:length(values(I)))
     end
     V = GradedSpace(gen)
-    @test eval(Meta.parse(TensorXD.type_repr(typeof(V)))) == typeof(V)
+    @test eval(Meta.parse(TensorLabXD.type_repr(typeof(V)))) == typeof(V)
     @test eval(Meta.parse(sprint(show, V))) == V
     @test eval(Meta.parse(sprint(show, V'))) == V'
     @test V' == GradedSpace(gen; dual = true)
@@ -214,11 +214,11 @@ end
     @test @constinferred(field(V)) == ℂ
     @test @constinferred(sectortype(V)) == I
     slist = @constinferred sectors(V)
-    @test @constinferred(TensorXD.hassector(V, first(slist)))
+    @test @constinferred(TensorLabXD.hassector(V, first(slist)))
     @test @constinferred(dim(V)) == sum(dim(s)*dim(V, s) for s in slist)
     @constinferred dim(V, first(slist))
     if hasfusiontensor(I)
-        @test @constinferred(TensorXD.axes(V)) == Base.OneTo(dim(V))
+        @test @constinferred(TensorLabXD.axes(V)) == Base.OneTo(dim(V))
     end
     @test @constinferred(⊕(V,V)) == Vect[I](c=>2dim(V,c) for c in sectors(V))
     @test @constinferred(⊕(V,V,V,V)) == Vect[I](c=>4dim(V,c) for c in sectors(V))
@@ -380,7 +380,7 @@ end
     V1, V2, V3, V4, V5 = SU₂Space(0=>3, 1//2=>1), SU₂Space(0=>2, 1=>1),
                             SU₂Space(1//2=>1, 1=>1)', SU₂Space(0=>2, 1//2=>2),
                             SU₂Space(0=>1, 1//2=>1, 3//2=>1)'
-    W = TensorXD.HomSpace(V1 ⊗ V2, V3 ⊗ V4 ⊗ V5)
+    W = TensorLabXD.HomSpace(V1 ⊗ V2, V3 ⊗ V4 ⊗ V5)
     @test W == (V3 ⊗ V4 ⊗ V5 → V1 ⊗ V2)
     @test W == (V1 ⊗ V2 ← V3 ⊗ V4 ⊗ V5)
     @test W' == (V1 ⊗ V2 → V3 ⊗ V4 ⊗ V5)
