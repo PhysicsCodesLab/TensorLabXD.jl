@@ -108,9 +108,9 @@ uuid = "61eb1bfa-7361-4325-ad38-22787b887f55"
 version = "0.12.9"
 
 [[HalfIntegers]]
-git-tree-sha1 = "5af4a70115e6237ce2a1444094296119067745b3"
+git-tree-sha1 = "dc0ce9efc3d88c6cefc4e1f9c29b397be8734cfc"
 uuid = "f0d1745a-41c9-11e9-1dd9-e5d34d218721"
-version = "1.4.1"
+version = "1.4.2"
 
 [[InteractiveUtils]]
 deps = ["Markdown"]
@@ -231,10 +231,9 @@ uuid = "21216c6a-2e73-6563-6e65-726566657250"
 version = "1.2.2"
 
 [[Primes]]
-deps = ["Test"]
-git-tree-sha1 = "ff1a2323cb468ec5f201838fcbe3c232266b1f95"
+git-tree-sha1 = "afccf037da52fa596223e5a0e331ff752e0e845c"
 uuid = "27ebfcd6-29c5-5fa9-bf4b-fb8fc14df3ae"
-version = "0.4.0"
+version = "0.5.0"
 
 [[Printf]]
 deps = ["Unicode"]
@@ -286,10 +285,10 @@ version = "3.1.19"
 uuid = "ea8e919c-243c-51af-8825-aaa63cd721ce"
 
 [[SUNRepresentations]]
-deps = ["LinearAlgebra", "RationalRoots", "SparseArrayKit", "TensorKit", "TensorOperations"]
-git-tree-sha1 = "2c28fd0305aff82cbf1f520d0f31a502cee2cb4e"
+deps = ["LinearAlgebra", "RationalRoots", "Requires", "SparseArrayKit", "TensorOperations"]
+git-tree-sha1 = "d5e70272aa6b9a37745b2fc921d6fe3688f734ce"
 uuid = "1a50b95c-7aac-476d-a9ce-2bfc675fc617"
-version = "0.1.2"
+version = "0.1.1"
 
 [[Serialization]]
 uuid = "9e88b42a-f829-5b0c-bbe9-9e923198166b"
@@ -351,12 +350,6 @@ repo-url = "https://github.com/PhysicsCodesLab/TensorContractionsXD.jl"
 uuid = "2200dae6-05f0-40f4-9fe9-6ee0acf43bbd"
 version = "0.1.0"
 
-[[TensorKit]]
-deps = ["HalfIntegers", "LRUCache", "LinearAlgebra", "Strided", "TensorOperations", "TupleTools", "WignerSymbols"]
-git-tree-sha1 = "cdc061402b7259d987fa8976f8be1711491ef76a"
-uuid = "07d1fe3e-3e46-537d-9eac-e9e13d0d4cec"
-version = "0.9.1"
-
 [[TensorOperations]]
 deps = ["CUDA", "LRUCache", "LinearAlgebra", "Requires", "Strided", "TupleTools"]
 git-tree-sha1 = "55029eba79c6caa44d0ad3a1e1dd12c8439eed5d"
@@ -400,10 +393,10 @@ uuid = "cf7118a7-6976-5b1a-9a39-7adc72f591a4"
 uuid = "4ec0a83e-493e-50e2-b9ac-8f72acf5a8f5"
 
 [[WignerSymbols]]
-deps = ["HalfIntegers", "Primes", "RationalRoots"]
-git-tree-sha1 = "dfb49a51c4c8e205d1d7ddc7e6a1a29da871ef52"
+deps = ["HalfIntegers", "LRUCache", "Primes", "RationalRoots"]
+git-tree-sha1 = "960e5f708871c1d9a28a7f1dbcaf4e0ee34ee960"
 uuid = "9f57e263-0b3d-5e2e-b1be-24f2bb48858b"
-version = "1.1.0"
+version = "2.0.0"
 
 [[Zlib_jll]]
 deps = ["Libdl"]
