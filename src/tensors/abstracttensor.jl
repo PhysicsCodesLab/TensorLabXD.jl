@@ -22,8 +22,8 @@ const AbstractTensor{S<:IndexSpace, N} = AbstractTensorMap{S, N, 0}
 """
     storagetype(t::AbstractTensorMap)
 
-Return the storage type of the data for the tensor map instance.
-Now we only have this type as DenseMatrix.
+Return the storage type of the data for the tensor map instance, for example,
+Matrix{Float64}. Now we only have this type as DenseMatrix.
 """
 storagetype(t::AbstractTensorMap) = storagetype(typeof(t))
 
@@ -35,7 +35,7 @@ similarstoragetype(t::AbstractTensorMap, T) = similarstoragetype(typeof(t), T)
     Base.eltype(T::Type{<:AbstractTensorMap})
     Base.eltype(t::AbstractTensorMap)
 
-Element type of the data for the tensormap in storage.
+Element type of the data for the tensormap in storage. Return, for example, `Float64`.
 """
 Base.eltype(T::Type{<:AbstractTensorMap}) = eltype(storagetype(T))
 Base.eltype(t::AbstractTensorMap) = eltype(typeof(t))
@@ -59,7 +59,7 @@ spacetype(::Type{<:AbstractTensorMap{S}}) where {S<:IndexSpace} = S
 spacetype(t::AbstractTensorMap) = spacetype(typeof(t))
 
 """
-    sectortype(::Type{<:VectorSpace}) where {S<:IndexSpace}
+    sectortype(::Type{<:AbstractTensorMap{S}}) where {S<:IndexSpace}
     sectortype(t::AbstractTensorMap) -> Type{<:Sector}
 
 Return the type of sector over which the AbstractTensorMap `t` or type is defined.

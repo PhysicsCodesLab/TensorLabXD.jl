@@ -1,7 +1,6 @@
 module TensorLabXD
-# try
+
 # Exports
-#---------
 # Types:
 export Sector, AbstractIrrep, Irrep
 export FusionStyle, UniqueFusion, MultipleFusion, MultiplicityFreeFusion,
@@ -78,7 +77,6 @@ export scalar, add!, contract!
 export notrunc, truncerr, truncdim, truncspace, truncbelow
 
 # Imports
-#---------
 using TupleLabXD
 using TupleLabXD: StaticLength
 
@@ -111,21 +109,17 @@ import Base.Meta
 const IndexTuple{N} = NTuple{N, Int}
 
 # Auxiliary files
-#-----------------
 include("auxiliary/auxiliary.jl")
 include("auxiliary/dicts.jl")
 include("auxiliary/linalg.jl")
 include("auxiliary/random.jl")
 
-#--------------------------------------------------------------------
 # experiment with different dictionaries
 const SectorDict{K, V} = SortedVectorDict{K, V}
 const FusionTreeDict{K, V} = Dict{K, V}
 fusiontreedict(I) = FusionStyle(I) isa UniqueFusion ? SingletonDict : FusionTreeDict
-#--------------------------------------------------------------------
 
 # Exception types:
-#------------------
 abstract type TensorException <: Exception end
 
 # Exception type for all errors related to sector mismatch
@@ -156,20 +150,15 @@ Base.show(io::IO, e::IndexError) = print(io, "IndexError(", e.message, ")")
 type_repr(T::Type) = repr(T)
 
 # Definitions and methods for superselection sectors (quantum numbers)
-#----------------------------------------------------------------------
 include("sectors/sectors.jl")
 
 # Constructing and manipulating fusion trees and iterators thereof
-#------------------------------------------------------------------
 include("fusiontrees/fusiontrees.jl")
 
 # Definitions and methods for vector spaces
-#-------------------------------------------
 include("spaces/vectorspaces.jl")
 
-# # Definitions and methods for tensors
-# #-------------------------------------
-# # general definitions
+# Definitions and methods for tensors
 include("tensors/abstracttensor.jl")
 include("tensors/tensortreeiterator.jl")
 include("tensors/tensor.jl")
