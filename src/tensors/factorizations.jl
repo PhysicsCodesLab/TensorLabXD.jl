@@ -413,7 +413,7 @@ function tsvd!(t::TensorMap{<:EuclideanSpace};
                     TensorMap(Vdata, W←domain(t)), truncerr
     end
     for (c, b) in blocks(t)
-        U, Σ, V = _svd!(b, alg)
+        U, Σ, V = _svd!(b, alg) # the Σ returned by LAPACK here is a vector
         Udata[c] = U
         Vdata[c] = V
         if @isdefined Σdata # cannot easily infer the type of Σ, so use this construction

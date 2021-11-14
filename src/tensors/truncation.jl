@@ -64,8 +64,6 @@ end
 _truncate!(v::AbstractVector, trunc::TruncationSpace, p::Real = 2) =
     _truncate!(v, truncdim(dim(trunc.space)), p)
 
-########################
-########################
 function _truncate!(v::AbstractVector, trunc::TruncationCutoff, p::Real = 2)
     S = real(eltype(v))
     dtrunc = findlast(Base.Fix2(>, trunc.ϵ), v)
@@ -151,6 +149,7 @@ function _truncate!(V::SectorVectorDict, trunc::TruncationDimension, p = 2)
     end
     return V, truncerr
 end
+
 function _truncate!(V::SectorVectorDict, trunc::TruncationSpace, p = 2)
     I = keytype(V)
     S = real(eltype(valtype(V)))
@@ -161,8 +160,7 @@ function _truncate!(V::SectorVectorDict, trunc::TruncationSpace, p = 2)
     end
     return V, truncerr
 end
-########################
-########################
+
 function _truncate!(V::SectorVectorDict, trunc::TruncationCutoff, p = 2)
     I = keytype(V)
     S = real(eltype(valtype(V)))
