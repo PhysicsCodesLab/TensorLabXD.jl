@@ -3,20 +3,13 @@
 
 The purpose of this page is to explain how certain
 concepts and terminology from the theory of monoidal categories apply in the context of
-tensors. In particular, we are interested in the category ``\mathbf{Vect}``, but our
-concept of tensors can be extended to morphisms of any category that shares similar
-properties. These properties are reviewed below.
+tensors.
 
-In particular, we will as example also study the more general case of ``\mathbf{SVect}``,
-i.e. the category of super vector spaces, which contains ``\mathbf{Vect}`` as a subcategory
-and which is useful to describe fermions.
-
-In the end, the goal of identifying tensor manipulations in TensorLabXD.jl with concepts from
+The goal of identifying tensor manipulations in TensorLabXD.jl with concepts from
 category theory is to put the diagrammatic formulation of tensor networks in the most
 general context on a firmer footing. The following exposition is mostly based on [^turaev],
-combined with input from [^selinger], [^kassel], [^kitaev], and
-[``n``Lab](https://ncatlab.org/), to which  we refer for further information. Furthermore,
-we recommend the nice introduction of [^beer].
+combined with input from [^selinger], [^kassel], [^kitaev],
+[``n``Lab](https://ncatlab.org/),[^beer] to which  we refer for further information.
 
 ## [Categories, functors and natural transformations](@id ss_categoryfunctor)
 
@@ -36,35 +29,32 @@ denoted as ``\mathrm{End}_C(V)``. When the category ``C`` is clear, we can drop 
 ``f^{-1}:V→W`` called its inverse, such that ``f^{-1} ∘ f = \mathrm{id}_W`` and ``f ∘ f^{-1}
 = \mathrm{id}_V``.
 
-Throughout this manual, we associate a graphical representation to morphisms and
+We associate a graphical representation to morphisms and
 compositions thereof, which is sometimes referred to as the Penrose graphical calculus. To
 morphisms, we associate boxes with an incoming and outgoing line denoting the object in its
-source and target. The flow from source to target, and thus the direction of morphism
+domain and codomain. The flow from domain to codomain, and thus the direction of morphism
 composition ``f ∘ g`` (sometimes known as the flow of time) can be chosen left to right
 (like the arrow in ``f:W→V``), right to left (like the composition order ``f ∘ g``, or the
 matrix product), bottom to top (quantum field theory convention) or top to bottom (quantum
-circuit convention). Throughout this manual, we stick to the top to bottom convention (which
-is not very common in manuscripts on category theory):
+circuit convention). Throughout this manual, we stick to the top to bottom convention:
 
 ![composition](img/diagram_morphism.svg)
 
 The direction of the arrows, which become important once we introduce duals, are also
 subject to convention, and are here chosen to follow the arrow in ``f:W→V``, i.e. the
-source comes in and the target goes out. Strangely enough, this is opposite to the most
-common convention.
+domain comes in and the codomain goes out.
 
-In the case of interest, i.e. the category ``\mathbf{(Fin)Vect}_{𝕜}`` (or some subcategory
-thereof), the objects are (finite-dimensional) vector spaces over a field ``𝕜``, and the
+[**Example**] For the category ``\mathbf{(Fin)Vect}_{𝕜}``, the objects are
+(finite-dimensional) vector spaces over a field ``𝕜``, and the
 morphisms are linear maps between these vector spaces with "matrix multiplication" as
-composition. More importantly, the morphism spaces ``\mathrm{Hom}(W,V)`` are themselves
-vector spaces. More general categories where the morphism spaces are vector spaces over a
-field ``𝕜`` (or modules over a ring ``𝕜``) and the composition of morphisms is a bilinear
-operation are called ``𝕜``-linear categories (or ``𝕜``-algebroids, or
-``\mathbf{Vect}_{𝕜}``-enriched categories). In that case, the endomorphisms
+composition. Furthermore, the category ``\mathbf{(Fin)Vect}_{𝕜}`` is an example of the
+``𝕜``-linear categories (or ``𝕜``-algebroids, or
+``\mathbf{Vect}_{𝕜}``-enriched categories), where the morphism spaces are vector spaces
+over a field ``𝕜`` (or modules over a ring ``𝕜``) and the composition of morphisms is a
+bilinear operation. In this case, the endomorphisms
 ``\mathrm{End}(V)`` are a ``𝕜``-algebra with ``\mathrm{id}_V`` as the identity.
 
-We also introduce some definitions which will be useful further on. A **functor** ``F``
-between two categories ``C`` and ``D`` is, colloquially speaking, a mapping between
+A **functor** ``F`` between two categories ``C`` and ``D`` is a mapping between
 categories that preserves morphism composition and identities. More specifically, ``F:C→D``
 assigns to every object ``V ∈ \mathrm{Ob}(C)`` an object ``F(V) ∈ \mathrm{Ob}(D)``, and to
 each morphism ``f ∈ \mathrm{Hom}_C(W,V)`` a morphism ``F(f) ∈ \mathrm{Hom}_D(F(W), F(V))``
@@ -72,22 +62,29 @@ such that ``F(f) ∘_D F(g) = F(f ∘_C g)`` and ``F(\mathrm{id}_V) = \mathrm{id
 (where we denoted the possibly different composition laws in ``C`` and ``D`` explicitly with
 a subscript). In particular, every category ``C`` has an identity functor ``1_C`` that acts
 trivially on objects and morphisms. Functors can also be composed. A ``𝕜``-linear functor
-between two ``𝕜``-linear categories has a linear action on morphisms.
+between two ``𝕜``-linear categories has a linear action on morphisms, i.e.,
+``F(αf+βg) = αF(f)+βF(g)``.
 
-Given two categories ``C`` and ``D``, and two functors ``F`` and ``G`` that map from ``C``
-to ``D``, a **natural transformation** ``φ:F⟶G`` is a family of morphisms
+![composition](img/diagram_functor.svg)
+
+A **natural transformation** is a mapping between two functors. Given two categories ``C``
+and ``D``, and two functors ``F`` and ``G`` that map from ``C``
+to ``D``, a natural transformation ``φ:F⟶G`` is a family of morphisms
 ``φ_V ∈ \mathrm{Hom}_D(F(V),G(V))`` in ``D``, labeled by the objects ``V`` of ``C``, such
 that ``φ_V ∘ F(f) = G(f) ∘ φ_W`` for all morphisms ``f ∈ \mathrm{Hom}_C(W,V)``. If all
 morphisms ``φ_V`` are isomorphisms, ``φ`` is called a natural isomorphism and the two
 functors ``F`` and ``G`` are said to be *isomorphic*.
 
-The *product* of two categories ``C`` and ``C′``, denoted ``C × C′``, is the category with
+![composition](img/diagram_natural_transformation.svg)
+
+The **product of two categories** ``C`` and ``C′``, denoted ``C × C′``, is the category with
 objects ``\mathrm{Ob}(C×C′) = \mathrm{Ob}(C) × \mathrm{Ob}(C′)``, whose elements are denoted
 as tuples ``(V,V′)``, and morphisms
 ``\mathrm{Hom}_{C×C′}((W,W′), (V,V′)) = \mathrm{Hom}_{C}(W,V) × \mathrm{Hom}_{C′}(W′,V′)``.
 Composition acts as ``(f,f′) ∘ (g,g′) = (f∘g, f′∘g′)`` and the identity is given by
-``\mathrm{id}_{V,V′} = (\mathrm{id}_V, \mathrm{id}_{V′})``. In a similar fashion, we can
-define the *product of functors* ``F:C→D`` and ``F′:C′→D′`` as a functor
+``\mathrm{id}_{V,V′} = (\mathrm{id}_V, \mathrm{id}_{V′})``.
+
+The **product of functors** ``F:C→D`` and ``F′:C′→D′`` as a functor
 ``F×F′: (C×C′)→(D×D′)`` mapping objects ``(V,V′)`` to ``(F(V), F′(V′))`` and morphisms
 ``(f,f′)`` to ``(F(f), F′(f′))``.
 
