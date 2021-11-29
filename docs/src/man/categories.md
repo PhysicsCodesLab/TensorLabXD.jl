@@ -77,21 +77,21 @@ functors ``F`` and ``G`` are said to be *isomorphic*.
 
 ![composition](img/diagram_natural_transformation.svg)
 
-The **product of two categories** ``C`` and ``C′``, denoted ``C × C′``, is the category with
+The **(Cartesian) product of two categories** ``C`` and ``C′``, denoted ``C × C′``, is the
+category with
 objects ``\mathrm{Ob}(C×C′) = \mathrm{Ob}(C) × \mathrm{Ob}(C′)``, whose elements are denoted
 as tuples ``(V,V′)``, and morphisms
-``\mathrm{Hom}_{C×C′}((W,W′), (V,V′)) = \mathrm{Hom}_{C}(W,V) × \mathrm{Hom}_{C′}(W′,V′)``.
+``\mathrm{Hom}_{C×C′}((W,W′), (V,V′)) = \mathrm{Hom}_{C}(W,V) × \mathrm{Hom}_{C′}(W′,V′)``,
+whose elements are denoted as tuples ``(f,f′)``.
 Composition acts as ``(f,f′) ∘ (g,g′) = (f∘g, f′∘g′)`` and the identity is given by
-``\mathrm{id}_{V,V′} = (\mathrm{id}_V, \mathrm{id}_{V′})``.
+``\mathrm{id}_{(V,V′)} = (\mathrm{id}_V, \mathrm{id}_{V′})``.
 
-The **product of functors** ``F:C→D`` and ``F′:C′→D′`` as a functor
+The **(Cartesian) product of functors** ``F:C→D`` and ``F′:C′→D′`` as a functor
 ``F×F′: (C×C′)→(D×D′)`` mapping objects ``(V,V′)`` to ``(F(V), F′(V′))`` and morphisms
 ``(f,f′)`` to ``(F(f), F′(f′))``.
 
 ## [Monoidal categories](@id ss_monoidalcategory)
-The next property of the category ``\mathbf{Vect}`` that we want to highlight and
-generalize is that which allows to take tensor products. Indeed, a category ``C`` is said
-to be a **tensor category** (a.k.a. a *monoidal category*), if it has
+A **tensor category** (a.k.a. a *monoidal category*) is a category ``C`` endowed with
 *   a binary operation on objects ``⊗: \mathrm{Ob}(C) × \mathrm{Ob}(C) → \mathrm{Ob}(C)``
 *   a binary operation on morphisms, also denoted as ``⊗``, such that
     ``⊗: \mathrm{Hom}_C(W_1,V_1) × \mathrm{Hom}_C(W_2,V_2) → \mathrm{Hom}_C(W_1 ⊗ W_2, V_1 ⊗ V_2)``
@@ -125,20 +125,15 @@ one-dimensional vector space. This is not automatically a strict category, espec
 considers how to represent tensor maps on a computer. The distinction between ``V``,
 ``I ⊗ V`` and ``V ⊗ I`` amounts to adding or removing an extra factor ``I`` to the tensor
 product structure of the domain or codomain, and so the left and right unitor are analogous
-to removing extra dimensions of size 1 from a multidimensional array. The fact that arrays
-with and without additional dimensions 1 are not automatically identical and an actual
-operation is required to insert or remove them, has led to some discussion in several
-programming languages that provide native support for multidimensional arrays.
-
-For what concerns the associator, the distinction between ``(V_1 ⊗ V_2) ⊗ V_3`` and
+to removing extra dimensions of size 1 from a multidimensional array. The distinction between
+``(V_1 ⊗ V_2) ⊗ V_3`` and
 ``V_1 ⊗ (V_2 ⊗ V_3)`` is typically absent for simple tensors or multidimensional arrays.
 However, this grouping can be taken to indicate how to build the fusion tree for coupling
 irreps to a joint irrep in the case of symmetric tensors. As such, going from one to the
 other requires a recoupling (F-move) which has a non-trivial action on the reduced blocks.
 We elaborate on this in the context of [Fusion categories](@ref ss_topologicalfusion) below.
-However, we can already note that we will always represent tensor products using a
-canonical order ``(…((V_1 ⊗ V_2) ⊗ V_3) … ⊗ V_N)``. A similar approach can be followed to
-turn any tensor category into a strict tensor category (see Section XI.5 of [^kassel]).
+We will always represent tensor products using a
+canonical order ``(…((V_1 ⊗ V_2) ⊗ V_3) … ⊗ V_N)``.
 
 The different natural isomorphisms involving the unit object have various relations, such
 as ``λ_{V⊗W} ∘ α_{I,V,W} = λ_V ⊗ \mathrm{id}_W`` and ``λ_I = ρ_I : I ⊗ I → I``. The last
@@ -146,7 +141,7 @@ relation defines an isomorphism between ``I ⊗ I`` and ``I``, which can also be
 state that for ``f, g ∈ \mathrm{End}_C(I)``, ``f ∘ g = ρ_I ∘ (f ⊗ g) ∘ λ_I^{-1} = g ∘ f``.
 Hence, the tensor product of morphisms in ``\mathrm{End}_C(I)`` can be related to morphism
 composition in ``\mathrm{End}_C(I)``, and the monoid of endomorphisms ``\mathrm{End}_C(I)``
-is commutative. In the case of a ``𝕜``-linear category, it is an abelian ``𝕜``-algebra. In
+is commutative. In the case of a ``𝕜``-linear category, it is an Abelian ``𝕜``-algebra. In
 the case of ``\mathbf{Vect}``, ``\mathrm{End}(I)`` is indeed isomorphic to the field of
 scalars ``𝕜``. We return to the general case where ``\mathrm{End}_C(I)`` is isomorphic to
 ``𝕜`` itself in the section on [pre-fusion categories](@ref ss_fusion).
@@ -162,38 +157,38 @@ left or right unitor to convert a graphical representation to a diagram of compo
 tensor products of morphisms gives rise to the same result, by virtue of Mac Lane's
 coherence theorem. Using the horizontal direction (left to right) to stack tensor products,
 this gives rise to the following graphical notation for the tensor product of two
-morphisms, and for a general morphism ``t`` between a tensor product of objects in source
-and target:
+morphisms, and for a general morphism ``t`` between a tensor product of objects in domain
+and codomain:
 
 ![tensorproduct](img/diagram-tensorproduct.svg)
 
-Another relevant example is the category ``\mathbf{SVect}_𝕜``, which has as objects *super
+[**Example**] The category ``\mathbf{SVect}_𝕜`` has as objects *super
 vector spaces* over ``𝕜``, which are vector spaces with a ``ℤ₂`` grading, i.e.
-they are decomposed as a direct sum ``V = V_0 ⊕ V_1``. Furthermore, the morphisms between
+they are decomposed as a direct sum ``V = V_0 ⊕ V_1``. The morphisms between
 two super vector spaces are restricted to be grading preserving, i.e.
 ``f∈ \mathrm{Hom}_{\mathbf{SVect}}(W,V)`` has ``f(W_0) ⊂ V_0`` and ``f(W_1) ⊂ V_1``.
 The graded tensor product between two super vector spaces is defined as
 ``V⊗_\mathrm{g}W = (V ⊗_\mathrm{g} W)_0 ⊕ (V ⊗_\mathrm{g} W)_1`` with
 ``(V ⊗_\mathrm{g} W)_0 = (V_0 ⊗ W_0) ⊕ (V_1 ⊗ W_1)`` and
 ``(V ⊗_\mathrm{g} W)_1 = (V_0 ⊗ W_1) ⊕ (V_1 ⊗ W_0)``. The unit object ``I`` is again
-isomorphic to ``𝕜``, i.e. ``I_0 = 𝕜`` and ``I_1 = 0``, a zero-dimensional vector space. In
+isomorphic to ``𝕜``, i.e. ``I_0 = 𝕜`` and ``I_1 = 0``. In
 particular, the category ``\mathbf{SVect}_𝕜`` contains ``\mathbf{Vect}_𝕜`` as a
 (monoidal) subcategory, by only selecting those objects ``V`` for which ``V_1 = 0``.
 
-We generalize the notion of a functor between monoidal categories. A *monoidal
-functor* between two tensor categories ``(C, ⊗_C, I_C, α_C, λ_C, ρ_C)`` and
+A **monoidal functor** between two tensor categories ``(C, ⊗_C, I_C, α_C, λ_C, ρ_C)`` and
 ``(D, ⊗_D, I_D, α_D, λ_D, ρ_D)`` is a functor ``F:C→D`` together with two monoidal
 constraints, namely
 *   a morphism ``F_0:I_D → F(I_C)``;
 *   a natural transformation
     ``F_2={F_2(X,Y): F(X) ⊗_D F(Y) → F(X ⊗_C Y), ∀ X,Y∈ \mathrm{Ob}(C)}``
     between the functors ``⊗_D(F×F)`` and ``F ⊗_C`` from ``C×C`` to ``D``.
-A *monoidal natural transformation* ``φ`` between two monoidal functors ``F:C→D`` and
+
+A **monoidal natural transformation** ``φ`` between two monoidal functors ``F:C→D`` and
 ``G:C→D`` is a natural transformation ``φ:F→G`` that furthermore satisfies
 *   ``φ_{I_C} F_0 = G_0``;
 *   ``∀ X,Y ∈ \mathrm{Ob}(C)``: ``φ_{X ⊗ Y} F_2(X,Y) = G_2(X,Y)(φ_X ⊗ φ_Y)``.
 
-For further reference, we also define the following categories which can be associated with
+We define the following categories which can be associated with
 the category ``\mathcal{C} = (C, ⊗, I, α, λ, ρ)``
 *   ``\mathcal{C}^{\mathrm{op}} = (C^{\mathrm{op}}, ⊗, I, α^{\mathrm{op}}, λ^{\mathrm{op}}, ρ^{\mathrm{op}})``
     where the opposite category ``C^{\mathrm{op}}`` has the same objects as ``C`` but has
